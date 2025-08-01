@@ -14,7 +14,7 @@ const SideBarNavigation = () => {
             route={item.route}
             itemName={item.itemName}
             itemIcon={item.itemIcon}
-            children={item.children}
+            subItems={item.children}
           />
         ))}
       </ul>

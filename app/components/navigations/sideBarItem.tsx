@@ -1,12 +1,11 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
 
 interface SidebarItemProps {
   itemName: string;
   route: string;
   itemIcon: React.ReactNode;
-  children?: { subItemName: string }[];
+  subItems?: { subItemName: string }[];
 }
 
 export default function SidebarItem({ ...props }: SidebarItemProps) {

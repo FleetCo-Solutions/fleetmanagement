@@ -8,6 +8,7 @@ import {
   getSortedRowModel,
   FilterFn,
   flexRender,
+  Row,
 } from '@tanstack/react-table'
 import { rankItem } from '@tanstack/match-sorter-utils'
 
@@ -88,7 +89,7 @@ const data: Driver[] = [
   // Add more data as needed
 ]
 
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+const fuzzyFilter: FilterFn<Driver> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
   addMeta({ itemRank })
   return itemRank.passed
@@ -121,12 +122,12 @@ export default function TempTable() {
     {
       header: 'Violation Rate',
       accessorKey: 'violationRate',
-      cell: ({ row }) => `${row.original.violationRate}%`,
+      cell: ({ row }: { row: Row<Driver> }) => `${row.original.violationRate}%`,
     },
     {
       header: 'Fuel Usage',
       accessorKey: 'fuelUsage',
-      cell: ({ row }) => `${row.original.fuelUsage}L`,
+      cell: ({ row }:{row: Row<Driver>}) => `${row.original.fuelUsage}L`,
     },
   ]
 

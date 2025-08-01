@@ -1,11 +1,15 @@
 'use client'
 import VehicleCard from "@/app/components/vehicleOverview/vehicleCard";
-import VehicleTracker from "@/app/components/vehicleTracker";
 import SideOverview from "./components/sideOverview";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 
 const VehiclesOverview = () => {
   const [openOverview, setOpenOverview] = useState(false)
+  const VehicleTracker = dynamic(() => import('@/app/components/vehicleTracker'), {
+
+    ssr: false,
+  })
   return (
     <div className="flex h-full w-full">
     <SideOverview openOverview={openOverview} setOpenOverview={setOpenOverview} />
