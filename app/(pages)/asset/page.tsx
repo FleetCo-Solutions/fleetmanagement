@@ -1,0 +1,27 @@
+import React from 'react'
+import VehicleTable from './components/vehicleTable'
+
+const Assets = () => {
+  return (
+    <div className="bg-white w-full h-full flex items-center justify-center">
+      <div className="w-[96%] h-[96%] flex flex-col gap-5">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-black">Fleet Assets</h1>
+          <div className="flex gap-3">
+            <button className="bg-[#004953] text-white px-4 py-2 rounded-lg hover:bg-[#014852] transition-colors">
+              Add Vehicle
+            </button>
+            <button className="border border-[#004953] text-[#004953] px-4 py-2 rounded-lg hover:bg-[#004953] hover:text-white transition-colors">
+              Export Data
+            </button>
+          </div>
+        </div>
+        <div className="border-[1px] border-black/20 rounded-xl flex flex-col gap-5 p-5 bg-white">
+          <VehicleTable />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Assets
