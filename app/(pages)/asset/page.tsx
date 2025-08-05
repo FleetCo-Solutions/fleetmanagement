@@ -1,5 +1,5 @@
 import React from 'react'
-import VehicleTable from './components/vehicleTable'
+import VehicleTableExample from './components/vehicleTableExample'
 
 const Assets = () => {
   return (
@@ -16,9 +16,7 @@ const Assets = () => {
             </button>
           </div>
         </div>
-        <div className="border-[1px] border-black/20 rounded-xl flex flex-col gap-5 p-5 bg-white">
-          <VehicleTable />
-        </div>
+          <VehicleTableExample />
       </div>
     </div>
   )
