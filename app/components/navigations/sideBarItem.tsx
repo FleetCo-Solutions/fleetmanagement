@@ -17,10 +17,10 @@ export default function SidebarItem({ ...props }: SidebarItemProps) {
         {/* Main Item */}
         <div
           // onClick={() => setOpen(!open)}
-          className="rounded-lg py-3 px-3 flex justify-center items-center cursor-pointer transition-colors duration-200"
+          className="rounded-lg p-1 flex hover:bg-[#004953] hover:text-white items-center cursor-pointer transition-colors duration-200"
         >
-          <div className="flex flex-col justify-center items-center gap-2">
-            <div className="bg-white p-3 rounded-xl">{props.itemIcon}</div>
+          <div className="flex justify-center items-center gap-2">
+            <div className="p-3 rounded-xl">{props.itemIcon}</div>
 
             <span>{props.itemName}</span>
           </div>

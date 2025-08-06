@@ -2,8 +2,8 @@ import Image from "next/image";
 
 const TopNavigation = () => {
   return (
-    <div className="flex justify-between items-center px-10 bg-white text-black h-[7vh] border-b-[1px] border-black/20">
-      <div className="font-black text-3xl text-[#004953]">FleetCo</div>
+    <div className="flex justify-end items-center px-10 bg-white text-black h-[7vh] border-b-[1px] border-black/20">
+      
       <div className="flex gap-3 items-center">
         <div className="flex flex-col items-end">
           <span className="text-lg">Renee McKelvey</span>{" "}
@@ -16,7 +16,7 @@ const TopNavigation = () => {
             height={1380}
             alt="User Avatar"
             className="object-cover"
-          />
+          /><div className="font-black text-3xl text-[#004953]">FleetCo</div>
         </div>
       </div>
     </div>

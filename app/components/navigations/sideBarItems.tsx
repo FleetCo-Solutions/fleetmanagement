@@ -50,7 +50,7 @@ export const sideBarItems = [
     },
     {
       itemName: "Drivers",
-      route: "/Drivers",
+      route: "/drivers",
       itemIcon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +75,7 @@ export const sideBarItems = [
     },
     {
       itemName: "Trips",
-      route: "/Trips",
+      route: "/trips",
       itemIcon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -105,7 +105,7 @@ export const sideBarItems = [
     },
     {
       itemName: "Fuel",
-      route: "Fuel",
+      route: "/fuel",
       itemIcon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -125,7 +125,7 @@ export const sideBarItems = [
     },
     {
       itemName: "Maintenance",
-      route: "Maintenance",
+      route: "/maintenance",
       itemIcon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
