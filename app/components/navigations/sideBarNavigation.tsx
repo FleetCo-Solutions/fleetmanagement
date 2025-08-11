@@ -1,3 +1,4 @@
+import LogOutBtn from "./logOutBtn";
 import SidebarItem from "./sideBarItem";
 import { sideBarItems } from "./sideBarItems";
 
@@ -18,6 +19,9 @@ const SideBarNavigation = () => {
           />
         ))}
       </ul>
+      <div className="text-black flex flex-col gap-1 my-5 font-extrabold">
+        <LogOutBtn />
+      </div>
     </div>
   );
 };
