@@ -1,5 +1,6 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
+import { redirect } from "next/navigation"
  
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -24,6 +25,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 name: 'Admin',
                 email: 'admin@fleetco.com'
             }
+            redirect('/')
         }
    
           if (!user) {
