@@ -52,15 +52,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // If accessing login page while already authenticated, redirect to dashboard
-  if (pathname === '/login' && isAuthenticated) {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
+  // // If accessing login page while already authenticated, redirect to dashboard
+  // if (pathname === '/login' && isAuthenticated) {
+  //   return NextResponse.redirect(new URL('/', request.url))
+  // }
 
-  // If accessing signup page while already authenticated, redirect to dashboard
-  if (pathname === '/signup' && isAuthenticated) {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
+  // // If accessing signup page while already authenticated, redirect to dashboard
+  // if (pathname === '/signup' && isAuthenticated) {
+  //   return NextResponse.redirect(new URL('/', request.url))
+  // }
 
   // Allow the request to continue
   return NextResponse.next()
