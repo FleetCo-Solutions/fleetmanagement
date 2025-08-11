@@ -25,7 +25,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 name: 'Admin',
                 email: 'admin@fleetco.com'
             }
-            redirect('/')
         }
    
           if (!user) {

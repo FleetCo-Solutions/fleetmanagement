@@ -35,20 +35,20 @@ const LoginPage = () => {
       const result = await signIn('credentials', {
         email: data.email,
         password: data.password,
-        redirect: false
+        callbackUrl: '/',
       })
       
-      if (result?.error) {
-        setError('root', {
-          type: 'manual',
-          message: 'Invalid email or password. Please try again.'
-        })
-        return
-      }
+      // if (result?.error) {
+      //   setError('root', {
+      //     type: 'manual',
+      //     message: 'Invalid email or password. Please try again.'
+      //   })
+      //   return
+      // }
       
-      // Redirect to dashboard on success
-      router.push('/')
-      // For now, just redirect to dashboard
+      // // Redirect to dashboard on success
+      // router.push('/')
+      // // For now, just redirect to dashboard
       
     } catch (error) {
       setError('root', {
