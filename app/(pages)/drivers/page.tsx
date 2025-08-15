@@ -83,8 +83,7 @@ const Drivers = () => {
             quantity={drivers.filter(d => d.safetyScore < 80 || d.violations > 5).length}
             description="Safety score < 80%"
           />
-        </div>
-        
+        </div>  
         <DriversTable />
       </div>
     </div>
