@@ -1,3 +1,47 @@
+// Import Drizzle-generated types from schema
+export type {
+  User,
+  NewUser,
+  Role,
+  NewRole,
+  Vehicle,
+  NewVehicle,
+  Driver,
+  NewDriver,
+  Trip,
+  NewTrip,
+  FuelData,
+  NewFuelData,
+  MaintenanceData,
+  NewMaintenanceData,
+  VehicleLocation,
+  NewVehicleLocation,
+  Cost,
+  NewCost,
+  Violation,
+  NewViolation
+} from '@/app/db/schema';
+
+// Custom form types for components
+export interface UserFormData {
+  email: string;
+  passwordHash?: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  department: string;
+  roleId: string;
+  status: 'active' | 'inactive' | 'suspended';
+}
+
+export interface RoleFormData {
+  name: string;
+  description: string;
+  permissions: string[];
+  isDefault: boolean;
+}
+
+// Legacy types for backward compatibility (can be removed later)
 export interface Vehicle {
     vehicleRegNo: string
     group: string

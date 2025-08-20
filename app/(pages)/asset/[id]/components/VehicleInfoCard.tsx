@@ -53,7 +53,7 @@ export default function VehicleInfoCard({ vehicleData }: { vehicleData: VehicleD
           </div>
           <div className="flex items-center justify-between">
             <span className="text-black/60">Substitute Driver</span>
-            <span className="font-semibold text-black border border-[#004953] px-2 py-1 rounded text-[#004953] text-sm">
+            <span className="font-semibold text-black border border-[#004953] px-2 py-1 rounded text-sm">
               {vehicleData.substituteDriver}
             </span>
           </div>

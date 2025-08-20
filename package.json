@@ -11,6 +11,8 @@
   "dependencies": {
     "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/react-table": "^8.21.3",
+    "@types/bcryptjs": "^3.0.0",
+    "bcryptjs": "^3.0.2",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.4",
     "leaflet": "^1.9.4",
@@ -21,7 +23,8 @@
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.62.0",
     "react-leaflet": "^5.0.0",
-    "recharts": "^3.1.0"
+    "recharts": "^3.1.0",
+    "sonner": "^2.0.7"
   },
   "overrides": {
     "react-is": "^19.0.0-rc-69d4b800-20241021"

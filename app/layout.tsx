@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Source_Sans_3 } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const sourceSans = Source_Sans_3({
   variable: "--font-source-sans",
@@ -24,6 +25,7 @@ export default function RootLayout({
         className={`${sourceSans.className} antialiased`}
       >
         {children}
+        <Toaster richColors theme="dark"/>
       </body>
     </html>
   );

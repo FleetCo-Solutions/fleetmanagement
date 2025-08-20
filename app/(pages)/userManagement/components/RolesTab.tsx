@@ -1,6 +1,8 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Modal from '@/app/components/Modal';
+import RoleForm from './RoleForm';
+import { useFetch } from '@/hooks/useFetch';
 
 interface Role {
   id: number;
@@ -26,60 +28,7 @@ interface RoleFormProps {
 
 // Mock data - replace with actual data from your backend
 const mockRoles: Role[] = [
-  {
-    id: 1,
-    name: 'Admin',
-    description: 'Full system access with all permissions',
-    permissions: ['create', 'read', 'update', 'delete'],
-    userCount: 2,
-    createdAt: '2024-01-01',
-    isDefault: false
-  },
-  {
-    id: 2,
-    name: 'Fleet Manager',
-    description: 'Manage fleet operations and view reports',
-    permissions: ['create', 'read', 'update'],
-    userCount: 3,
-    createdAt: '2024-01-01',
-    isDefault: false
-  },
-  {
-    id: 3,
-    name: 'Driver',
-    description: 'View assigned trips and update status',
-    permissions: ['read', 'update'],
-    userCount: 8,
-    createdAt: '2024-01-01',
-    isDefault: false
-  },
-  {
-    id: 4,
-    name: 'Maintenance Technician',
-    description: 'Manage maintenance records and schedules',
-    permissions: ['create', 'read', 'update'],
-    userCount: 4,
-    createdAt: '2024-01-01',
-    isDefault: false
-  },
-  {
-    id: 5,
-    name: 'Analyst',
-    description: 'View reports and analytics data',
-    permissions: ['read'],
-    userCount: 2,
-    createdAt: '2024-01-01',
-    isDefault: false
-  },
-  {
-    id: 6,
-    name: 'Viewer',
-    description: 'Read-only access to basic information',
-    permissions: ['read'],
-    userCount: 5,
-    createdAt: '2024-01-01',
-    isDefault: true
-  }
+ 
 ];
 
 const availablePermissions = [
@@ -90,10 +39,34 @@ const availablePermissions = [
 ];
 
 const RolesTab = () => {
-  const [roles, setRoles] = useState<Role[]>(mockRoles);
+  const [roles, setRoles] = useState<Role[]>([])
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false)
+  
+  useEffect (() => {
+    const fetchRoles = async() => {
+      try{
+        setLoading(true)
+        const response = await fetch('api/roles')
+        if(response.ok){
+          const data = await response.json()
+          setRoles(data)
+        }
+      } catch (error) {
+        console.error('Error fetching roles:', error)
+      } finally {
+        setLoading(false)
+      } 
+    }
+    fetchRoles()
+  }, [])
+
+  if (loading) {
+    return <div className='text-black/80 font-bold'>Loading...</div>
+  }
+
 
   const filteredRoles = roles.filter(role =>
     role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -142,6 +115,8 @@ const RolesTab = () => {
     }
   };
 
+  
+
   return (
     <div>
       {/* Header */}
@@ -166,7 +141,7 @@ const RolesTab = () => {
           placeholder="Search roles..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004953] focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 outline-none text-black"
         />
       </div>
 
@@ -244,8 +219,31 @@ const RolesTab = () => {
         size="lg"
       >
         <RoleForm
-          role={editingRole}
-          onSave={editingRole ? handleEditRole : handleAddRole}
+          role={
+            editingRole
+              ? {
+                  ...editingRole,
+                  id: String(editingRole.id),
+                }
+              : null
+          }
+          onSave={editingRole ? (
+            (roleData) => {
+              // Convert id back to number for handleEditRole
+              handleEditRole({
+                ...roleData,
+                id: roleData.id ? Number(roleData.id) : undefined,
+              });
+            }
+          ) : (
+            (roleData) => {
+              // Convert id back to number for handleAddRole (shouldn't have id, but just in case)
+              handleAddRole({
+                ...roleData,
+                id: roleData.id ? Number(roleData.id) : undefined,
+              });
+            }
+          )}
           onClose={() => {
             setShowAddModal(false);
             setEditingRole(null);
@@ -253,91 +251,6 @@ const RolesTab = () => {
         />
       </Modal>
     </div>
-  );
-};
-
-// Role Form Component
-const RoleForm: React.FC<RoleFormProps> = ({ role, onSave, onClose }) => {
-  const [formData, setFormData] = useState<RoleFormData>({
-    name: role?.name || '',
-    description: role?.description || '',
-    permissions: role?.permissions || []
-  });
-
-  const handlePermissionToggle = (permission: string) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: prev.permissions.includes(permission)
-        ? prev.permissions.filter((p: string) => p !== permission)
-        : [...prev.permissions, permission]
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({ ...formData, id: role?.id });
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-black mb-1">Role Name</label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#004953] focus:border-transparent"
-          required
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium text-black mb-1">Description</label>
-        <textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#004953] focus:border-transparent"
-          rows={3}
-          required
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium text-black mb-2">Permissions</label>
-        <div className="space-y-2">
-          {availablePermissions.map((perm) => (
-            <label key={perm.key} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={formData.permissions.includes(perm.key)}
-                onChange={() => handlePermissionToggle(perm.key)}
-                className="rounded border-gray-300 text-[#004953] focus:ring-[#004953]"
-              />
-              <div className="ml-3">
-                <div className="text-sm font-medium text-black">{perm.label}</div>
-                <div className="text-xs text-black">{perm.description}</div>
-              </div>
-            </label>
-          ))}
-        </div>
-      </div>
-      
-      <div className="flex gap-3 pt-4">
-        <button
-          type="submit"
-          className="flex-1 bg-[#004953] text-white py-2 px-4 rounded-md hover:bg-[#014852] transition-colors"
-        >
-          {role ? 'Update' : 'Create'}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
   );
 };
 
