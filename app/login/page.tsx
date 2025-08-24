@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { signIn } from 'next-auth/react'
+// import { signIn } from 'next-auth/react'
 
 interface LoginFormData {
   email: string
@@ -14,7 +14,7 @@ interface LoginFormData {
 const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const router = useRouter()
+  // const router = useRouter()
 
   const {
     register,
@@ -32,11 +32,11 @@ const LoginPage = () => {
 
       
       // Simulate API call delay
-      const result = await signIn('credentials', {
-        email: data.email,
-        password: data.password,
-        callbackUrl: '/',
-      })
+      // const result = await signIn('credentials', {
+      //   email: data.email,
+      //   password: data.password,
+      //   callbackUrl: '/',
+      // })
       
       // if (result?.error) {
       //   setError('root', {
@@ -53,7 +53,7 @@ const LoginPage = () => {
     } catch (error) {
       setError('root', {
         type: 'manual',
-        message: 'Invalid email or password. Please try again.'
+        message: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.'
       })
     } finally {
       setIsLoading(false)

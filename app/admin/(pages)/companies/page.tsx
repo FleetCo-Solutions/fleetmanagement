@@ -1,15 +1,15 @@
 'use client'
 import React, { useState } from 'react'
 import AdminLayout from '../../layout/layout'
-import SystemUsersList from './components/SystemUsersList'
-import CreateSystemUser from './components/CreateSystemUser'
+import CompaniesList from './components/CompaniesList'
+import CompanyRegistration from './components/CompanyRegistration'
 
-export default function SystemUsersPage() {
+export default function CompaniesPage() {
   const [activeTab, setActiveTab] = useState('list')
 
   const tabs = [
-    { id: 'list', label: 'All Users', icon: '👥' },
-    { id: 'create', label: 'Create User', icon: '➕' },
+    { id: 'list', label: 'All Companies', icon: '🏢' },
+    { id: 'register', label: 'Company Registration', icon: '➕' },
   ]
 
   return (
@@ -19,8 +19,8 @@ export default function SystemUsersPage() {
           {/* Header */}
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-black">System Users Management</h1>
-              <p className="text-gray-600 mt-1">Manage FleetCo staff, support team, and system administrators</p>
+              <h1 className="text-3xl font-bold text-black">Company Management</h1>
+              <p className="text-gray-600 mt-1">Manage all registered companies and their subscriptions</p>
             </div>
           </div>
 
@@ -48,8 +48,8 @@ export default function SystemUsersPage() {
 
           {/* Tab Content */}
           <div className="flex-1">
-            {activeTab === 'list' && <SystemUsersList />}
-            {activeTab === 'create' && <CreateSystemUser />}
+            {activeTab === 'list' && <CompaniesList />}
+            {activeTab === 'register' && <CompanyRegistration />}
           </div>
         </div>
       </div>

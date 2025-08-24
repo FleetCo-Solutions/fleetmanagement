@@ -1,9 +1,9 @@
 'use client'
 import React, { useState } from 'react'
-import AdminLayout from '../layout'
-import GlobalConfiguration from './components/GlobalConfiguration'
-import FeatureFlags from './components/FeatureFlags'
-import ApiManagement from './components/ApiManagement'
+import AdminLayout from '../../layout/layout'
+// import GlobalConfiguration from './components/GlobalConfiguration'
+// import FeatureFlags from './components/FeatureFlags'
+// import ApiManagement from './components/ApiManagement'
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('config')
@@ -49,11 +49,11 @@ export default function SettingsPage() {
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1">
+          {/* <div className="flex-1">
             {activeTab === 'config' && <GlobalConfiguration />}
             {activeTab === 'features' && <FeatureFlags />}
             {activeTab === 'api' && <ApiManagement />}
-          </div>
+          </div> */}
         </div>
       </div>
     </AdminLayout>

@@ -1,9 +1,9 @@
 'use client'
 import React, { useState } from 'react'
-import AdminLayout from '../layout'
-import SupportTickets from './components/SupportTickets'
-import KnowledgeBase from './components/KnowledgeBase'
-import TrainingMaterials from './components/TrainingMaterials'
+import AdminLayout from '../../layout/layout'
+// import SupportTickets from './components/SupportTickets'
+// import KnowledgeBase from './components/KnowledgeBase'
+// import TrainingMaterials from './components/TrainingMaterials'
 
 export default function SupportPage() {
   const [activeTab, setActiveTab] = useState('tickets')
@@ -49,11 +49,11 @@ export default function SupportPage() {
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1">
+          {/* <div className="flex-1">
             {activeTab === 'tickets' && <SupportTickets />}
             {activeTab === 'knowledge' && <KnowledgeBase />}
             {activeTab === 'training' && <TrainingMaterials />}
-          </div>
+          </div> */}
         </div>
       </div>
     </AdminLayout>
