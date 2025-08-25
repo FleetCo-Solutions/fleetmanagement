@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Modal from '@/app/components/Modal';
 import RoleForm from './RoleForm';
-import { useFetch } from '@/hooks/useFetch';
+// import { useFetch } from '@/hooks/useFetch';
 
 interface Role {
   id: number;
@@ -20,16 +20,16 @@ interface RoleFormData {
   permissions: string[];
 }
 
-interface RoleFormProps {
-  role: Role | null;
-  onSave: (roleData: RoleFormData & { id?: number }) => void;
-  onClose: () => void;
-}
+// interface RoleFormProps {
+//   role: Role | null;
+//   onSave: (roleData: RoleFormData & { id?: number }) => void;
+//   onClose: () => void;
+// }
 
-// Mock data - replace with actual data from your backend
-const mockRoles: Role[] = [
+// // Mock data - replace with actual data from your backend
+// const mockRoles: Role[] = [
  
-];
+// ];
 
 const availablePermissions = [
   { key: 'create', label: 'Create', description: 'Can create new records' },

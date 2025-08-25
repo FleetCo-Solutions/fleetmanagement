@@ -15,7 +15,7 @@ import { rankItem } from '@tanstack/match-sorter-utils'
 
 // Interface for action buttons
 interface ActionButton<T> {
-  label: string
+  label: ReactNode | string
   onClick: (row: T) => void
   variant?: 'primary' | 'secondary' | 'danger'
   icon?: ReactNode
@@ -62,13 +62,13 @@ const fuzzyFilter: FilterFn<unknown> = (row, columnId, value, addMeta) => {
 const getActionButtonStyles = (variant: string = 'primary') => {
   switch (variant) {
     case 'primary':
-      return 'px-3 py-1 rounded bg-[#004953] text-white text-xs font-semibold hover:bg-[#014852] transition-colors'
+      return 'p-1 rounded bg-[#004953] text-white text-xs font-semibold hover:bg-[#014852] transition-colors'
     case 'secondary':
-      return 'px-3 py-1 rounded border border-[#004953] text-[#004953] text-xs font-semibold hover:bg-[#004953] hover:text-white transition-colors'
+      return 'p-1 rounded border border-[#004953] text-[#004953] text-xs font-semibold hover:bg-[#004953] hover:text-white transition-colors'
     case 'danger':
-      return 'px-3 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition-colors'
+      return 'p-1 rounded  text-white text-xs font-semibold hover:bg-red-200/80 transition-colors'
     default:
-      return 'px-3 py-1 rounded bg-[#004953] text-white text-xs font-semibold hover:bg-[#014852] transition-colors'
+      return 'p-1 rounded bg-[#004953] text-white text-xs font-semibold hover:bg-[#014852] transition-colors'
   }
 }
 
@@ -113,7 +113,6 @@ export default function UniversalTable<T>({
                   action.onClick(row.original)
                 }}
                 disabled={action.disabled}
-                title={action.label}
               >
                 {action.icon && <span className="mr-1">{action.icon}</span>}
                 {action.label}

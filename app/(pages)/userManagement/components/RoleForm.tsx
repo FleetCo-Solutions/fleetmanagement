@@ -33,15 +33,15 @@ const availablePermissions = [
   { key: 'delete', label: 'Delete', description: 'Can delete records' }
 ];
 
-const RoleForm: React.FC<RoleFormProps> = ({ role, onSave, onClose }) => {
-  const { submit, loading, error, resetError } = useSubmit();
+const RoleForm: React.FC<RoleFormProps> = ({ role, onClose }) => {
+  const { submit, loading} = useSubmit();
   
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors },
-    watch
+    
   } = useForm<RoleFormData>({
     defaultValues: {
       name: '',

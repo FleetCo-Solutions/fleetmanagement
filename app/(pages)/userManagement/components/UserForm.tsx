@@ -12,19 +12,20 @@ interface UserFormProps {
 }
 
 const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
-  const { submit, loading, error, resetError } = useSubmit();
+  const { submit, loading} = useSubmit();
   
   // Fetch roles from database
   const { data: roles, loading: rolesLoading, error: rolesError, refetch: refetchRoles } = useFetch<Role[]>({
-    url: '/api/roles'
+    url: 'https://dummyjson.com/c/bc39-6d81-4490-9bd6'
   });
-
+  const { data: departments, loading: departmentsLoading, error: departmentsError } = useFetch<Role[]>({
+    url: 'https://dummyjson.com/c/fc8e-c075-4102-8ca6'
+  });
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors },
-    watch
   } = useForm<UserFormData>({
     defaultValues: {
       email: '',
@@ -80,14 +81,14 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
       if (isEditMode) {
         // Update existing user
         await submit({
-          url: `/api/users/${user?.id}`,
+          url: `https://dummyjson.com/users/${user?.id}`,
           method: 'PUT',
           values: submitData
         });
       } else {
         // Create new user
         await submit({
-          url: '/api/users',
+          url: 'https://dummyjson.com/c/df82-daf5-4321-b096',
           method: 'POST',
           values: submitData
         });
@@ -103,20 +104,21 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
   };
 
   // Show loading state while fetching roles
-  if (rolesLoading) {
+  if (rolesLoading || departmentsLoading) {
     return (
       <div className="flex justify-center items-center h-32">
-        <div className="text-lg text-gray-600">Loading roles...</div>
+        <div className="text-lg text-gray-600">Loading roles and departments ...</div>
       </div>
     );
   }
 
   // Show error state if roles fetch fails
-  if (rolesError) {
+  if (rolesError || departmentsError) {
     return (
       <div className="flex justify-center items-center h-32">
         <div className="text-lg text-red-600">
-          Error loading roles: {rolesError.message}
+          {rolesError && `Error loading roles: ${rolesError.message}`}
+          {departmentsError && `Error loading roles: ${departmentsError.message}`}
           <button 
             onClick={refetchRoles}
             className="ml-4 px-4 py-2 bg-[#004953] text-white rounded-lg hover:bg-[#014852]"
@@ -249,10 +251,16 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
             Phone *
           </label>
           <Controller
-            name="phone"
-            control={control}
-            rules={{ required: 'Phone number is required' }}
-            render={({ field }) => (
+              name="phone"
+              control={control}
+              rules={{
+                required: 'Phone number is required',
+                pattern: {
+                  value: /^\+255\s\d{3}\s\d{3}\s\d{3}$/,
+                  message: 'Phone number must match +255 712 123 456 format',
+                },
+              }}
+              render={({ field }) => (
               <input
                 {...field}
                 type="tel"
@@ -277,14 +285,19 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
             control={control}
             rules={{ required: 'Department is required' }}
             render={({ field }) => (
-              <input
+              <select
                 {...field}
-                type="text"
                 className={`w-full px-3 py-2 border rounded-md focus:ring-0 outline-none text-black ${
-                  errors.department ? 'border-red-500' : 'border-gray-300'
+                  errors.roleId ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Enter department"
-              />
+              >
+                <option value="">Select a department</option>
+                {departments?.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.name}
+                  </option>
+                ))}
+              </select>
             )}
           />
           {errors.department && (
@@ -335,9 +348,9 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
                 {...field}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-0 outline-none text-black"
               >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
+                <option value="1">Active</option>
+                <option value="2">Inactive</option>
+                <option value="3">Suspended</option>
               </select>
             )}
           />
