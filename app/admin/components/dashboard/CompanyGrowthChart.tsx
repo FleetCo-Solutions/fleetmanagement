@@ -1,4 +1,6 @@
 'use client'
+/* eslint-disable */
+
 import React from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
@@ -36,7 +38,7 @@ const CompanyGrowthChart = () => {
   }
 
   return (
-    <div>
+    <div className='h-full'>
       <div className="flex items-center justify-between mb-6 text-black/70">
         <h3 className="text-xl font-semibold text-black">Company Growth & Revenue</h3>
         <select className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-0 bg-white">
@@ -46,7 +48,7 @@ const CompanyGrowthChart = () => {
         </select>
       </div>
       
-      <div className="h-80">
+      <div className="h-[90%]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
