@@ -1,5 +1,5 @@
 'use client'
-import { useParams } from 'next/navigation'
+// import { useParams } from 'next/navigation'
 import { ResponsiveContainer, Tooltip, Legend, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts'
 import VehicleInfoCard from './components/VehicleInfoCard'
 // import KeyIndicatorsCard from './components/KeyIndicatorsCard' // Unused import removed

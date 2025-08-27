@@ -1,15 +1,15 @@
 "use client";
 import { useParams } from "next/navigation";
-import { drivers } from "../components/driversList";
 import OverviewRealTime from "@/app/components/cards/overviewRealTime";
 import UniversalTable from "@/app/components/universalTable";
 import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
+import useDriverDetailsQuery from "./query";
 
 export default function DriverProfile() {
   const params = useParams();
   const driverId = params.id as string;
-  const driver = drivers.find((d) => d.driverId === driverId);
+  const {data: driver} = useDriverDetailsQuery({id: driverId});
 
   // Mock recent trips for the driver
   const recentTrips = [

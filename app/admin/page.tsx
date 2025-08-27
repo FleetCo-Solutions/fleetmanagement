@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import AdminLayout from './(pages)/layout'
+import AdminLayout from './layout/layout'
 import AdminDashboard from './components/AdminDashboard'
 
 export default function AdminPage() {

@@ -14,7 +14,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           password: {},
         },
         authorize: async (credentials) => {
-          let user = null
+          const user = {
+            id: "1",
+            name: "Demo User",
+            email: "demouser@gmail.com"
+
+          }
 
           
    

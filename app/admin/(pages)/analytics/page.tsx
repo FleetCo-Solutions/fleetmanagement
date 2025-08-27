@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import AdminLayout from '../layout'
+import AdminLayout from '../../layout/layout'
 // import SystemPerformance from 'components/SystemPerformance'
 // import UsageAnalytics from './components/UsageAnalytics'
 // import BusinessIntelligence from './components/BusinessIntelligence'

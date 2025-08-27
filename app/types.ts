@@ -2,17 +2,17 @@
 export type {
   User,
   NewUser,
-  Role,
+  
   NewRole,
-  Vehicle,
+  
   NewVehicle,
   Driver,
   NewDriver,
-  Trip,
+
   NewTrip,
-  FuelData,
+
   NewFuelData,
-  MaintenanceData,
+
   NewMaintenanceData,
   VehicleLocation,
   NewVehicleLocation,
@@ -34,30 +34,34 @@ export interface UserFormData {
   status: 'active' | 'inactive' | 'suspended';
 }
 
-export interface RoleFormData {
-  name: string;
-  description: string;
-  permissions: string[];
-  isDefault: boolean;
+export interface IUser {
+  id:         number;
+  firstName:  string;
+  lastName:   string;
+  email:      string;
+  phone:      string;
+  createdAt:  string;
+  updatedAt:  string;
+  lastLogin:  string;
+  status:     string;
+  department: Department;
+  role:       Role;
+  passwordHash?: string;
 }
 
-// Legacy types for backward compatibility (can be removed later)
-export interface Vehicle {
-    vehicleRegNo: string
-    group: string
-    status: 'en route' | 'available' | 'out of service'
-    model: string
-    healthRate: number
-    costPerMonth: number
-    driver: string
-    lastMaintenance: string
-    fuelEfficiency: number
-    mileage: number
-    year: number
-    manufacturer: string
-  }
+export interface Department {
+  id:   number;
+  name: string;
+}
 
-export interface Driver {
+export interface Role {
+  id:          number;
+  name:        string;
+  description?: string;
+  permissions?: string[];
+}
+
+export interface IDriver {
   driverId: string;
   firstName: string;
   lastName: string;
@@ -88,6 +92,31 @@ export interface Driver {
   trainingCertExpiry: string;
   profileImage?: string;
 }
+
+
+
+export interface RoleFormData {
+  name: string;
+  description: string;
+  permissions: string[];
+  isDefault: boolean;
+}
+
+// Legacy types for backward compatibility (can be removed later)
+export interface Vehicle {
+    vehicleRegNo: string
+    group: string
+    status: 'en route' | 'available' | 'out of service'
+    model: string
+    healthRate: number
+    costPerMonth: number
+    driver: string
+    lastMaintenance: string
+    fuelEfficiency: number
+    mileage: number
+    year: number
+    manufacturer: string
+  }
 
 export interface Trip {
   tripId: string;

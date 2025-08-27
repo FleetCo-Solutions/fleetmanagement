@@ -19,7 +19,7 @@ const MaintenanceCharts = () => {
       { period: 'Jun', preventive: 1250000, repair: 850000, emergency: 350000 },
     ];
     return trends;
-  }, [period]);
+  }, []);
 
   // Vehicle Health Distribution
   const healthDistribution = useMemo(() => {

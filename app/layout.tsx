@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Source_Sans_3 } from "next/font/google";
 import "./globals.css";
+import Providers from "./providers";
 import { Toaster } from "sonner";
 
 const sourceSans = Source_Sans_3({
   variable: "--font-source-sans",
   subsets: ["latin"],
-  weight: ["300","500","600","800","900"]
+  weight: ["300", "500", "600", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -21,11 +22,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${sourceSans.className} antialiased`}
-      >
-        {children}
-        <Toaster richColors theme="dark"/>
+      <body className={`${sourceSans.className} antialiased`}>
+        <Providers>
+          {children}
+          <Toaster richColors theme="dark" />
+        </Providers>
       </body>
     </html>
   );

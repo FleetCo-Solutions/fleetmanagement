@@ -1,6 +1,6 @@
-import { Driver } from "@/app/types";
+import { IDriver } from "@/app/types";
 
-export const drivers: Driver[] = [
+export const drivers: IDriver[] = [
   {
     driverId: 'D001',
     firstName: 'Alice',

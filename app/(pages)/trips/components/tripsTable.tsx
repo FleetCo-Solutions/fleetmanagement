@@ -96,14 +96,14 @@ export default function TripsTable() {
     },
     {
       label: 'Edit',
-      onClick: (row: Trip) => {
+      onClick: () => {
         // Implement edit logic or route
       },
       variant: 'secondary' as const,
     },
     {
       label: 'Cancel',
-      onClick: (row: Trip) => {
+      onClick: () => {
         // Implement cancel logic
       },
       variant: 'danger' as const,

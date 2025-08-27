@@ -1,9 +1,9 @@
 'use client'
 import React, { useState } from 'react'
-import AdminLayout from '../layout'
-import SubscriptionPlans from './components/SubscriptionPlans'
-import InvoicesList from './components/InvoicesList'
-import PaymentHistory from './components/PaymentHistory'
+import AdminLayout from '../../layout/layout'
+// import SubscriptionPlans from './components/SubscriptionPlans'
+// import InvoicesList from './components/InvoicesList'
+// import PaymentHistory from './components/PaymentHistory'
 
 export default function BillingPage() {
   const [activeTab, setActiveTab] = useState('plans')
@@ -49,11 +49,11 @@ export default function BillingPage() {
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1">
+          {/* <div className="flex-1">
             {activeTab === 'plans' && <SubscriptionPlans />}
             {activeTab === 'invoices' && <InvoicesList />}
             {activeTab === 'payments' && <PaymentHistory />}
-          </div>
+          </div> */}
         </div>
       </div>
     </AdminLayout>

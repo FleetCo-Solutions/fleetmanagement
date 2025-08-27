@@ -11,13 +11,13 @@ const Drivers = () => {
   const suspendedDrivers = drivers.filter(d => d.status === 'suspended').length
   const inactiveDrivers = drivers.filter(d => d.status === 'inactive').length
   
-  // Calculate average safety score
-  const averageSafetyScore = Math.round(
-    drivers.reduce((sum, driver) => sum + driver.safetyScore, 0) / totalDrivers
-  )
+  // // Calculate average safety score
+  // const averageSafetyScore = Math.round(
+  //   drivers.reduce((sum, driver) => sum + driver.safetyScore, 0) / totalDrivers
+  // )
   
-  // Calculate drivers with violations
-  const driversWithViolations = drivers.filter(d => d.violations > 0).length
+  // // Calculate drivers with violations
+  // const driversWithViolations = drivers.filter(d => d.violations > 0).length
   
   // Calculate drivers with expiring licenses (within 30 days)
   const today = new Date()
@@ -27,8 +27,8 @@ const Drivers = () => {
     return daysUntilExpiry <= 30 && daysUntilExpiry > 0
   }).length
   
-  // Calculate unassigned drivers
-  const unassignedDrivers = drivers.filter(d => !d.assignedVehicle).length
+  // // Calculate unassigned drivers
+  // const unassignedDrivers = drivers.filter(d => !d.assignedVehicle).length
 
   return (
     <div className="bg-white w-full h-full flex items-center justify-center">
@@ -36,7 +36,6 @@ const Drivers = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-black">Driver Management</h1>
         </div>
-        
         {/* Driver Summary Cards */}
         <div className="flex justify-between gap-6">
           <OverviewRealTime
@@ -44,29 +43,11 @@ const Drivers = () => {
             quantity={totalDrivers}
             description={`Active: ${activeDrivers}`}
           />
-          <OverviewRealTime
-            title="Active Drivers"
-            quantity={activeDrivers}
-            description={`On Leave: ${driversOnLeave}`}
-          />
+          
           <OverviewRealTime
             title="Drivers on Leave"
             quantity={driversOnLeave + suspendedDrivers + inactiveDrivers}
             description={`Suspended: ${suspendedDrivers}`}
-          />
-          <OverviewRealTime
-            title="Average Safety Score"
-            quantity={`${averageSafetyScore}%`}
-            description={`With Violations: ${driversWithViolations}`}
-          />
-        </div>
-        
-        {/* Additional Driver Metrics */}
-        <div className="flex justify-between gap-6">
-          <OverviewRealTime
-            title="Drivers with Violations"
-            quantity={driversWithViolations}
-            description="Need attention"
           />
           <OverviewRealTime
             title="Expiring Licenses"
@@ -74,16 +55,11 @@ const Drivers = () => {
             description="Within 30 days"
           />
           <OverviewRealTime
-            title="Unassigned Drivers"
-            quantity={unassignedDrivers}
-            description="Available for assignment"
-          />
-          <OverviewRealTime
             title="High-Risk Drivers"
             quantity={drivers.filter(d => d.safetyScore < 80 || d.violations > 5).length}
             description="Safety score < 80%"
           />
-        </div>  
+        </div>
         <DriversTable />
       </div>
     </div>

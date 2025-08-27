@@ -5,7 +5,7 @@ import OverviewRealTime from '@/app/components/cards/overviewRealTime'
 import React from 'react'
 
 // Mock fuel history data
-const getFuelHistory = (vehicleId: string) => {
+const getFuelHistory = () => {
   return [
     {
       date: '2024-06-01',
@@ -79,7 +79,7 @@ export default function FuelDetail() {
     )
   }
 
-  const fuelHistory = getFuelHistory(vehicleId)
+  const fuelHistory = getFuelHistory()
   const efficiencyTrends = getEfficiencyTrends()
   
   // Calculate performance metrics

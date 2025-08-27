@@ -17,7 +17,7 @@ const FuelCharts = () => {
       { period: 'Week 4', diesel: 600, petrol: 420 },
     ];
     return trends;
-  }, [period]);
+  }, []);
 
   // Vehicle Fuel Efficiency Comparison
   const efficiencyData = useMemo(() => {

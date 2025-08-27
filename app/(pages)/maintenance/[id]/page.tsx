@@ -5,7 +5,7 @@ import OverviewRealTime from '@/app/components/cards/overviewRealTime'
 import React from 'react'
 
 // Mock maintenance history data
-const getMaintenanceHistory = (vehicleId: string) => {
+const getMaintenanceHistory = () => {
   return [
     {
       date: '2024-05-15',
@@ -89,7 +89,7 @@ export default function MaintenanceDetail() {
     )
   }
 
-  const maintenanceHistory = getMaintenanceHistory(vehicleId)
+  const maintenanceHistory = getMaintenanceHistory()
   const healthTrends = getHealthTrends()
   
   // Calculate performance metrics
