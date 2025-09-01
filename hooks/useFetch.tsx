@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 
 interface UseFetchOptions {
@@ -12,6 +13,7 @@ export function useFetch<T = unknown>({
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const {data: session} = useSession();
 
   const fetchData = async () => {
     setLoading(true);
@@ -21,11 +23,13 @@ export function useFetch<T = unknown>({
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-        }
+          "Authorization": `Bearer ${session?.userToken}`
+        },
       });
 
-      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       const result = await res.json();
+      
+      if (!res.ok) throw new Error(`${result.message}`);
       setData(result);
     } catch (err) {
       setError(err as Error);

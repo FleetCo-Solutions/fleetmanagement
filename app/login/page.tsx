@@ -1,20 +1,22 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import { useForm } from 'react-hook-form'
-// import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-// import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 
 interface LoginFormData {
   email: string
   password: string
 }
 
-const LoginPage = () => {
+const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  // const router = useRouter()
+  const router = useRouter()
+  const { data: session } = useSession()
+  const searchParams = useSearchParams()
 
   const {
     register,
@@ -32,23 +34,24 @@ const LoginPage = () => {
 
       
       // Simulate API call delay
-      // const result = await signIn('credentials', {
-      //   email: data.email,
-      //   password: data.password,
-      //   callbackUrl: '/',
-      // })
+      const result = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      })
       
-      // if (result?.error) {
-      //   setError('root', {
-      //     type: 'manual',
-      //     message: 'Invalid email or password. Please try again.'
-      //   })
-      //   return
-      // }
-      
-      // // Redirect to dashboard on success
-      // router.push('/')
-      // // For now, just redirect to dashboard
+      if (result?.error) {
+        setError('root', {
+          type: 'manual',
+          message: result.code
+        })
+      }
+
+      if (result?.ok && !result?.error) {
+        // Redirect to dashboard on success
+        console.log(session)
+        router.push(searchParams.get('callbackUrl') || '/')
+      }
       
     } catch (error) {
       setError('root', {
@@ -259,6 +262,18 @@ const LoginPage = () => {
         </div>
       </div>
     </div>
+  )
+}
+
+const LoginPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-[#004953] via-[#014852] to-[#003a44] flex items-center justify-center">
+        <div className="text-white text-lg">Loading...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
 
