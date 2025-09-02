@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
@@ -12,6 +13,7 @@ interface SubmitOptions {
 export function useSubmit() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const {data: session} = useSession()
 
   const submit = useCallback(async ({ url, method = "POST", values }: SubmitOptions) => {
     setLoading(true);
@@ -24,6 +26,7 @@ export function useSubmit() {
             method,
             headers: {
               "Content-Type": "application/json",
+              "Authorization": `Bearer ${session?.userToken}`
             },
           };
 

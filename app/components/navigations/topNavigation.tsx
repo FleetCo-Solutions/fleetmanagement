@@ -1,12 +1,14 @@
+import { auth } from "@/app/auth";
 import Image from "next/image";
 
-const TopNavigation = () => {
+const TopNavigation = async () => {
+  const session = await auth()
   return (
     <div className="flex justify-end items-center px-10 bg-white text-black h-[7vh] border-b-[1px] border-black/20">
       
       <div className="flex gap-3 items-center">
         <div className="flex flex-col items-end">
-          <span className="text-lg">Renee McKelvey</span>{" "}
+          <span className="text-lg">{session?.user?.name}</span>{" "}
           <span className="text-sm">Fleet Manager</span>
         </div>
         <div className="w-[50px] h-[50px] rounded-full overflow-hidden">
