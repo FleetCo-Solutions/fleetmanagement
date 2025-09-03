@@ -1,5 +1,5 @@
 import { db } from "@/app/db";
-import { emergencyContacts, users } from "@/app/db/schema";
+import {  users } from "@/app/db/schema";
 import { NextResponse } from "next/server";
 
 export interface IPostUser {
@@ -29,7 +29,7 @@ export default async function postUser(request: Request) {
       !body.firstName ||
       !body.lastName ||
       !body.email ||
-      !body.passwordHash
+      !body.phone
     ) {
       return NextResponse.json(
         {
@@ -48,7 +48,6 @@ export default async function postUser(request: Request) {
           lastName: body.lastName,
           phone: body.phone,
           email: body.email,
-          passwordHash: body.passwordHash,
         })
         .returning()
         .onConflictDoNothing();
@@ -57,29 +56,31 @@ export default async function postUser(request: Request) {
           return { success: false, message: "User with this email already exists", status: 500 };
         }
 
-        const userEmergencyContacts = await Promise.all(
-            body.emergencyContacts.map(async (contact) => {
-                return await tx.insert(emergencyContacts).values({
-                    firstName: contact.firstName,
-                    lastName: contact.lastName,
-                    relationship: contact.relationship,
-                    address: contact.address,
-                    phone: contact.phone,
-                    alternativeNo: contact.alternativeNo,
-                    email: contact.email,
-                    userId: user[0].id,
-                }).returning();
-            })
-        );
+        return { success: true, data: user[0], status: 201 };
 
-        const flattenedContacts = userEmergencyContacts.flat();
+        // const userEmergencyContacts = await Promise.all(
+        //     body.emergencyContacts.map(async (contact) => {
+        //         return await tx.insert(emergencyContacts).values({
+        //             firstName: contact.firstName,
+        //             lastName: contact.lastName,
+        //             relationship: contact.relationship,
+        //             address: contact.address,
+        //             phone: contact.phone,
+        //             alternativeNo: contact.alternativeNo,
+        //             email: contact.email,
+        //             userId: user[0].id,
+        //         }).returning();
+        //     })
+        // );
 
-        if (!userEmergencyContacts || flattenedContacts.length !== body.emergencyContacts.length) {
-            return { success: false, message: "Failed to create emergency contact", status: 500};
-        }
-        if (user.length != 0 && userEmergencyContacts.length != 0) {
-            return { success: true, data: {...user[0], emergencyContact: userEmergencyContacts}, status: 201 };
-        }
+        // const flattenedContacts = userEmergencyContacts.flat();
+
+        // if (!userEmergencyContacts || flattenedContacts.length !== body.emergencyContacts.length) {
+        //     return { success: false, message: "Failed to create emergency contact", status: 500};
+        // }
+        // if (user.length != 0 && userEmergencyContacts.length != 0) {
+        //     return { success: true, data: {...user[0], emergencyContact: userEmergencyContacts}, status: 201 };
+        // }
     });
 
     return NextResponse.json(

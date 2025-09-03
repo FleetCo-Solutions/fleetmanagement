@@ -1,14 +1,8 @@
 import { ReactNode } from "react";
 import AdminSideBarNavigation from "../components/AdminSideBarNavigation";
 import AdminTopNavigation from "../components/AdminTopNavigation";
-// import { auth } from "../../auth";
-// import { redirect } from "next/navigation";
 
 const AdminLayout = async ({ children }: { children: ReactNode }) => {
-  // const session = await auth()
-  // if (!session) {
-  //   redirect("/login");
-  // }
   
   return (
     <div>
