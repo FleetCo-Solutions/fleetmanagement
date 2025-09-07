@@ -1,25 +1,6 @@
 // Import Drizzle-generated types from schema
 export type {
-  User,
-  NewUser,
-  
-  NewRole,
-  
-  NewVehicle,
-  Driver,
-  NewDriver,
 
-  NewTrip,
-
-  NewFuelData,
-
-  NewMaintenanceData,
-  VehicleLocation,
-  NewVehicleLocation,
-  Cost,
-  NewCost,
-  Violation,
-  NewViolation
 } from '@/app/db/schema';
 
 // Custom form types for components
@@ -29,36 +10,62 @@ export interface UserFormData {
   firstName: string;
   lastName: string;
   phone: string;
-  department: string;
-  roleId: string;
+  departmentId: number;
+  roles: number[];
   status: 'active' | 'inactive' | 'suspended';
 }
 
-export interface IUser {
-  id:         number;
-  firstName:  string;
-  lastName:   string;
-  email:      string;
-  phone:      string;
-  createdAt:  string;
-  updatedAt:  string;
-  lastLogin:  string;
-  status:     string;
-  department: Department;
-  role:       Role;
-  passwordHash?: string;
+
+export interface IUsers {
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        UserContent;
 }
 
+export interface UserContent {
+  content:       BackendUser[];
+  totalPages:    number;
+  totalElements: number;
+}
+
+export interface BackendUser {
+  id?:            number;
+  name:           string;
+  email:          string;
+  phone:          string;
+  status:         string;
+  roles:          string[];
+  departmentData: Department;
+}
+export interface IDepartments {
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        Department[];
+}
+export interface IAddUser {
+  name:         string;
+  email:        string;
+  phone:        string;
+  roles:        number[];
+  departmentId: number;
+}
 export interface Department {
   id:   number;
   name: string;
 }
 
+export interface IRoles {
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        Role[];
+}
+
 export interface Role {
   id:          number;
   name:        string;
-  description?: string;
-  permissions?: string[];
 }
 
 export interface IDriver {

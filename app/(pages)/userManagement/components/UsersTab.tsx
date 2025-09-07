@@ -7,93 +7,20 @@ import UniversalTable from '@/app/components/universalTable';
 import Modal from '@/app/components/Modal';
 import UserForm from './UserForm';
 import { ColumnDef } from '@tanstack/react-table';
-import { IUser, User, UserFormData } from '@/app/types';
-import useUserQuery from '../query';
-
-// const mockUsers: User[] = [
-//   {
-//     id: '1',
-//     email: 'alice.johnson@example.com',
-//     passwordHash: '',
-//     firstName: 'Alice',
-//     lastName: 'Johnson',
-//     phone: '0712345678',
-//     department: 'Operations',
-//     createdAt: new Date('2024-01-10'),
-//     updatedAt: new Date('2025-08-20'),
-//     roleId: 'Admin',
-//     status: 'active',
-//     lastLogin: new Date('2025-08-20T09:30:00'),
-//   },
-//   {
-//     id: '2',
-//     email: 'brian.smith@example.com',
-//     passwordHash: '',
-//     firstName: 'Brian',
-//     lastName: 'Smith',
-//     phone: '0723456789',
-//     department: 'Fleet',
-//     createdAt: new Date('2024-02-15'),
-//     updatedAt: new Date('2025-08-21'),
-//     roleId: 'Fleet Manager',
-//     status: 'active',
-//     lastLogin: new Date('2025-08-21T11:15:00'),
-//   },
-//   {
-//     id: '3',
-//     email: 'catherine.lee@example.com',
-//     passwordHash: '',
-//     firstName: 'Catherine',
-//     lastName: 'Lee',
-//     phone: '0734567890',
-//     department: 'Drivers',
-//     createdAt: new Date('2024-03-20'),
-//     updatedAt: new Date('2025-08-22'),
-//     roleId: 'Driver',
-//     status: 'inactive',
-//     lastLogin: null,
-//   },
-//   {
-//     id: '4',
-//     email: 'frank.wilson@example.com',
-//     passwordHash: '',
-//     firstName: 'Frank',
-//     lastName: 'Wilson',
-//     phone: '0745678901',
-//     department: 'Maintenance',
-//     createdAt: new Date('2024-04-05'),
-//     updatedAt: new Date('2025-08-18'),
-//     roleId: 'Maintenance Technician',
-//     status: 'suspended',
-//     lastLogin: new Date('2025-08-18T14:00:00'),
-//   },
-//   {
-//     id: '5',
-//     email: 'grace.taylor@example.com',
-//     passwordHash: '',
-//     firstName: 'Grace',
-//     lastName: 'Taylor',
-//     phone: '0756789012',
-//     department: 'Analytics',
-//     createdAt: new Date('2024-05-12'),
-//     updatedAt: new Date('2025-08-22'),
-//     roleId: 'Analyst',
-//     status: 'active',
-//     lastLogin: new Date('2025-08-22T08:45:00'),
-//   },
-// ];
+import { BackendUser, UserFormData } from '@/app/types';
+import UniversalTableSkeleton from '@/app/components/universalTableSkeleton';
+import { useUserQuery } from '../query';
 
 const UsersTab = () => {
-
-  const {data , isLoading, isError} = useUserQuery()
-  const [users, setUsers] = useState<IUser[]>([]);
+  const {data , isLoading, isError, error} = useUserQuery()
+  const [users, setUsers] = useState<BackendUser[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<IUser | null>(null);
+  const [editingUser, setEditingUser] = useState<BackendUser | null>(null);
   const [filterValue, setFilterValue] = useState('all');
 
   useEffect(() => {
     if (data) {
-        setUsers(data);
+        setUsers(data.dto.content);
     }
   },[data])
 
@@ -120,7 +47,7 @@ const UsersTab = () => {
         return 'bg-green-100 text-green-800';
       case 'Maintenance Technician':
         return 'bg-orange-100 text-orange-800';
-      case 'Analyst':
+      case 'Trial Role':
         return 'bg-indigo-100 text-indigo-800';
       case 'Viewer':
         return 'bg-gray-100 text-gray-800';
@@ -129,13 +56,13 @@ const UsersTab = () => {
     }
   };
 
-  const columns: ColumnDef<IUser>[] = [
+  const columns: ColumnDef<BackendUser>[] = [
     {
       header: 'Name',
-      accessorKey: 'firstName',
+      accessorKey: 'name',
       cell: ({ row }) => (
         <span className="font-semibold text-black">
-          {row.original.firstName} {row.original.lastName}
+          {row.original.name}
         </span>
       ),
     },
@@ -158,20 +85,22 @@ const UsersTab = () => {
       ),
     },
     {
-      header: 'Role',
-      accessorKey: 'role.name',
+      header: 'Roles',
+      accessorKey: 'roles',
       cell: ({ row }) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getRoleColor('Role')}`}>
-          {row.original.role.name}
-        </span>
+          row.original.roles.map((role: string, index:number) => 
+            <span key={index} className={`px-2 py-1 rounded-full text-xs font-semibold ${getRoleColor(role)}`}>
+              {role}
+            </span>
+          )
       ),
     },
     {
       header: 'Department',
-      accessorKey: 'department.name',
+      accessorKey: 'departmentData.name',
       cell: ({ row }) => (
         <span className="font-semibold text-black">
-          {row.original.department.name}
+          {row.original.departmentData.name}
         </span>
       ),
     },
@@ -184,47 +113,24 @@ const UsersTab = () => {
         </span>
       ),
     },
-    {
-      header: 'Last Login',
-      accessorKey: 'lastLogin',
-      cell: ({ row }) => (
-        <span className="font-semibold text-black">
-          {row.original.lastLogin ? new Date(row.original.lastLogin).toLocaleString() : 'Never'}
-        </span>
-      ),
-    },
+    // {
+    //   header: 'Last Login',
+    //   accessorKey: 'lastLogin',
+    //   cell: ({ row }) => (
+    //     <span className="font-semibold text-black">
+    //       {row.original.lastLogin ? new Date(row.original.lastLogin).toLocaleString() : 'Never'}
+    //     </span>
+    //   ),
+    // },
   ];
 
   const handleAddUser = (userData: UserFormData & { id?: string }) => {
-    const newUser: IUser = {
-      ...userData,
-      id: userData.id ? Number(userData.id) : 0,
-      passwordHash: '', // This will be set by the API
-      createdAt: new Date().toString(),
-      updatedAt: new Date().toString(),
-      lastLogin: "",
-      role: { id: userData.id ? Number(userData.id):0,name: userData.roleId }, // Assuming roleId corresponds to the role name
-      department: {id: userData.id ? Number(userData.id):0, name: userData.department }, // Assuming department is a string
-    };
-    setUsers([...users, newUser]); // Optimistic update
+    // The React Query mutation will handle the optimistic update and cache invalidation
     setShowAddModal(false);
   };
 
   const handleEditUser = (userData: UserFormData & { id?: string }) => {
-    setUsers(users.map(user => 
-      user.id.toString() === userData.id 
-        ? {
-            ...user,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            email: userData.email,
-            phone: userData.phone,
-            department: { ...user.department, name: userData.department },
-            role: { ...user.role, name: userData.roleId },
-            status: userData.status
-          }
-        : user
-    ));
+    // The React Query mutation will handle the optimistic update and cache invalidation
     setEditingUser(null);
   };
 
@@ -251,7 +157,9 @@ const UsersTab = () => {
 
   const actions = [
     {
-      label: 'Edit',
+      label:  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+    </svg>,
       onClick: (row: User) => setEditingUser(row),
       variant: 'secondary' as const,
     },
@@ -261,7 +169,9 @@ const UsersTab = () => {
       variant: 'secondary' as const,
     },
     {
-      label: 'Delete',
+      label: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="red" className="size-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+    </svg>,
       onClick: (row: User) => handleDeleteUser(row),
       variant: 'danger' as const,
     },
@@ -276,8 +186,29 @@ const UsersTab = () => {
 
   return (
     <>
-    {isLoading && <div className='text-black'>Loading...</div>}
-    {isError && <div className='text-black'>Error loading users</div>}
+    {isLoading && <div className='text-black'>
+      <UniversalTableSkeleton 
+        title="Loading Table..."
+        rows={9}
+        columns={5}
+      />
+      </div>}
+    {isError && <div className='text-black flex justify-center pt-20 h-full w-full'>
+      <div className='mx-auto w-fit flex flex-col items-center gap-4'>
+        <div className='w-48'>
+          <img src="/error1.png" alt="Error" className='w-fill h-fill object-cover'/>
+          </div>
+        <h2 className='font-bold text-3xl'>An Expected Error Occurred</h2>
+        <p className='text-lg text-black/60'>We sincerely apologize for this happening. Working on making this rare as possible</p>
+        <p>{error.message}</p>
+        <button 
+          onClick={() => setShowAddModal(true)}
+          className="bg-[#004953] text-white px-6 py-2 rounded-lg hover:bg-[#014852] transition-colors"
+        >
+          Add User
+        </button>
+      </div>
+      </div>}
     {data && <div>
       <UniversalTable
         data={users}

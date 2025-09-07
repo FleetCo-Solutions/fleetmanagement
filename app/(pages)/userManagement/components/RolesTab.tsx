@@ -1,7 +1,8 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Modal from '@/app/components/Modal';
 import RoleForm from './RoleForm';
+import { useRolesQuery } from '../query';
 // import { useFetch } from '@/hooks/useFetch';
 
 interface Role {
@@ -39,31 +40,16 @@ const availablePermissions = [
 ];
 
 const RolesTab = () => {
-  const [roles, setRoles] = useState<Role[]>([])
+  const [roles, setRoles] = useState<Role[]>([{id:1, name:'Admin' , description:'Administrator role', permissions:['create','read','update','delete'], userCount:2, createdAt:'2023-10-01', isDefault:true}]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false)
+  const {data, isLoading, error} = useRolesQuery()
   
-  useEffect (() => {
-    const fetchRoles = async() => {
-      try{
-        setLoading(true)
-        const response = await fetch('api/roles')
-        if(response.ok){
-          const data = await response.json()
-          setRoles(data)
-        }
-      } catch (error) {
-        console.error('Error fetching roles:', error)
-      } finally {
-        setLoading(false)
-      } 
-    }
-    fetchRoles()
-  }, [])
+  console.log(data, isLoading, error)
 
-  if (loading) {
+
+  if (isLoading) {
     return <div className='text-black/80 font-bold'>Loading...</div>
   }
 
@@ -144,7 +130,6 @@ const RolesTab = () => {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 outline-none text-black"
         />
       </div>
-
       {/* Roles Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRoles.map((role) => (

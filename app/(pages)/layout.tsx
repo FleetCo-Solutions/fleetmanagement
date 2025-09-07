@@ -1,15 +1,9 @@
 import { ReactNode } from "react";
 import SideBarNavigation from "../components/navigations/sideBarNavigation";
 import TopNavigation from "../components/navigations/topNavigation";
-import { auth } from "../auth";
-import { redirect } from "next/navigation";
 
-const WebLayout = async ({ children }: { children: ReactNode }) => {
-  const session = await auth()
-  if (!session) {
-    // If the user is not authenticated, redirect to the login page
-    redirect("/login");
-  }
+const WebLayout = ({ children }: { children: ReactNode }) => {
+
   return (
     <div>
       <div className="flex">
