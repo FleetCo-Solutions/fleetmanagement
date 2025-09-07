@@ -257,7 +257,7 @@ const LoginForm = () => {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-white/60 text-sm">
-            © 2024 FleetCo. All rights reserved.
+            © {new Date().getFullYear()} FleetCo. All rights reserved.
           </p>
         </div>
       </div>
