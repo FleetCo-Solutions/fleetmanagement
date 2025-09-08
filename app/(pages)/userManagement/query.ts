@@ -98,6 +98,7 @@ export const useAddUser = () => {
         email: newUser.email,
         phone: newUser.phone,
         status: 'active',
+        lastLoginAt: null,
         roles: [], // We'll need to map role IDs to names
         departmentData: { id: newUser.departmentId, name: '' } // We'll need to get department name
       };

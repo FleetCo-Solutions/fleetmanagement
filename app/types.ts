@@ -1,7 +1,5 @@
 // Import Drizzle-generated types from schema
-export type {
-
-} from '@/app/db/schema';
+export type {} from "@/app/db/schema";
 
 // Custom form types for components
 export interface UserFormData {
@@ -12,60 +10,60 @@ export interface UserFormData {
   phone: string;
   departmentId: number;
   roles: number[];
-  status: 'active' | 'inactive' | 'suspended';
+  status: "active" | "inactive" | "suspended";
 }
 
-
 export interface IUsers {
-  timestamp:  Date;
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        UserContent;
+  message: string;
+  dto: UserContent;
 }
 
 export interface UserContent {
-  content:       BackendUser[];
-  totalPages:    number;
+  content: BackendUser[];
+  totalPages: number;
   totalElements: number;
 }
 
 export interface BackendUser {
-  id?:            number;
-  name:           string;
-  email:          string;
-  phone:          string;
-  status:         string;
-  roles:          string[];
+  id?: number;
+  name: string;
+  email: string;
+  phone: string;
+  status: string;
+  lastLoginAt: Date | null;
+  roles: string[];
   departmentData: Department;
 }
 export interface IDepartments {
-  timestamp:  Date;
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        Department[];
+  message: string;
+  dto: Department[];
 }
 export interface IAddUser {
-  name:         string;
-  email:        string;
-  phone:        string;
-  roles:        number[];
+  name: string;
+  email: string;
+  phone: string;
+  roles: number[];
   departmentId: number;
 }
 export interface Department {
-  id:   number;
+  id: number;
   name: string;
 }
 
 export interface IRoles {
-  timestamp:  Date;
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        Role[];
+  message: string;
+  dto: Role[];
 }
 
 export interface Role {
-  id:          number;
-  name:        string;
+  id: number;
+  name: string;
 }
 
 export interface IDriver {
@@ -78,7 +76,7 @@ export interface IDriver {
   licenseExpiry: string;
   dateOfBirth: string;
   hireDate: string;
-  status: 'active' | 'inactive' | 'on_leave' | 'suspended';
+  status: "active" | "inactive" | "on_leave" | "suspended";
   assignedVehicle?: string;
   emergencyContact: {
     name: string;
@@ -100,8 +98,6 @@ export interface IDriver {
   profileImage?: string;
 }
 
-
-
 export interface RoleFormData {
   name: string;
   description: string;
@@ -111,19 +107,19 @@ export interface RoleFormData {
 
 // Legacy types for backward compatibility (can be removed later)
 export interface Vehicle {
-    vehicleRegNo: string
-    group: string
-    status: 'en route' | 'available' | 'out of service'
-    model: string
-    healthRate: number
-    costPerMonth: number
-    driver: string
-    lastMaintenance: string
-    fuelEfficiency: number
-    mileage: number
-    year: number
-    manufacturer: string
-  }
+  vehicleRegNo: string;
+  group: string;
+  status: "en route" | "available" | "out of service";
+  model: string;
+  healthRate: number;
+  costPerMonth: number;
+  driver: string;
+  lastMaintenance: string;
+  fuelEfficiency: number;
+  mileage: number;
+  year: number;
+  manufacturer: string;
+}
 
 export interface Trip {
   tripId: string;
@@ -133,7 +129,7 @@ export interface Trip {
   endLocation: string;
   startTime: string;
   endTime: string;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'delayed' | 'cancelled';
+  status: "scheduled" | "in_progress" | "completed" | "delayed" | "cancelled";
   distance: number; // in kilometers
   duration: number; // in minutes
   fuelUsed: number; // in liters
@@ -144,7 +140,7 @@ export interface FuelData {
   vehicleId: string;
   vehicleRegNo: string;
   driver: string;
-  fuelType: 'diesel' | 'petrol';
+  fuelType: "diesel" | "petrol";
   currentLevel: number; // percentage
   lastRefuelDate: string;
   lastRefuelAmount: number; // liters
@@ -155,7 +151,7 @@ export interface FuelData {
   fuelWastage: number; // liters wasted
   totalDistance: number; // km
   avgSpeed: number; // km/h
-  status: 'low' | 'ok' | 'good';
+  status: "low" | "ok" | "good";
   fuelStation: string;
   nextRefuelDate: string;
 }
@@ -167,8 +163,16 @@ export interface MaintenanceData {
   healthScore: number; // 0-100
   lastServiceDate: string;
   nextServiceDate: string;
-  serviceType: 'oil_change' | 'brakes' | 'tires' | 'inspection' | 'repair' | 'filter_change' | 'battery' | 'cooling_system';
-  status: 'good' | 'due_soon' | 'overdue' | 'critical';
+  serviceType:
+    | "oil_change"
+    | "brakes"
+    | "tires"
+    | "inspection"
+    | "repair"
+    | "filter_change"
+    | "battery"
+    | "cooling_system";
+  status: "good" | "due_soon" | "overdue" | "critical";
   estimatedCost: number; // TZS
   actualCost?: number; // TZS
   serviceProvider: string;
@@ -176,8 +180,8 @@ export interface MaintenanceData {
   downtime: number; // hours
   partsUsed: string[];
   notes: string;
-  warrantyStatus: 'active' | 'expired' | 'void';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  warrantyStatus: "active" | "expired" | "void";
+  priority: "low" | "medium" | "high" | "urgent";
   completionDate?: string;
   technician: string;
   location: string;

@@ -113,19 +113,19 @@ const UsersTab = () => {
         </span>
       ),
     },
-    // {
-    //   header: 'Last Login',
-    //   accessorKey: 'lastLogin',
-    //   cell: ({ row }) => (
-    //     <span className="font-semibold text-black">
-    //       {row.original.lastLogin ? new Date(row.original.lastLogin).toLocaleString() : 'Never'}
-    //     </span>
-    //   ),
-    // },
+    {
+      header: 'Last Login',
+      accessorKey: 'lastLoginAt',
+      cell: ({ row }) => (
+        <span className="font-semibold text-black">
+          {row.original.lastLoginAt ? new Date(row.original.lastLoginAt).toLocaleString() : 'Never'}
+        </span>
+      ),
+    },
   ];
 
   const handleAddUser = (userData: UserFormData & { id?: string }) => {
-    // The React Query mutation will handle the optimistic update and cache invalidation
+    // The React Query mutation will handle the opimistic update and cache invalidation
     setShowAddModal(false);
   };
 
