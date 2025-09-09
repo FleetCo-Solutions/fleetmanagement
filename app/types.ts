@@ -55,16 +55,22 @@ export interface Department {
 }
 
 export interface IRoles {
-  timestamp: Date;
+  timestamp:  Date;
   statusCode: string;
-  message: string;
-  dto: Role[];
+  message:    string;
+  dto:        Role[];
 }
 
 export interface Role {
-  id: number;
-  name: string;
+  id:            number;
+  name:          string;
+  description:   string;
+  disabled:      boolean;
+  createdDate:   Date;
+  createdBy:     string;
+  numberOfUsers: number;
 }
+
 
 export interface IDriver {
   driverId: string;

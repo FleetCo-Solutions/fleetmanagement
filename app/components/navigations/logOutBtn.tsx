@@ -1,13 +1,10 @@
 'use client'
 
 import { signOut } from "next-auth/react"
-import { useRouter } from "next/navigation";
 
 const LogOutBtn = () => {
-    const router = useRouter()
     const signingOut = () => {
         signOut()
-        router.push('/login')
     };
   return (
     <div
