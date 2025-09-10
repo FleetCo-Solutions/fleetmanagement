@@ -1,96 +1,41 @@
-import {  IAddUser, IUsers, BackendUser, IRoles } from "@/app/types";
+import { getDepartments } from "@/actions/departments";
+import { getRoles } from "@/actions/roles";
+import { addUser, getUsers, updateUser } from "@/actions/users";
+import {  IAddUser, IUsers, BackendUser, IRoles, IDepartments } from "@/app/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
 
 export const useUserQuery = () => {
-  const {data: session} = useSession();
-  
   return useQuery<IUsers>({
-    queryKey: ["users"],
-    queryFn: async () => {
-      try{
-        const response = await fetch(`https://fleetco-production.up.railway.app/api/v1/user`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.userToken}`
-          },
-        });
-
-        const result = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(`${result.message}`);
-        }
-
-        return result;
-      }catch(err){
-        throw new Error((err as Error).message);
-      }
-    },
+    queryKey: ["Users"],
+    queryFn: async () => await getUsers()
   });
 };
 
 export const useRolesQuery = () => {
-  const {data: session} = useSession()
-
   return useQuery<IRoles>({
     queryKey: ["Roles"],
-    queryFn: async () => {
-      try{
-        const response = await fetch(`https://fleetco-production.up.railway.app/api/v1/roles`,{
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.userToken}`
-          },
-        })
-        const result = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(`${result.message}`);
-        }
-        
-        return result;
-      }catch(err){
-        throw new Error((err as Error).message);
-      }
-    },
+    queryFn: async () => await getRoles()
+  })
+}
+
+export const useDepartmentsQuery = () => {
+  return useQuery<IDepartments>({
+    queryKey: ["Departments"],
+    queryFn: async () => await getDepartments()
   })
 }
 
 export const useAddUser = () => {
-  const {data: session} = useSession();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationKey: ["addUser"],
-    mutationFn: async (userData: IAddUser) => {
-      try{
-        const response = await fetch(`https://fleetco-production.up.railway.app/api/v1/user`, { 
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.userToken}`
-          },
-          body: JSON.stringify(userData),
-        });
-        
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.message || 'Failed to add user');
-        }
-        return result;
-      }catch(err){
-        throw new Error((err as Error).message);
-      }
-    },
+    mutationFn: async (userData: IAddUser) => await addUser(userData),
 
     // Optimistic UI update
     onMutate: async (newUser) => {
-      await queryClient.cancelQueries({ queryKey: ["users"] });
-      const previousUsers = queryClient.getQueryData<IUsers>(["users"]);
+      await queryClient.cancelQueries({ queryKey: ["Users"] });
+      const previousUsers = queryClient.getQueryData<IUsers>(["Users"]);
       
       // Create a temporary user object for optimistic update
       const tempUser: BackendUser = {
@@ -103,7 +48,7 @@ export const useAddUser = () => {
         departmentData: { id: newUser.departmentId, name: '' } // We'll need to get department name
       };
 
-      queryClient.setQueryData<IUsers>(["users"], (oldUsers) => {
+      queryClient.setQueryData<IUsers>(["Users"], (oldUsers) => {
         if (!oldUsers) return oldUsers;
         
         return {
@@ -122,51 +67,30 @@ export const useAddUser = () => {
     // Rollback if error
     onError: (err, newUser, context) => {
       if (context?.previousUsers) {
-        queryClient.setQueryData(['users'], context.previousUsers);
+        queryClient.setQueryData(['Users'], context.previousUsers);
       }
     },
 
     // Always refetch after success/failure to ensure data consistency
     onSettled: () => {
-      queryClient.invalidateQueries({queryKey: ["users"]});
+      queryClient.invalidateQueries({queryKey: ["Users"]});
     }
   });
 }
 
 export const useUpdateUser = () => {
-  const {data: session} = useSession();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationKey: ["updateUser"],
-    mutationFn: async ({ id, userData }: { id: number, userData: IAddUser }) => {
-      try{
-        const response = await fetch(`https://fleetco-production.up.railway.app/api/v1/user/${id}`, { 
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.userToken}`
-          },
-          body: JSON.stringify(userData),
-        });
-        
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.message || 'Failed to update user');
-        }
-        return result;
-      }catch(err){
-        throw new Error((err as Error).message);
-      }
-    },
+    mutationFn: async ({ id, userData }: { id: number, userData: IAddUser }) => await updateUser(id, userData),
 
     // Optimistic UI update
     onMutate: async ({ id, userData }) => {
-      await queryClient.cancelQueries({ queryKey: ["users"] });
-      const previousUsers = queryClient.getQueryData<IUsers>(["users"]);
+      await queryClient.cancelQueries({ queryKey: ["Users"] });
+      const previousUsers = queryClient.getQueryData<IUsers>(["Users"]);
       
-      queryClient.setQueryData<IUsers>(["users"], (oldUsers) => {
+      queryClient.setQueryData<IUsers>(["Users"], (oldUsers) => {
         if (!oldUsers) return oldUsers;
         
         const updatedContent = oldUsers.dto.content.map(user => {
@@ -199,13 +123,13 @@ export const useUpdateUser = () => {
     // Rollback if error
     onError: (err, variables, context) => {
       if (context?.previousUsers) {
-        queryClient.setQueryData(['users'], context.previousUsers);
+        queryClient.setQueryData(['Users'], context.previousUsers);
       }
     },
 
     // Always refetch after success/failure to ensure data consistency
     onSettled: () => {
-      queryClient.invalidateQueries({queryKey: ["users"]});
+      queryClient.invalidateQueries({queryKey: ["Users"]});
     }
   });
 }

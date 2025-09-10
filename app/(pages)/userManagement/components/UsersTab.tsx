@@ -39,7 +39,7 @@ const UsersTab = () => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'Admin':
+      case 'ADMIN':
         return 'bg-purple-100 text-purple-800';
       case 'Fleet Manager':
         return 'bg-blue-100 text-blue-800';

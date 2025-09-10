@@ -3,11 +3,22 @@ import React, { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useSubmit } from "@/hooks/useSubmit";
 import { useFetch } from "@/hooks/useFetch";
-import {  UserFormData, IDepartments, IRoles, Role, BackendUser } from "@/app/types";
+import {
+  UserFormData,
+  IDepartments,
+  IRoles,
+  Role,
+  BackendUser,
+} from "@/app/types";
 import "react-phone-input-2/lib/style.css";
 import PhoneInput from "react-phone-input-2";
 import MultiSelect from "./MultiSelect";
-import { useAddUser, useUpdateUser } from "../query";
+import {
+  useAddUser,
+  useDepartmentsQuery,
+  useRolesQuery,
+  useUpdateUser,
+} from "../query";
 import { toast } from "sonner";
 
 interface UserFormProps {
@@ -18,25 +29,20 @@ interface UserFormProps {
 
 const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
   const { submit, loading } = useSubmit();
-  const {mutateAsync: AddUser} = useAddUser();
-  const {mutateAsync: UpdateUser} = useUpdateUser();
+  const { mutateAsync: AddUser } = useAddUser();
+  const { mutateAsync: UpdateUser } = useUpdateUser();
 
   // Fetch roles from database
   const {
     data: roles,
-    loading: rolesLoading,
+    isLoading: rolesLoading,
     error: rolesError,
-    refetch: refetchRoles,
-  } = useFetch<IRoles>({
-    url: "https://fleetco-production.up.railway.app/api/v1/roles",
-  });
+  } = useRolesQuery();
   const {
     data: departments,
-    loading: departmentsLoading,
+    isLoading: departmentsLoading,
     error: departmentsError,
-  } = useFetch<IDepartments>({
-    url: "https://fleetco-production.up.railway.app/api/v1/department",
-  });
+  } = useDepartmentsQuery();
   const {
     control,
     handleSubmit,
@@ -60,7 +66,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
   useEffect(() => {
     if (user) {
       const fullName = user.name ? user.name.split(" ") : ["", ""];
-      
+
       // Map role names to role IDs
       const userRoleIds: number[] = [];
       if (user.roles && roles?.dto) {
@@ -71,7 +77,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
           }
         });
       }
-      
+
       reset({
         email: user.email || "",
         firstName: fullName[0] || "",
@@ -110,7 +116,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
       const userData = {
         name: `${data.firstName} ${data.lastName}`,
         email: submitData.email,
-        phone: submitData.phone,
+        phone: `+${submitData.phone}`,
         roles: submitData.roles,
         departmentId: submitData.departmentId,
       };
@@ -120,24 +126,21 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
         await toast.promise(
           UpdateUser({
             id: user.id || 0, // Using email as identifier
-            userData: userData
+            userData: userData,
           }),
           {
             loading: "Updating User...",
             success: (data) => data.message || "User Updated Successfully",
-            error: (err) => err.message || "An Error Occurred"
+            error: (err) => err.message || "An Error Occurred",
           }
         );
       } else {
         // Create new user
-        await toast.promise(
-          AddUser(userData),
-          {
-            loading: "Creating User...",
-            success: (data) => data.message || "User Created Successfully",
-            error: (err) => err.message || "An Error Occurred"
-          }
-        );
+        await toast.promise(AddUser(userData), {
+          loading: "Creating User...",
+          success: (data) => data.message || "User Created Successfully",
+          error: (err) => err.message || "An Error Occurred",
+        });
       }
 
       // Call the parent onSave callback
@@ -168,7 +171,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
           {departmentsError &&
             `Error loading departments: ${departmentsError.message}`}
           <button
-            onClick={refetchRoles}
+            
             className="ml-4 px-4 py-2 bg-[#004953] text-white rounded-lg hover:bg-[#014852]"
           >
             Retry
