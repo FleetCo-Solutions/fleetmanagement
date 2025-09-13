@@ -6,7 +6,7 @@ export async function getDepartments() {
     const session = await auth();
     try {
     const response = await fetch(
-      `https://fleetco-production.up.railway.app/api/v1/department`,
+      `${process.env.BACKENDBASE_URL}/v1/department`,
       {
         method: "GET",
         headers: {
