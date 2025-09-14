@@ -6,7 +6,7 @@ export async function getRoles() {
   const session = await auth();
   try {
     const response = await fetch(
-      `https://fleetco-production.up.railway.app/api/v1/roles`,
+      `${process.env.BACKENDBASE_URL}/v1/roles`,
       {
         method: "GET",
         headers: {
