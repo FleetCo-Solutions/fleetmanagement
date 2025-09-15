@@ -11,6 +11,15 @@ export interface UserFormData {
   departmentId: number;
   roles: number[];
   status: "active" | "inactive" | "suspended";
+  emergencyContacts?: {
+    firstName: string;
+    lastName: string;
+    relationship: string;
+    address: string;
+    phone: string;
+    email?: string;
+    alternativeNo?: string;
+  }[];
 }
 
 export interface IUsers {
@@ -71,39 +80,37 @@ export interface Role {
   numberOfUsers: number;
 }
 
-
 export interface IDriver {
-  driverId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  licenseNumber: string;
-  licenseExpiry: string;
-  dateOfBirth: string;
-  hireDate: string;
-  status: "active" | "inactive" | "on_leave" | "suspended";
-  assignedVehicle?: string;
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
-  address: {
-    street: string;
-    city: string;
-    postalCode: string;
-  };
-  totalTrips: number;
-  totalDistance: number;
-  safetyScore: number;
-  fuelEfficiencyRating: number;
-  violations: number;
-  medicalCertExpiry: string;
-  trainingCertExpiry: string;
-  profileImage?: string;
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        DriverDto;
 }
 
+export interface DriverDto {
+  content:       Driver[];
+  totalPages:    number;
+  totalElements: number;
+  currentPage:   number;
+  pageSize:      number;
+  hasNext:       boolean;
+  hasPrevious:   boolean;
+}
+
+export interface Driver {
+  id?:                number;
+  name:              string;
+  phoneNumber:       string;
+  licenseNumber:     string;
+  licenseExpiryDate: string;
+  status:            string;
+  safetyScore:       number;
+  fuelEfficiency:    number;
+  violations:        number;
+  totalTrips:        number;
+  assignedVehicle:   string | null;
+  hiredDate:         Date;
+}
 export interface RoleFormData {
   name: string;
   description: string;
@@ -111,20 +118,85 @@ export interface RoleFormData {
   isDefault: boolean;
 }
 
-// Legacy types for backward compatibility (can be removed later)
-export interface Vehicle {
+export interface VehicleFormData {
   vehicleRegNo: string;
   group: string;
-  status: "en route" | "available" | "out of service";
   model: string;
+  manufacturer: string;
+  year: number;
   healthRate: number;
   costPerMonth: number;
-  driver: string;
-  lastMaintenance: string;
+  lastMaintenanceDate: string;
   fuelEfficiency: number;
   mileage: number;
-  year: number;
-  manufacturer: string;
+  driverId: number;
+  status: "en route" | "available" | "out of service";
+  vin?: string;
+  color?: string;
+  fuelType?: "diesel" | "petrol" | "hybrid" | "electric";
+  engineSize?: string;
+  transmission?: "manual" | "automatic";
+}
+
+// Legacy types for backward compatibility (can be removed later)
+export interface IVehicles {
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        Dto;
+}
+
+export interface Dto {
+  content:       Vehicle[];
+  totalPages:    number;
+  totalElements: number;
+  currentPage:   number;
+  pageSize:      number;
+  hasNext:       boolean;
+  hasPrevious:   boolean;
+}
+
+export interface Vehicle{
+  id:                  number;
+  vehicleRegNo:        string;
+  group:               string;
+  status:              string;
+  model:               string;
+  healthRate:          number;
+  costPerMonth:        number;
+  lastMaintenanceDate: Date;
+  fuelEfficiency:      number;
+  mileage:             number;
+  driverName:          string | null;
+}
+
+export enum Group {
+  Logistics = "Logistics",
+  Service = "Service",
+  Transport = "Transport",
+}
+
+export enum Status {
+  Available = "Available",
+  InMaintenance = "In-Maintenance",
+  OnTrip = "On-Trip",
+}
+
+export interface ITrips {
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        TripsDto;
+}
+
+export interface TripsDto {
+  content:       unknown[];
+  totalPages:    number;
+  totalElements: number;
+  currentPage:   number;
+  pageSize:      number;
+  hasNext:       boolean;
+  hasPrevious:   boolean;
 }
 
 export interface Trip {
@@ -192,3 +264,4 @@ export interface MaintenanceData {
   technician: string;
   location: string;
 }
+

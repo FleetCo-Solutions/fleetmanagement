@@ -21,7 +21,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authorize: async (credentials) => {
         if (credentials.email && credentials.password) {
           const response = await fetch(
-            `https://fleetco-production.up.railway.app/api/v1/user/authenticate`,
+            `${process.env.BACKENDBASE_URL}/v1/user/authenticate`,
             {
               method: "POST",
               headers: {
