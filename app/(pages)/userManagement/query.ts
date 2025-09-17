@@ -1,6 +1,6 @@
 import { getDepartments } from "@/actions/departments";
 import { getRoles } from "@/actions/roles";
-import { addUser, getUsers, updateUser } from "@/actions/users";
+import { addUser, getUsers, toggleUserStatus, updateUser } from "@/actions/users";
 import {  IAddUser, IUsers, BackendUser, IRoles, IDepartments } from "@/app/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -130,6 +130,19 @@ export const useUpdateUser = () => {
     // Always refetch after success/failure to ensure data consistency
     onSettled: () => {
       queryClient.invalidateQueries({queryKey: ["Users"]});
+    }
+  });
+}
+
+export const useToggleUserStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["updateStatusUser"],
+    mutationFn: async ({ id, string }: { id: number, string: string}) => await toggleUserStatus(id,string),
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["Users"] });
     }
   });
 }

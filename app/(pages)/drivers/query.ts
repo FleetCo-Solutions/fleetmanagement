@@ -1,19 +1,36 @@
-import { IDriver } from '@/app/types'
-import { useQuery } from '@tanstack/react-query'
+import { addDriver, getDriverDashboard, getDrivers, AddDriverPayload } from "@/actions/drivers";
+import { IDriver } from "@/app/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const useDriverQuery = () => {
-  return useQuery<IDriver[]>({
-    queryKey: ['drivers'],
-    queryFn: async () => {
-      const response = await fetch('https://dummyjson.com/c/b22a-b329-4fe3-bf36')
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
-      return response.json()
-    }
-  }
-    
-  )
-}
+export const useDriverQuery = () => {
+  return useQuery<IDriver>({
+    queryKey: ["Drivers"],
+    queryFn: async () => await getDrivers(),
+  });
+};
 
-export default useDriverQuery
+export const useAddDriver = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["addDriver"],
+    mutationFn: async (driverData: AddDriverPayload) => await addDriver(driverData),
+
+    onSettled: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ["Drivers"] });
+    },
+  });
+};
+
+export const useDriverDashboardQuery = () => {
+  return useQuery({
+    queryKey: ["DriverDashboard"],
+    queryFn: async () => await getDriverDashboard(),
+  });
+};
+
+// export const useUpdateDriverStatus = () => {
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationKey: ['updateDriverStatus'],
+//     mutationFn: async ({id}: {id: number}) => await updateDriverStatus(id),

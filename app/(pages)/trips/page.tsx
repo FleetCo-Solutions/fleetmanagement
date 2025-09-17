@@ -45,7 +45,7 @@ const Trips = () => {
             description="All trips"
           />
         </div>
-        <div className="flex justify-between gap-6">
+        {/* <div className="flex justify-between gap-6">
           <OverviewRealTime
             title="Total Distance"
             quantity={`${totalDistance.toLocaleString()} km`}
@@ -58,7 +58,7 @@ const Trips = () => {
           />
           <div className="flex-1" />
           <div className="flex-1" />
-        </div>
+        </div> */}
         {/* Trip Charts */}
         <TripCharts />
         <TripsTable />

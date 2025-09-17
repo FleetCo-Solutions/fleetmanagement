@@ -9,8 +9,39 @@ import useDriverDetailsQuery from "./query";
 export default function DriverProfile() {
   const params = useParams();
   const driverId = params.id as string;
-  const {data: driver} = useDriverDetailsQuery({id: driverId});
+  // const {data: driver} = useDriverDetailsQuery({id: driverId});
 
+  const driver = {
+    driverId: 'D001',
+    firstName: 'Alice',
+    lastName: 'Johnson',
+    email: 'alice.johnson@example.com',
+    phone: '+255 700 111 222',
+    licenseNumber: 'LIC12345',
+    licenseExpiry: '2025-06-30',
+    dateOfBirth: '1985-04-12',
+    hireDate: '2015-08-01',
+    status: 'active',
+    assignedVehicle: 'T 123 ABC',
+    emergencyContact: {
+      name: 'Bob Johnson',
+      phone: '+255 700 333 444',
+      relationship: 'Spouse',
+    },
+    address: {
+      street: '123 Main St',
+      city: 'Dar es Salaam',
+      postalCode: '10001',
+    },
+    totalTrips: 1200,
+    totalDistance: 85000,
+    safetyScore: 92,
+    fuelEfficiencyRating: 8.5,
+    violations: 2,
+    medicalCertExpiry: '2024-12-31',
+    trainingCertExpiry: '2025-03-15',
+    profileImage: undefined,
+  }
   // Mock recent trips for the driver
   const recentTrips = [
     {

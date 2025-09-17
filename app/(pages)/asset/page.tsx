@@ -1,5 +1,6 @@
 import React from 'react'
 import VehicleTableExample from './components/vehicleTableExample'
+import AddVehicleButton from './components/AddVehicleButton'
 
 const Assets = () => {
   return (
@@ -8,9 +9,7 @@ const Assets = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-black">Fleet Assets</h1>
           <div className="flex gap-3">
-            <button className="bg-[#004953] text-white px-4 py-2 rounded-lg hover:bg-[#014852] transition-colors">
-              Add Vehicle
-            </button>
+            <AddVehicleButton />
             <button className="border border-[#004953] text-[#004953] px-4 py-2 rounded-lg hover:bg-[#004953] hover:text-white transition-colors">
               Export Data
             </button>
