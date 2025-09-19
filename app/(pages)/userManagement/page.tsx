@@ -14,11 +14,6 @@ const UserManagement = () => {
   return (
     <div className="bg-white w-full h-full flex items-center justify-center">
       <div className="w-[96%] h-[96%] flex flex-col gap-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-black">User Management</h1>
-        </div>
-
         {/* Tabs */}
         <div className="bg-white border border-black/20 rounded-xl shadow-sm">
           <div className="border-b border-gray-200">

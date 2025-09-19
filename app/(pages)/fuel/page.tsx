@@ -37,10 +37,6 @@ const Fuel = () => {
   return (
     <div className="bg-white w-full h-full flex items-center justify-center">
       <div className="w-[96%] h-[96%] flex flex-col gap-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-black">Fuel Management</h1>
-        </div>
-
         {/* Fuel Summary Cards */}
         <div className="flex justify-between gap-6">
           <OverviewRealTime
