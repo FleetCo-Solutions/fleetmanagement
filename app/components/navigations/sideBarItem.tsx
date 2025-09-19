@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface SidebarItemProps {
   itemName: string;
@@ -9,6 +10,8 @@ interface SidebarItemProps {
 }
 
 export default function SidebarItem({ ...props }: SidebarItemProps) {
+  const pathname = usePathname();
+  const isActive = pathname === props.route || (props.route !== "/" && pathname.startsWith(props.route));
   // const [open, setOpen] = useState(false);
 
   return (
@@ -17,7 +20,11 @@ export default function SidebarItem({ ...props }: SidebarItemProps) {
         {/* Main Item */}
         <div
           // onClick={() => setOpen(!open)}
-          className="rounded-lg p-1 flex hover:bg-[#004953] hover:text-white items-center cursor-pointer transition-colors duration-200"
+          className={`rounded-lg p-1 flex items-center cursor-pointer transition-all duration-200 ${
+            isActive 
+              ? "bg-[#004953] text-white shadow-md" 
+              : "hover:bg-[#004953] hover:text-white"
+          }`}
         >
           <div className="flex justify-center items-center gap-2">
             <div className="p-3 rounded-xl">{props.itemIcon}</div>

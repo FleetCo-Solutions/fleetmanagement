@@ -18,14 +18,14 @@ const SideBarNavigation = () => {
           <span>FleetCo</span>
         </div> */}
         <Link href="/" className="flex items-center space-x-3 mx-3 px-4 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 border border-white/40 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-glow">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 border border-white/40 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-glow">
                 FC
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-bold text-primary-500 group-hover:text-primary-600 transition-colors">
+                <span className="text-3xl font-bold text-white group-hover:text-primary-600 transition-colors">
                   FleetCo
                 </span>
-                <span className="text-xs text-secondary-500 -mt-1">For Easy Managing</span>
+                {/* <span className="text-xs text-secondary-500 -mt-1">For Easy Managing</span> */}
                 {/* <span>Tanzania&apos;s Fleet Leader</span> */}
               </div>
             </Link>
