@@ -1,15 +1,15 @@
+
 import { auth } from "@/app/auth";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
-import CurrentPageTitle from "./CurrentPageTitle";
-
-
 
 const TopNavigation = async () => {
   const session = await auth()
   return (
-    <div className="flex justify-between items-center px-9 bg-white text-black h-[7vh] border-b-[1px] border-black/20">
-      <div>
-        <CurrentPageTitle />
+    <div className="flex flex-1 justify-between items-center px-9 bg-white text-black h-[7vh] border-b-[1px] border-black/20">
+      <div className="flex items-center gap-3">
+        {/* Co-branding spot: replace src with partner logo if needed */}
+        {/* <Image src="/fleetco.png" width={120} height={30} alt="Co Brand" /> */}
       </div>
       <div className="flex gap-3 items-center">
         <div className="flex flex-col items-end">
