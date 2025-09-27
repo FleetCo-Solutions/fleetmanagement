@@ -1,36 +1,15 @@
+'use client'
 import Link from "next/link";
+import React from "react";
 import LogOutBtn from "./logOutBtn";
 import SidebarItem from "./sideBarItem";
 import { sideBarItems } from "./sideBarItems";
 
 const SideBarNavigation = () => {
+  const [collapsed, setCollapsed] = React.useState(false);
   return (
-    <div className="w-[15%] bg-[#EBEBEB] h-[100vh] border-r-[1px] border-black/10">
-      <div className="w-full h-[7vh] bg-[#004953] flex items-center">
-        {/* <div className="font-black text-3xl text-white mx-3 px-4 flex gap-2 items-center ">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 640 640"
-            className="fill-white size-9"
-          >
-            <path d="M64 160C64 124.7 92.7 96 128 96L416 96C451.3 96 480 124.7 480 160L480 192L530.7 192C547.7 192 564 198.7 576 210.7L621.3 256C633.3 268 640 284.3 640 301.3L640 448C640 483.3 611.3 512 576 512L572.7 512C562.3 548.9 528.3 576 488 576C447.7 576 413.8 548.9 403.3 512L300.7 512C290.3 548.9 256.3 576 216 576C175.7 576 141.8 548.9 131.3 512L128 512C92.7 512 64 483.3 64 448L64 400L24 400C10.7 400 0 389.3 0 376C0 362.7 10.7 352 24 352L136 352C149.3 352 160 341.3 160 328C160 314.7 149.3 304 136 304L24 304C10.7 304 0 293.3 0 280C0 266.7 10.7 256 24 256L200 256C213.3 256 224 245.3 224 232C224 218.7 213.3 208 200 208L24 208C10.7 208 0 197.3 0 184C0 170.7 10.7 160 24 160L64 160zM576 352L576 301.3L530.7 256L480 256L480 352L576 352zM256 488C256 465.9 238.1 448 216 448C193.9 448 176 465.9 176 488C176 510.1 193.9 528 216 528C238.1 528 256 510.1 256 488zM488 528C510.1 528 528 510.1 528 488C528 465.9 510.1 448 488 448C465.9 448 448 465.9 448 488C448 510.1 465.9 528 488 528z" />
-          </svg>
-          <span>FleetCo</span>
-        </div> */}
-        <Link href="/" className="flex items-center space-x-3 mx-3 px-4 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 border border-white/40 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-glow">
-                FC
-              </div>
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white group-hover:text-primary-600 transition-colors">
-                  FleetCo
-                </span>
-                {/* <span className="text-xs text-secondary-500 -mt-1">For Easy Managing</span> */}
-                {/* <span>Tanzania&apos;s Fleet Leader</span> */}
-              </div>
-            </Link>
-      </div>
-      <ul className="text-black flex flex-col gap-1 my-5 font-extrabold">
+    <div className={`w-[15%] bg-[#EBEBEB] h-full border-r-[1px] border-black/10`}>
+      <ul className={`text-black flex flex-col gap-1 py-5 font-extrabold ${collapsed ? "items-center w-[30%] bg-red-900" : "items-stretch"}`}>
         {sideBarItems.map((item, index) => (
           <SidebarItem
             key={index}
@@ -38,12 +17,13 @@ const SideBarNavigation = () => {
             itemName={item.itemName}
             itemIcon={item.itemIcon}
             subItems={item.children}
+            isCollapsed={collapsed}
           />
         ))}
       </ul>
-      <div className="text-black flex flex-col gap-1 my-5 font-extrabold">
+      {/* <div className="text-black flex flex-col gap-1 my-5 font-extrabold">
         <LogOutBtn />
-      </div>
+      </div> */}
     </div>
   );
 };
