@@ -18,11 +18,11 @@ export const sideBarItems = [
           />
         </svg>
       ),
-      children: [
-        { subItemName: "Real-time Data" },
-        { subItemName: "Overview" },
-        { subItemName: "Events" },
-      ],
+      // children: [
+      //   { subItemName: "Real-time Data" },
+      //   { subItemName: "Overview" },
+      //   { subItemName: "Events" },
+      // ],
     },
     {
       itemName: "Asset",
@@ -44,8 +44,8 @@ export const sideBarItems = [
         </svg>
       ),
       children: [
-        { subItemName: "Fleet" },
-        { subItemName: "Vehicle Assignment" },
+        { subItemName: "Vehicle List", route: "/asset" },
+        { subItemName: "Vehicle Assignment", route: "/asset/assignment" },
       ],
     },
     {
@@ -67,11 +67,11 @@ export const sideBarItems = [
           />
         </svg>
       ),
-      children: [
-        { subItemName: "Real-time Data" },
-        { subItemName: "Overview" },
-        { subItemName: "Events" },
-      ],
+      // children: [
+      //   { subItemName: "Real-time Data" },
+      //   { subItemName: "Overview" },
+      //   { subItemName: "Events" },
+      // ],
     },
     {
       itemName: "Trips",
@@ -97,11 +97,11 @@ export const sideBarItems = [
           />
         </svg>
       ),
-      children: [
-        { subItemName: "Real-time Data" },
-        { subItemName: "Overview" },
-        { subItemName: "Events" },
-      ],
+      // children: [
+      //   { subItemName: "Real-time Data" },
+      //   { subItemName: "Overview" },
+      //   { subItemName: "Events" },
+      // ],
     },
     {
       itemName: "Fuel",
@@ -167,10 +167,10 @@ export const sideBarItems = [
           />
         </svg>
       ),
-      children: [
-        { subItemName: "Users" },
-        { subItemName: "Roles" },
-        { subItemName: "Permissions" },
-      ],
+      // children: [
+      //   { subItemName: "Users" },
+      //   { subItemName: "Roles" },
+      //   { subItemName: "Permissions" },
+      // ],
     },
   ];
