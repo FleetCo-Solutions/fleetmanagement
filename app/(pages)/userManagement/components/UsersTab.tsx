@@ -39,31 +39,31 @@ const UsersTab = () => {
     }
   };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case "ADMIN":
-        return "bg-purple-100 text-purple-800";
-      case "Fleet Manager":
-        return "bg-blue-100 text-blue-800";
-      case "Driver":
-        return "bg-green-100 text-green-800";
-      case "Maintenance Technician":
-        return "bg-orange-100 text-orange-800";
-      case "Trial Role":
-        return "bg-indigo-100 text-indigo-800";
-      case "Viewer":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  // const getRoleColor = (role: string) => {
+  //   switch (role) {
+  //     case "ADMIN":
+  //       return "bg-purple-100 text-purple-800";
+  //     case "Fleet Manager":
+  //       return "bg-blue-100 text-blue-800";
+  //     case "Driver":
+  //       return "bg-green-100 text-green-800";
+  //     case "Maintenance Technician":
+  //       return "bg-orange-100 text-orange-800";
+  //     case "Trial Role":
+  //       return "bg-indigo-100 text-indigo-800";
+  //     case "Viewer":
+  //       return "bg-gray-100 text-gray-800";
+  //     default:
+  //       return "bg-gray-100 text-gray-800";
+  //   }
+  // };
 
   const columns: ColumnDef<BackendUser>[] = [
     {
       header: "Name",
       accessorKey: "name",
       cell: ({ row }) => (
-        <span className="font-semibold text-black">{row.original.name}</span>
+        <span className="font-semibold text-black">{row.original.firstName + " " +row.original.lastName}</span>
       ),
     },
     {
@@ -80,30 +80,30 @@ const UsersTab = () => {
         <span className="font-semibold text-black">{row.original.email}</span>
       ),
     },
-    {
-      header: "Roles",
-      accessorKey: "roles",
-      cell: ({ row }) =>
-        row.original.roles.map((role: string, index: number) => (
-          <span
-            key={index}
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${getRoleColor(
-              role
-            )}`}
-          >
-            {role}
-          </span>
-        )),
-    },
-    {
-      header: "Department",
-      accessorKey: "departmentData.name",
-      cell: ({ row }) => (
-        <span className="font-semibold text-black">
-          {row.original.departmentData.name}
-        </span>
-      ),
-    },
+    // {
+    //   header: "Roles",
+    //   accessorKey: "roles",
+    //   cell: ({ row }) =>
+    //     row.original.roles.map((role: string, index: number) => (
+    //       <span
+    //         key={index}
+    //         className={`px-2 py-1 rounded-full text-xs font-semibold ${getRoleColor(
+    //           role
+    //         )}`}
+    //       >
+    //         {role}
+    //       </span>
+    //     )),
+    // },
+    // {
+    //   header: "Department",
+    //   accessorKey: "departmentData.name",
+    //   cell: ({ row }) => (
+    //     <span className="font-semibold text-black">
+    //       {row.original.departmentData.name}
+    //     </span>
+    //   ),
+    // },
     {
       header: "Status",
       accessorKey: "status",
@@ -120,11 +120,11 @@ const UsersTab = () => {
     },
     {
       header: "Last Login",
-      accessorKey: "lastLoginAt",
+      accessorKey: "lastLogin",
       cell: ({ row }) => (
         <span className="font-semibold text-black">
-          {row.original.lastLoginAt
-            ? new Date(row.original.lastLoginAt).toLocaleString()
+          {row.original.lastLogin
+            ? new Date(row.original.lastLogin).toLocaleString()
             : "Never"}
         </span>
       ),
@@ -298,7 +298,7 @@ const UsersTab = () => {
               setEditingUser(null);
             }}
             title={editingUser ? "Edit User" : "Add New User"}
-            size="3xl"
+            size="2xl"
           >
             <UserForm
               user={editingUser}
