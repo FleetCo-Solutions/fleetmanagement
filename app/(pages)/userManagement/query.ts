@@ -32,45 +32,6 @@ export const useAddUser = () => {
     mutationKey: ["addUser"],
     mutationFn: async (userData: IAddUser) => await addUser(userData),
 
-    // Optimistic UI update
-    onMutate: async (newUser) => {
-      await queryClient.cancelQueries({ queryKey: ["Users"] });
-      const previousUsers = queryClient.getQueryData<IUsers>(["Users"]);
-      
-      // Create a temporary user object for optimistic update
-      const tempUser: BackendUser = {
-        name: newUser.name,
-        email: newUser.email,
-        phone: newUser.phone,
-        status: 'active',
-        lastLoginAt: null,
-        roles: [], // We'll need to map role IDs to names
-        departmentData: { id: newUser.departmentId, name: '' } // We'll need to get department name
-      };
-
-      queryClient.setQueryData<IUsers>(["Users"], (oldUsers) => {
-        if (!oldUsers) return oldUsers;
-        
-        return {
-          ...oldUsers,
-          dto: {
-            ...oldUsers.dto,
-            content: [...oldUsers.dto.content, tempUser],
-            totalElements: oldUsers.dto.totalElements + 1
-          }
-        };
-      });
-
-      return { previousUsers };
-    },
-
-    // Rollback if error
-    onError: (err, newUser, context) => {
-      if (context?.previousUsers) {
-        queryClient.setQueryData(['Users'], context.previousUsers);
-      }
-    },
-
     // Always refetch after success/failure to ensure data consistency
     onSettled: () => {
       queryClient.invalidateQueries({queryKey: ["Users"]});
