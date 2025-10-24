@@ -1,5 +1,6 @@
-import { addDriver, getDriverDashboard, getDrivers, AddDriverPayload } from "@/actions/drivers";
-import { IDriver } from "@/app/types";
+import { addDriver, getDriverDashboard, getDrivers, AddDriverPayload, getDriversList, assignDriverToVehicle } from "@/actions/drivers";
+import { AssignDriverRequestBody } from "@/app/api/drivers/assignDriver/post";
+import { DriversList, IDriver } from "@/app/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useDriverQuery = () => {
@@ -8,6 +9,13 @@ export const useDriverQuery = () => {
     queryFn: async () => await getDrivers(),
   });
 };
+
+export const useDriversListQuery = () => {
+  return useQuery<DriversList>({
+    queryKey: ["DriversList"],
+    queryFn: async () => await getDriversList(),
+  });
+}
 
 export const useAddDriver = () => {
   const queryClient = useQueryClient();
@@ -21,6 +29,19 @@ export const useAddDriver = () => {
     },
   });
 };
+
+export const useAssignVehicleToDriver = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["assignVehicleToDriver"],
+    mutationFn: async (payload: AssignDriverRequestBody) => await assignDriverToVehicle(payload),
+
+    onSettled: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ["Drivers"] });
+    },
+  });
+}
 
 export const useDriverDashboardQuery = () => {
   return useQuery({
