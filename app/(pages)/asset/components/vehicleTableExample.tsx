@@ -33,19 +33,15 @@ export default function VehicleTableExample() {
 
   const columns: ColumnDef<Vehicle>[] = [
     {
-      header: 'Vehicle Reg No',
+      header: 'Registration',
       accessorKey: 'vehicleRegNo',
-    },
-    {
-      header: 'Group',
-      accessorKey: 'group',
+      cell: ({row}) => `${row.original.registrationNumber}`
     },
     {
       header: 'Status',
       accessorKey: 'status',
       cell: ({ row }) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(row.original.status)}`}>
-          {row.original.status}
+        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(" ")}`}>
         </span>
       ),
     },
@@ -57,38 +53,38 @@ export default function VehicleTableExample() {
       header: 'Health Rate',
       accessorKey: 'healthRate',
       cell: ({ row }) => (
-        <span className={`font-semibold ${getHealthRateColor(row.original.healthRate)}`}>
-          {row.original.healthRate}%
+        <span className={`font-semibold ${getHealthRateColor(0)}`}>
+          %
         </span>
       ),
     },
     {
       header: 'Cost/Month',
       accessorKey: 'costPerMonth',
-      cell: ({ row }) => `${row.original.costPerMonth.toLocaleString()} Tsh`,
+      cell: ({ row }) => `Tsh`,
     },
     {
       header: 'Driver',
       accessorKey: 'driverName',
       cell: ({ row }) => (<span>
-        {row.original.driverName ? row.original.driverName : 'Unassigned'}
+        {row.original.drivers ? row.original.drivers.length === 0 ? "unassigned" : row.original.drivers[0].firstName + " " + row.original.drivers[0].lastName : 'Unassigned'}
       </span>
       ),
     },
     {
       header: 'Last Maintenance',
       accessorKey: 'lastMaintenanceDate',
-      cell: ({ row }) => new Date(row.original.lastMaintenanceDate).toLocaleDateString(),
+      cell: ({ row }) => new Date().toLocaleDateString(),
     },
     {
       header: 'Fuel Efficiency',
       accessorKey: 'fuelEfficiency',
-      cell: ({ row }) => `${row.original.fuelEfficiency} km/L`,
+      cell: ({ row }) => `km/L`,
     },
     {
       header: 'Mileage',
       accessorKey: 'mileage',
-      cell: ({ row }) => `${row.original.mileage.toLocaleString()} km`,
+      cell: ({ row }) => `km`,
     },
   ]
 
@@ -100,7 +96,7 @@ export default function VehicleTableExample() {
         </svg>
         ,
           onClick: (row: Vehicle) => {
-            router.push(`/drivers/${row.vehicleRegNo}`);
+            router.push(`/drivers/${row.id}`);
           },
           variant: "primary" as const,
         },
@@ -112,7 +108,7 @@ export default function VehicleTableExample() {
         ,
           onClick: (row: Vehicle) => {
             // Implement edit logic or route
-            console.log("Edit driver:", row.vehicleRegNo);
+            console.log("Edit driver:", row.id);
           },
           variant: "secondary" as const,
         },
@@ -123,7 +119,7 @@ export default function VehicleTableExample() {
         ,
           onClick: (row: Vehicle) => {
             // Implement delete logic
-            console.log("Delete driver:", row.vehicleRegNo);
+            console.log("Delete driver:", row.id);
           },
           variant: "danger" as const,
         },  
@@ -174,7 +170,7 @@ export default function VehicleTableExample() {
         placeholder: 'Filter by status'
       }}
       onRowClick={(row) => {
-        router.push(`/${row.vehicleRegNo}`)
+        router.push(`/asset/${row.id}`)
       }}
     >
       <button className="border border-[#004953] text-[#004953] px-4 py-2 rounded-lg hover:bg-[#004953] hover:text-white transition-colors">
