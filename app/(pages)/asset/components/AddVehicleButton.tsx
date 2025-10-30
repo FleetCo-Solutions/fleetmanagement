@@ -12,7 +12,7 @@ const AddVehicleButton: React.FC = () => {
 
   const handleSuccess = () => {
     // You can add any success handling here, like refreshing data
-    console.log("Vehicle created successfully");
+    handleClose()
   };
 
   return (
@@ -40,6 +40,15 @@ const AddVehicleButton: React.FC = () => {
 };
 
 export default AddVehicleButton;
+
+
+
+
+
+
+
+
+
 
 
 
