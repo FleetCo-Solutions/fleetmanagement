@@ -59,7 +59,8 @@ export const useUpdateUser = () => {
           if (user.email === userData.email) {
             return {
               ...user,
-              name: userData.name,
+              firstName: userData.firstName,
+              lastName: userData.lastName,
               email: userData.email,
               phone: userData.phone,
               // Note: roles and departmentData would need to be mapped properly

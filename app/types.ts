@@ -8,18 +8,18 @@ export interface UserFormData {
   firstName: string;
   lastName: string;
   phone: string;
-  departmentId: number;
-  roles: number[];
-  status: "active" | "inactive" | "suspended";
-  emergencyContacts?: {
-    firstName: string;
-    lastName: string;
-    relationship: string;
-    address: string;
-    phone: string;
-    email?: string;
-    alternativeNo?: string;
-  }[];
+  // departmentId: number;
+  // roles: number[];
+  // status: "active" | "inactive" | "suspended";
+  // emergencyContacts?: {
+  //   firstName: string;
+  //   lastName: string;
+  //   relationship: string;
+  //   address: string;
+  //   phone: string;
+  //   email?: string;
+  //   alternativeNo?: string;
+  // }[];
 }
 
 export interface IUsers {
@@ -36,14 +36,17 @@ export interface UserContent {
 }
 
 export interface BackendUser {
-  id?: number;
-  name: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
   email: string;
-  phone: string;
-  status: string;
-  lastLoginAt: Date | null;
-  roles: string[];
-  departmentData: Department;
+  passwordHash: string;
+  status: "active" | "inactive" | "suspended";
+  lastLogin: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
 }
 export interface IDepartments {
   timestamp: Date;
@@ -52,11 +55,12 @@ export interface IDepartments {
   dto: Department[];
 }
 export interface IAddUser {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  roles: number[];
-  departmentId: number;
+  // roles: number[];
+  // departmentId: number;
 }
 export interface Department {
   id: number;
@@ -64,53 +68,96 @@ export interface Department {
 }
 
 export interface IRoles {
-  timestamp:  Date;
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        Role[];
+  message: string;
+  dto: Role[];
 }
 
 export interface Role {
-  id:            number;
-  name:          string;
-  description:   string;
-  disabled:      boolean;
-  createdDate:   Date;
-  createdBy:     string;
+  id: number;
+  name: string;
+  description: string;
+  disabled: boolean;
+  createdDate: Date;
+  createdBy: string;
   numberOfUsers: number;
 }
 
 export interface IDriver {
-  timestamp:  Date;
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        DriverDto;
+  message: string;
+  dto: DriverDto;
 }
 
 export interface DriverDto {
-  content:       Driver[];
-  totalPages:    number;
+  content: Driver[];
+  totalPages: number;
   totalElements: number;
-  currentPage:   number;
-  pageSize:      number;
-  hasNext:       boolean;
-  hasPrevious:   boolean;
+  currentPage: number;
+  pageSize: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
 export interface Driver {
-  id?:                number;
-  name:              string;
-  phoneNumber:       string;
-  licenseNumber:     string;
-  licenseExpiryDate: string;
-  status:            string;
-  safetyScore:       number;
-  fuelEfficiency:    number;
-  violations:        number;
-  totalTrips:        number;
-  assignedVehicle:   string | null;
-  hiredDate:         Date;
+  id:               string;
+  firstName:        string;
+  lastName:         string;
+  phone:            string;
+  alternativePhone: string;
+  licenseNumber:    string;
+  licenseExpiry:    string;
+  status:           string;
+  passwordHash:     string;
+  role:             string;
+  vehicleId:        string;
+  lastLogin:        Date | null;
+  createdAt:        Date;
+  updatedAt:        Date;
+  deletedAt:        Date | null;
+  vehicle?:          tempVehicle;
 }
+export interface DriversList {
+  mesage: string;
+  data:   DriverDetails[];
+}
+
+export interface DriverDetails {
+  id:                string;
+  firstName:         string;
+  lastName:          string;
+  phone:             string;
+  LicenseNumber:     string;
+  licenseExpiryDate: Date;
+}
+
+export interface tempVehicle {
+  id:                 string;
+  registrationNumber: string;
+  model:              string;
+  manufacturer:       string;
+  vin:                string;
+  color:              string;
+  createdAt:          Date;
+  updatedAt:          Date;
+  deletedAt:          null;
+}
+
+export interface VehiclesList {
+  message: string;
+  data:    vehicleDetails[];
+}
+
+export interface vehicleDetails {
+  id:                 string;
+  registrationNumber: string;
+  model:              string;
+}
+
+
+
 export interface RoleFormData {
   name: string;
   description: string;
@@ -140,35 +187,36 @@ export interface VehicleFormData {
 
 // Legacy types for backward compatibility (can be removed later)
 export interface IVehicles {
-  timestamp:  Date;
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        Dto;
+  message: string;
+  dto: Dto;
 }
 
 export interface Dto {
-  content:       Vehicle[];
-  totalPages:    number;
+  content: Vehicle[];
+  totalPages: number;
   totalElements: number;
-  currentPage:   number;
-  pageSize:      number;
-  hasNext:       boolean;
-  hasPrevious:   boolean;
+  currentPage: number;
+  pageSize: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
-export interface Vehicle{
-  id:                  number;
-  vehicleRegNo:        string;
-  group:               string;
-  status:              string;
-  model:               string;
-  healthRate:          number;
-  costPerMonth:        number;
-  lastMaintenanceDate: Date;
-  fuelEfficiency:      number;
-  mileage:             number;
-  driverName:          string | null;
+
+export interface Vehicle {
+  id:                 string;
+  registrationNumber: string;
+  model:              string;
+  manufacturer:       string;
+  vin:                string;
+  color:              string;
+  createdAt:          Date;
+  updatedAt:          Date;
+  deletedAt:          null;
+  drivers?:            Driver[];
 }
+
 
 export enum Group {
   Logistics = "Logistics",
@@ -183,20 +231,20 @@ export enum Status {
 }
 
 export interface ITrips {
-  timestamp:  Date;
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        TripsDto;
+  message: string;
+  dto: TripsDto;
 }
 
 export interface TripsDto {
-  content:       unknown[];
-  totalPages:    number;
+  content: unknown[];
+  totalPages: number;
   totalElements: number;
-  currentPage:   number;
-  pageSize:      number;
-  hasNext:       boolean;
-  hasPrevious:   boolean;
+  currentPage: number;
+  pageSize: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
 export interface Trip {
@@ -264,4 +312,3 @@ export interface MaintenanceData {
   technician: string;
   location: string;
 }
-

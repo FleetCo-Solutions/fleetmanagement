@@ -1,6 +1,6 @@
 'use server'
 
-import { auth } from "@/app/auth";
+import { IPostVehicle } from "@/app/api/vehicles/post";
 
 export interface AddVehiclePayload {
   vehicleRegNo: string;
@@ -15,15 +15,13 @@ export interface AddVehiclePayload {
 }
 
 export async function getVehicles() {
-    const session = await auth();
     try {
     const response = await fetch(
-      `${process.env.BACKENDBASE_URL}/v1/vehicles`,
+      `${process.env.LOCAL_BACKENDBASE_URL}/vehicles`,
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.userToken}`,
         },
       }
     );
@@ -41,27 +39,43 @@ export async function getVehicles() {
     
 }
 
-export async function addVehicle(vehicleData: AddVehiclePayload) {
-    const session = await auth();
+export async function getVehiclesList() {
+  try {
+    const response = await fetch(
+      `${process.env.LOCAL_BACKENDBASE_URL}/vehicles/vehiclesList`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to fetch vehicles list");
+    }
+    return result;
+  } catch (err) {
+    throw new Error((err as Error).message);
+  }
+}
+
+export async function addVehicle(vehicleData: IPostVehicle) {
     try {
     const response = await fetch(
-      `${process.env.BACKENDBASE_URL}/v1/vehicles`,
+      `${process.env.LOCAL_BACKENDBASE_URL}/vehicles`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.userToken}`,
         },
         body: JSON.stringify({
             vehicleRegNo: vehicleData.vehicleRegNo,
-            group: vehicleData.group,
             model: vehicleData.model,
-            healthRate: vehicleData.healthRate,
-            costPerMonth: vehicleData.costPerMonth,
-            lastMaintenanceDate: vehicleData.lastMaintenanceDate,
-            fuelEfficiency: vehicleData.fuelEfficiency,
-            mileage: vehicleData.mileage,
-            driverId: vehicleData.driverId,
+            manufacturer: vehicleData.manufacturer,
+            vin: vehicleData.vin,
+            color: vehicleData.color
           }),
       }
     );

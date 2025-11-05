@@ -1,6 +1,5 @@
 'use server'
 
-import { auth } from "@/app/auth";
 
 export interface AddTripPayload {
   vehicleId: number;
@@ -17,15 +16,13 @@ export interface AddTripPayload {
 }
 
 export async function getTrips() {
-    const session = await auth();
     try {
     const response = await fetch(
-      `${process.env.BACKENDBASE_URL}/v1/trip`,
+      `${process.env.LOCAL_BACKENDBASE_URL}/trips`,
         {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.userToken}`,
         },
       }
     );
@@ -44,7 +41,6 @@ export async function getTrips() {
 }
 
 export async function addTrip(tripData: AddTripPayload) {
-    const session = await auth();
     try {
     const response = await fetch(
       `${process.env.BACKENDBASE_URL}/v1/trip`,
@@ -52,7 +48,6 @@ export async function addTrip(tripData: AddTripPayload) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.userToken}`,
         },
         body: JSON.stringify({
             vehicleId: tripData.vehicleId,

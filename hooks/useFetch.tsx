@@ -23,7 +23,7 @@ export function useFetch<T = unknown>({
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${session?.userToken}`
+          "Authorization": `Bearer ${(session?.user as any)?.token}`
         },
       });
 

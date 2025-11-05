@@ -1,9 +1,7 @@
 "use server";
 
-import { auth } from "@/app/auth";
 
 export async function getRoles() {
-  const session = await auth();
   try {
     const response = await fetch(
       `${process.env.BACKENDBASE_URL}/v1/roles`,
@@ -11,7 +9,6 @@ export async function getRoles() {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.userToken}`,
         },
       }
     );

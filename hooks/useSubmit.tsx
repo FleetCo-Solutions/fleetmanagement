@@ -26,7 +26,7 @@ export function useSubmit() {
             method,
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${session?.userToken}`
+              "Authorization": `Bearer ${(session?.user as any)?.token}`
             },
           };
 
