@@ -1,4 +1,4 @@
-'use server'
+"use server";
 
 import { AssignDriverRequestBody } from "@/app/api/drivers/assignDriver/post";
 
@@ -12,7 +12,7 @@ export interface AddDriverPayload {
 }
 
 export async function getDrivers() {
-    try {
+  try {
     const response = await fetch(
       `${process.env.LOCAL_BACKENDBASE_URL}/drivers`,
       {
@@ -24,16 +24,15 @@ export async function getDrivers() {
       }
     );
     const result = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(`${result.message}`);
     }
 
     return result;
-    }
-    catch (err) {
-        throw new Error((err as Error).message);
-    }
+  } catch (err) {
+    throw new Error((err as Error).message);
+  }
 }
 
 export async function getDriversList() {
@@ -48,13 +47,35 @@ export async function getDriversList() {
       }
     );
     const result = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(result.message || "Failed to fetch drivers list");
     }
     return result;
   } catch (err) {
     throw new Error((err as Error).message);
+  }
+}
+
+export async function getDriverDetails(id: string) {
+  try {
+    const response = await fetch(
+      `${process.env.LOCAL_BACKENDBASE_URL}/drivers/${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to fetch driver details");
+    }
+    return result;
+  } catch (error) {
+    throw new Error((error as Error).message);
   }
 }
 
@@ -80,13 +101,13 @@ export async function assignDriverToVehicle(payload: AssignDriverRequestBody) {
       throw new Error(result.message || "Failed to assign driver to vehicle");
     }
     return result;
-  }catch (err) {
+  } catch (err) {
     throw new Error((err as Error).message);
   }
 }
 
 export async function getDriverDashboard() {
-    try {
+  try {
     const response = await fetch(
       `${process.env.BACKENDBASE_URL}/v1/drivers/dashboard`,
       {
@@ -97,20 +118,19 @@ export async function getDriverDashboard() {
       }
     );
     const result = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(`${result.message}`);
     }
 
     return result;
-    }
-    catch (err) {
-        throw new Error((err as Error).message);
-    }
+  } catch (err) {
+    throw new Error((err as Error).message);
+  }
 }
 
 export async function addDriver(driverData: AddDriverPayload) {
-    try {
+  try {
     const response = await fetch(
       `${process.env.LOCAL_BACKENDBASE_URL}/drivers`,
       {
@@ -120,13 +140,13 @@ export async function addDriver(driverData: AddDriverPayload) {
           // Authorization: `Bearer ${session?.userToken}`,
         },
         body: JSON.stringify({
-            firstName: driverData.firstName,
-            lastName: driverData.lastName,
-            phone: driverData.phone,
-            alternativePhone: driverData.alternativePhone,
-            licenseNumber: driverData.licenseNumber,
-            licenseExpiry: driverData.licenseExpiry,
-          }),
+          firstName: driverData.firstName,
+          lastName: driverData.lastName,
+          phone: driverData.phone,
+          alternativePhone: driverData.alternativePhone,
+          licenseNumber: driverData.licenseNumber,
+          licenseExpiry: driverData.licenseExpiry,
+        }),
       }
     );
     const result = await response.json();
@@ -138,5 +158,37 @@ export async function addDriver(driverData: AddDriverPayload) {
   } catch (err) {
     throw new Error((err as Error).message);
   }
-    
+}
+
+export interface UpdateDriverPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  alternativePhone?: string;
+  licenseNumber: string;
+  licenseExpiry: string;
+  status: "active" | "inactive" | "suspended";
+}
+
+export async function updateDriver(id: string, driverData: UpdateDriverPayload) {
+  try {
+    const response = await fetch(
+      `${process.env.LOCAL_BACKENDBASE_URL}/drivers/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(driverData),
+      }
+    );
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to update driver");
+    }
+    return result;
+  } catch (err) {
+    throw new Error((err as Error).message);
+  }
 }
