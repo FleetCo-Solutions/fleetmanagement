@@ -1,6 +1,6 @@
 "use server";
 
-import { IAddUser } from "@/app/types";
+import { IAddUser, ProfilePayload } from "@/app/types";
 
 export async function getUsers() {
   try {
@@ -64,10 +64,10 @@ export async function addUser(userData: IAddUser) {
   }
 }
 
-export async function updateUser(id: number, userData: IAddUser) {
+export async function updateUser(id: string, userData: ProfilePayload) {
   try {
     const response = await fetch(
-      `${process.env.BACKENDBASE_URL}/v1/user/${id}`,
+      `${process.env.LOCAL_BACKENDBASE_URL}/users/${id}`,
       {
         method: "PUT",
         headers: {
