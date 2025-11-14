@@ -1,12 +1,11 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
 // Simple backend auth error class
-class BackendAuthError extends Error {
-  code?: string;
+class BackendAuthError extends CredentialsSignin {
+  code: string;
   constructor(message: string) {
     super(message);
-    this.name = "BackendAuthError";
     this.code = message;
   }
 }
@@ -48,7 +47,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
 
         if (!response.ok) {
-          throw new BackendAuthError(user?.message || "Invalid credentials.");
+          throw new BackendAuthError(user.message || "Invalid credentials.");
         }
 
         // Return user object (NextAuth will include this on `user` in callbacks)
