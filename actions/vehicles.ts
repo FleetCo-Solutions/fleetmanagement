@@ -89,5 +89,26 @@ export async function addVehicle(vehicleData: IPostVehicle) {
   } catch (err) {
     throw new Error((err as Error).message);
   }
+}
+
+export async function getVehicleDetails(id: string) {
+  try {
+    const response = await fetch(
+      `${process.env.LOCAL_BACKENDBASE_URL}/vehicles/${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const result = await response.json();
     
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to fetch vehicle details");
+    }
+    return result;
+  } catch (err) {
+    throw new Error((err as Error).message);
+  }
 }
