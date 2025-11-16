@@ -49,6 +49,7 @@ export interface BackendUser {
   deletedAt: Date | null;
 }
 
+
 export interface UserDetails {
   timestamp:  Date;
   statusCode: string;
@@ -59,6 +60,7 @@ export interface UserDetails {
 export interface UserDetail {
   profile:  UserProfile;
   activity: UserActivity;
+  emergencyContacts: EmergencyContact[];
 }
 
 export interface UserActivity {
@@ -148,6 +150,70 @@ export interface Driver {
   deletedAt:        Date | null;
   vehicle?:          tempVehicle;
 }
+
+export interface IndividualDriver {
+  timestamp: Date;
+  message:   string;
+  dto:       DriverData;
+}
+
+export interface DriverData {
+  profile:  DriverProfile;
+  activity: DriverActivity;
+  emergencyContacts: EmergencyContact[];
+}
+
+export interface DriverActivity {
+  lastLogin:  null;
+  accountAge: number;
+}
+
+export interface DriverProfile {
+  id:               string;
+  firstName:        string;
+  lastName:         string;
+  phone:            string;
+  alternativePhone: string;
+  licenseNumber:    string;
+  licenseExpiry:    Date;
+  status:           "active" | "inactive" | "suspended";
+}
+
+export interface EmergencyContact {
+  id:            string;
+  firstName:     string;
+  lastName:      string;
+  relationship:  string;
+  address:       string;
+  phone:         string;
+  email:         string;
+  alternativeNo: string;
+  createdAt:     Date;
+  updatedAt:     null;
+  userId:        null;
+  driverId:      string;
+}
+
+export interface EmergencyContactPayload {
+  firstName: string;
+  lastName: string;
+  relationship: "parent" | "spouse" | "sibling" | "friend" | "other";
+  address: string;
+  phone: string;
+  email?: string;
+  alternativeNo?: string;
+  userId?: string;
+  driverId?: string;
+}
+
+export interface ProfilePayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  status: "active" | "inactive" | "suspended";
+}
+
 export interface DriversList {
   mesage: string;
   data:   DriverDetails[];
@@ -185,6 +251,42 @@ export interface vehicleDetails {
   model:              string;
 }
 
+export interface VehicleDetailsResponse {
+  timestamp: Date;
+  message:   string;
+  dto:       Dto;
+}
+
+export interface vehicleDetails {
+  id:                 string;
+  registrationNumber: string;
+  model:              string;
+  manufacturer:       string;
+  vin:                string;
+  color:              string;
+  createdAt:          Date;
+  updatedAt:          null;
+  deletedAt:          null;
+  drivers:            VehicleDriver[];
+}
+
+export interface VehicleDriver {
+  id:               string;
+  firstName:        string;
+  lastName:         string;
+  phone:            string;
+  alternativePhone: string;
+  licenseNumber:    string;
+  licenseExpiry:    Date;
+  status:           string;
+  passwordHash:     string;
+  role:             string;
+  vehicleId:        string;
+  lastLogin:        null;
+  createdAt:        Date;
+  updatedAt:        Date;
+  deletedAt:        null;
+}
 
 
 export interface RoleFormData {
@@ -245,6 +347,7 @@ export interface Vehicle {
   deletedAt:          null;
   drivers?:            Driver[];
 }
+
 
 
 export enum Group {
