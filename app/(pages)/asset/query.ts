@@ -1,6 +1,6 @@
-import { addVehicle, getVehicles, AddVehiclePayload, getVehiclesList } from "@/actions/vehicles";
+import { addVehicle, getVehicles, AddVehiclePayload, getVehiclesList, getVehicleDetails } from "@/actions/vehicles";
 import { IPostVehicle } from "@/app/api/vehicles/post";
-import { IVehicles, VehiclesList } from "@/app/types";
+import { IVehicles, VehicleDetailsResponse, VehiclesList } from "@/app/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useVehicleQuery = () => {
@@ -30,3 +30,10 @@ export const useAddVehicle = () => {
     },
   });
 };
+
+export const useVehicleDetailsQuery = (id: string) => {
+  return useQuery<VehicleDetailsResponse>({
+    queryKey: ["VehicleDetails"],
+    queryFn: async () => await getVehicleDetails(id),
+  });
+}
