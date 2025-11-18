@@ -1,26 +1,74 @@
-import { IDriver, Driver } from "@/app/types"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { getDriverDetails, UpdateDriverPayload } from "@/actions/drivers";
+import { addEmergencyContact, updateEmergencyContact as updateAction, deleteEmergencyContact as deleteAction } from "@/actions/emergencyContact";
+import { IndividualDriver, EmergencyContactPayload } from "@/app/types"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-const useDriverDetailsQuery = ({id}:{id: string}) => {
-    const queryClient = useQueryClient();
-  return useQuery<Driver | undefined>({
+export const useDriverDetailsQuery = ({id}:{id: string}) => {
+  return useQuery<IndividualDriver>({
     queryKey: ["driver", id],
-    queryFn: async () => {
-      // Replace with actual data fetching logic
-      const response = await fetch("https://dummyjson.com/c/ac57-fa9b-49e8-8b6"); //intensionally wrong url to test error handling put "c" at the end of url
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return (await response.json()) as Driver;
-    },
-    initialData: () => {
-        const driversResponse = queryClient.getQueryData<IDriver>(["Drivers"]);
-        const list = driversResponse?.dto?.content || [];
-        return list.find((driver) => String(driver.id) === id);
-    },
-    enabled: !!id,
-  }
-  )
+    queryFn: async () => await getDriverDetails(id),
+  })
 }
 
-export default useDriverDetailsQuery
+export const usePostEmergencyContact = (driverId?: string) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ["EmergencyContact"],
+    mutationFn: async (EmergencyContactPayload: EmergencyContactPayload) => await addEmergencyContact(EmergencyContactPayload),
+    onSettled: () => {
+      if (driverId) {
+        queryClient.invalidateQueries({queryKey:["driver", driverId]})
+      } else {
+         // Fallback or invalidate all drivers if needed, but specific is better
+         queryClient.invalidateQueries({queryKey:["driver"]})
+      }
+    }
+  })
+}
+
+export const useUpdateEmergencyContact = (driverId?: string) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ["EmergencyContact"],
+    mutationFn: async ({id, payload}: {id: string, payload: EmergencyContactPayload}) => await updateAction(id, payload),
+    onSettled: () => {
+      if (driverId) {
+        queryClient.invalidateQueries({queryKey:["driver", driverId]})
+      } else {
+        queryClient.invalidateQueries({queryKey:["driver"]})
+      }
+    }
+  })
+}
+
+export const useDeleteEmergencyContact = (driverId?: string) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ["EmergencyContact"],
+    mutationFn: async (id: string) => await deleteAction(id),
+    onSettled: () => {
+      if (driverId) {
+        queryClient.invalidateQueries({queryKey:["driver", driverId]})
+      } else {
+        queryClient.invalidateQueries({queryKey:["driver"]})
+      }
+    }
+  })
+}
+
+export const useUpdateDriver = (driverId?: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateDriver"],
+    mutationFn: async ({ id, payload }: { id: string; payload: UpdateDriverPayload }) => {
+      const { updateDriver } = await import("@/actions/drivers");
+      return await updateDriver(id, payload);
+    },
+    onSettled: () => {
+      if (driverId) {
+        queryClient.invalidateQueries({ queryKey: ["driver", driverId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["drivers"] });
+    },
+  });
+};
