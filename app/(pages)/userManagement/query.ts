@@ -15,7 +15,10 @@ import {
   IRoles,
   IDepartments,
   UserDetails,
+  EmergencyContactPayload,
+  ProfilePayload
 } from "@/app/types";
+import { addEmergencyContact, updateEmergencyContact as updateAction, deleteEmergencyContact as deleteAction } from "@/actions/emergencyContact";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUserQuery = () => {
@@ -60,60 +63,15 @@ export const useAddUser = () => {
   });
 };
 
-export const useUpdateUser = () => {
+export const useUpdateUser = (userId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationKey: ["updateUser"],
-    mutationFn: async ({ id, userData }: { id: number; userData: IAddUser }) =>
+    mutationFn: async ({ id, userData }: { id: string; userData: ProfilePayload }) =>
       await updateUser(id, userData),
-
-    // Optimistic UI update
-    onMutate: async ({ id, userData }) => {
-      await queryClient.cancelQueries({ queryKey: ["Users"] });
-      const previousUsers = queryClient.getQueryData<IUsers>(["Users"]);
-
-      queryClient.setQueryData<IUsers>(["Users"], (oldUsers) => {
-        if (!oldUsers) return oldUsers;
-
-        const updatedContent = oldUsers.dto.content.map((user) => {
-          // Assuming we can identify the user by email or some other unique field
-          if (user.email === userData.email) {
-            return {
-              ...user,
-              firstName: userData.firstName,
-              lastName: userData.lastName,
-              email: userData.email,
-              phone: userData.phone,
-              // Note: roles and departmentData would need to be mapped properly
-              // This is a simplified version for optimistic update
-            };
-          }
-          return user;
-        });
-
-        return {
-          ...oldUsers,
-          dto: {
-            ...oldUsers.dto,
-            content: updatedContent,
-          },
-        };
-      });
-
-      return { previousUsers };
-    },
-
-    // Rollback if error
-    onError: (err, variables, context) => {
-      if (context?.previousUsers) {
-        queryClient.setQueryData(["Users"], context.previousUsers);
-      }
-    },
-
-    // Always refetch after success/failure to ensure data consistency
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["Users"] });
+      queryClient.invalidateQueries({ queryKey: ["User", userId] });
     },
   });
 };
@@ -152,3 +110,48 @@ export const useChangePassword = () => {
     },
   });
 };
+
+export const useAddEmergencyContact = (userId?: string) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ["EmergencyContact"],
+    mutationFn: async (payload: EmergencyContactPayload) => await addEmergencyContact(payload),
+    onSettled: () => {
+      if (userId) {
+        queryClient.invalidateQueries({queryKey:["User", userId]})
+      } else {
+         queryClient.invalidateQueries({queryKey:["User"]})
+      }
+    }
+  })
+}
+
+export const useUpdateEmergencyContact = (userId?: string) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ["EmergencyContact"],
+    mutationFn: async ({id, payload}: {id: string, payload: EmergencyContactPayload}) => await updateAction(id, payload),
+    onSettled: () => {
+      if (userId) {
+        queryClient.invalidateQueries({queryKey:["User", userId]})
+      } else {
+        queryClient.invalidateQueries({queryKey:["User"]})
+      }
+    }
+  })
+}
+
+export const useDeleteEmergencyContact = (userId?: string) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ["EmergencyContact"],
+    mutationFn: async (id: string) => await deleteAction(id),
+    onSettled: () => {
+      if (userId) {
+        queryClient.invalidateQueries({queryKey:["User", userId]})
+      } else {
+        queryClient.invalidateQueries({queryKey:["User"]})
+      }
+    }
+  })
+}
