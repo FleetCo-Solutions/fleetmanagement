@@ -5,12 +5,23 @@ import { useUserByIdQuery } from "../../query";
 import ProfileTab from "./ProfileEditForm";
 import SecurityTab from "./SecurityTab";
 import ActivityTab from "./ActivityTab";
+
+import { useAddEmergencyContact, useUpdateEmergencyContact, useDeleteEmergencyContact } from "../../query";
+import EmergencyContactForm from "@/app/components/forms/EmergencyContactForm";
+import { EmergencyContactPayload } from "@/app/types";
+import { toast } from "sonner";
+
 export default function EditUserPage() {
   const searchParams = useSearchParams();
   const userId = searchParams.get("id");
   const [activeTab, setActiveTab] = useState<
-    "profile" | "security" | "activity"
+    "profile" | "security" | "activity" | "emergency"
   >("profile");
+  
+  const { mutateAsync: addEmergencyContact } = useAddEmergencyContact(userId || undefined);
+  const { mutateAsync: updateEmergencyContactMutate } = useUpdateEmergencyContact(userId || undefined);
+  const { mutateAsync: deleteEmergencyContactMutate } = useDeleteEmergencyContact(userId || undefined);
+
   const {
     data: userData,
     isLoading,
@@ -87,6 +98,16 @@ export default function EditUserPage() {
             >
               Activity & History
             </button>
+            <button
+              onClick={() => setActiveTab("emergency")}
+              className={`pb-4 px-2 font-medium transition-colors ${
+                activeTab === "emergency"
+                  ? "border-b-2 border-[#004953] text-[#004953]"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Emergency Contact
+            </button>
           </nav>
         </div>
 
@@ -100,6 +121,49 @@ export default function EditUserPage() {
 
           {/* Activity Tab */}
           {activeTab === "activity" && <ActivityTab userData={userData.dto.activity} />}
+
+          {/* Emergency Contact Tab */}
+          {activeTab === "emergency" && (
+             <div className="bg-white border border-gray-200 rounded-xl p-10 shadow-sm">
+               <EmergencyContactForm
+                contacts={userData.dto.emergencyContacts}
+                onSave={async (contacts) => {
+                  try {
+                    const promises = [];
+
+                    // Handle Updates and Adds
+                    for (const contact of contacts) {
+                      if (contact.id && contact.id.length > 10) { // Simple check for real ID
+                        promises.push(updateEmergencyContactMutate({ id: contact.id, payload: contact }));
+                      } else {
+                        const payload: EmergencyContactPayload = {
+                          ...contact,
+                          userId: userId || undefined
+                        };
+                        promises.push(addEmergencyContact(payload));
+                      }
+                    }
+
+                    await toast.promise(Promise.all(promises), {
+                      loading: "Saving changes...",
+                      success: "All changes saved successfully",
+                      error: "Failed to save some changes",
+                    });
+                  } catch (error) {
+                    console.error("Bulk save error:", error);
+                    toast.error("An error occurred while saving");
+                  }
+                }}
+                onDelete={async (id) => {
+                  await toast.promise(deleteEmergencyContactMutate(id), {
+                    loading: "Deleting contact...",
+                    success: "Contact deleted successfully",
+                    error: "Failed to delete contact"
+                  });
+                }}
+              />
+             </div>
+          )}
         </div>
       </div>
     </div>
