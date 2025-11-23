@@ -2,28 +2,21 @@
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
-import { UserProfile } from "@/app/types";
-
-interface ProfileFormValues {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  status: "active" | "inactive" | "suspended";
-}
+import { ProfilePayload, UserProfile } from "@/app/types";
+import { useUpdateUser } from "../../query";
 
 interface ProfileTabProps {
   userData: UserProfile;
-  onUpdateSuccess?: () => void;
 }
 
-export default function ProfileTab({ userData, onUpdateSuccess }: ProfileTabProps) {
+export default function ProfileTab({ userData}: ProfileTabProps) {
+  const {mutateAsync: updateUser} = useUpdateUser(userData.id);
   const {
     register,
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<ProfileFormValues>({
+  } = useForm<ProfilePayload>({
     defaultValues: {
       firstName: userData?.firstName || "",
       lastName: userData?.lastName || "",
@@ -34,14 +27,15 @@ export default function ProfileTab({ userData, onUpdateSuccess }: ProfileTabProp
     mode: "onChange",
   });
 
-  const onSubmit = async (values: ProfileFormValues) => {
+  const onSubmit = async (values: ProfilePayload) => {
     try {
-      // TODO: Call API to update user profile
-      console.log("Update profile payload:", values);
-      toast.success("Profile updated successfully!");
-      onUpdateSuccess?.();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update profile");
+      toast.promise(updateUser({ id: userData.id, userData: values }),{
+        loading: "Updating profile...",
+        success: (result) => result.message || "Profile updated successfully!",
+        error: (error) => error.message || "Failed to update profile",
+      }) 
+    } catch (error) {
+      toast.error((error as Error).message || "Failed to update profile");
     }
   };
 
