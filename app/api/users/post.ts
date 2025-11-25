@@ -1,5 +1,6 @@
 import { db } from "@/app/db";
 import {  users } from "@/app/db/schema";
+import { sendUserCredentialsEmail } from "@/app/lib/mail";
 import { NextResponse } from "next/server";
 
 export interface IPostUser {
@@ -44,6 +45,15 @@ export default async function postUser(request: Request) {
       })
       .returning()
       .onConflictDoNothing();
+
+    if(user){
+      await sendUserCredentialsEmail({
+        to: user.email,
+        username: user.email,
+        password: 'Welcome@123'
+      })
+    }
+    
     return NextResponse.json({message:`User Created Successfully`, data:user}, {status: 201});
   } catch (error) {
     return NextResponse.json(

@@ -1,0 +1,76 @@
+// lib/mail.ts
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export async function sendUserCredentialsEmail({
+  to,
+  username,
+  password,
+}: {
+  to: string;
+  username: string;
+  password: string;
+}) {
+  try {
+    const data = await resend.emails.send({
+      from: "FleetCo <noreply@fleetcotelematics.com>", // replace with your verified domain
+      to,
+      subject: "Welcome to FleetCo Telematics!",
+      html: `
+  <div style="background-color:#f6f8fa; padding:40px 0; font-family:Arial, sans-serif;">
+    <div style="max-width:600px; margin:0 auto; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.05); overflow:hidden;">
+      
+      <!-- Header -->
+      <div style="background:linear-gradient(to right, #004953, #004953); padding:24px; text-align:center;">
+        <div style="width:56px; height:56px; background:linear-gradient(to bottom right,##004953,##004953); border:1px solid rgba(255,255,255,0.3); border-color:white; border-radius:16px; display:flex; align-items:center; justify-content:center; color:white; font-size:24px; font-weight:700; box-shadow:0 0 10px rgba(255,255,255,0.2);">
+          FC
+        </div>
+        <div style="margin-top:10px;">
+          <span style="font-size:28px; font-weight:700; color:white;">FleetCo</span>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div style="padding:32px;">
+        <h2 style="color:#111827;">Welcome to FleetCo Telematics!</h2>
+        <p style="color:#374151; line-height:1.6;">
+          We’re thrilled to have you join our platform — where intelligent fleet management meets simplicity and precision.
+        </p>
+
+        <div style="margin:24px 0; padding:20px; background-color:#f3f4f6; border-radius:8px;">
+          <p style="margin:0 0 8px; color:#111827; font-weight:600;">Here are your login credentials:</p>
+          <p style="margin:4px 0; color:#374151;">Username: <strong>${username}</strong></p>
+          <p style="margin:4px 0; color:#374151;">Password: <strong>${password}</strong></p>
+        </div>
+
+        <p style="color:#374151; line-height:1.6;">
+          You can access your dashboard and start managing your vehicles right away:
+        </p>
+
+        <div style="text-align:center; margin:24px 0;">
+          <a href="https://solutions.fleetcotelematics.com/login"
+             style="display:inline-block; background:linear-gradient(to right, #2563eb, #1d4ed8); color:white; padding:12px 24px; border-radius:8px; font-weight:600; text-decoration:none;">
+             Go to Dashboard
+          </a>
+        </div>
+
+        <p style="color:#6b7280; font-size:14px; line-height:1.5;">
+          If you didn't request this account, please ignore this message or contact our support team.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div style="background-color:#f9fafb; text-align:center; padding:16px; color:#9ca3af; font-size:12px;">
+        © ${new Date().getFullYear()} FleetCo Telematics. All rights reserved.
+      </div>
+    </div>
+  </div>
+      `,
+    });
+
+    return data;
+  } catch (error) {
+    console.error("Email sending failed:", error);
+  }
+}

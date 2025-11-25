@@ -23,6 +23,26 @@ export async function getUsers() {
   }
 }
 
+export async function getUserDetails(id: string) {
+  try {
+    const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/users/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to fetch user details");
+    }
+    return result;
+  } catch (err) {
+    throw new Error((err as Error).message);
+  }
+}
+
 export async function addUser(userData: IAddUser) {
   try {
     const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/users`, {
@@ -90,3 +110,27 @@ export async function toggleUserStatus(id: number,status: string) {
     throw new Error((err as Error).message);
   }
 }
+
+export async function changePassword({userId, password, oldPassword}: {userId: string, password: string, oldPassword: string}) {
+  try {
+    const response = await fetch(
+      `${process.env.LOCAL_BACKENDBASE_URL}/auth/resetPassword`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({userId: userId, password: password, oldPassword: oldPassword}),
+      }
+    )
+
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to change password");
+    }
+  } catch (err) {
+    throw new Error((err as Error).message);
+  }
+}
+;

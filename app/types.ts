@@ -48,6 +48,35 @@ export interface BackendUser {
   updatedAt: Date;
   deletedAt: Date | null;
 }
+
+export interface UserDetails {
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        UserDetail;
+}
+
+export interface UserDetail {
+  profile:  UserProfile;
+  activity: UserActivity;
+}
+
+export interface UserActivity {
+  lastLogin:  Date;
+  accountAge: number;
+}
+
+export interface UserProfile {
+  id:        string;
+  firstName: string;
+  lastName:  string;
+  email:     string;
+  phone:     string;
+  status:    "active" | "inactive" | "suspended";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IDepartments {
   timestamp: Date;
   statusCode: string;
