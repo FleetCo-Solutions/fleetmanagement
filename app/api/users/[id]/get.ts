@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function getUserDetails(id: string) {
   const date = new Date();
   try {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const user = await db.query.users.findFirst({ with: { emergencyContacts: true }, where: eq(users.id, id) });
     if (!user) {
       return NextResponse.json(
         {
@@ -37,7 +37,8 @@ export async function getUserDetails(id: string) {
           activity: {
             lastLogin: user.lastLogin,
             accountAge: Math.floor((date.getTime() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)), // in days
-          }
+          },
+          emergencyContacts: user.emergencyContacts,
         },
       },
       { status: 200 }
