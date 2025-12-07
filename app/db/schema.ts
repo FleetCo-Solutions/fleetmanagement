@@ -6,6 +6,7 @@ import {
   timestamp,
   pgEnum,
   index,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 export const userStatusEnum = pgEnum("user_status", [
@@ -80,9 +81,7 @@ export const drivers = pgTable(
   }
 );
 
-export const vehicles = pgTable(
-  "vehicles", 
-  {
+export const vehicles = pgTable("vehicles", {
   id: uuid("id").defaultRandom().primaryKey(),
   registrationNumber: varchar("registrationNumber", { length: 15 })
     .notNull()
@@ -117,11 +116,33 @@ export const emergencyContacts = pgTable(
     driverId: uuid("driver_id").references(() => drivers.id, {
       onDelete: "cascade",
     }),
+    deleted: boolean("deleted").default(false),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => {
     return {
       userIdx: index("user_idx").on(table.userId),
       driverIdx: index("driver_idx").on(table.driverId),
+    };
+  }
+);
+
+export const passwordResetOtps = pgTable(
+  "password_reset_otps",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    email: varchar("email", { length: 100 }).notNull(),
+    otp: varchar("otp", { length: 6 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    verified: boolean("verified").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      emailIdx: index("otp_email_idx").on(table.email),
     };
   }
 );
