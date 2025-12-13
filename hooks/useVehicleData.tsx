@@ -19,26 +19,47 @@ export function useVehicleData(): UseVehicleDataReturn {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        
-        // Fetch vehicles
+        setError(null);
+
         const vehiclesResponse = await fetch('/api/vehicle-tracking?action=vehicles');
+
+        if (!vehiclesResponse.ok) {
+          throw new Error(`Failed to fetch vehicles: ${vehiclesResponse.statusText}`);
+        }
+
         const vehiclesData = await vehiclesResponse.json();
-        
-        // Fetch trips
-        const tripsResponse = await fetch('/api/vehicle-tracking?action=trips');
-        const tripsData = await tripsResponse.json();
-        
-        if (vehiclesData.success) {
+
+        if (!vehiclesData.success) {
+          throw new Error(vehiclesData.message || 'Failed to fetch vehicles');
+        }
+
+        // Only set vehicles if we have valid data
+        if (Array.isArray(vehiclesData.data)) {
           setVehicles(vehiclesData.data);
+        } else {
+          setVehicles([]);
         }
-        
-        if (tripsData.success) {
-          setTrips(tripsData.data);
+
+        // Fetch trips (currently returns empty array as trips are not implemented)
+        const tripsResponse = await fetch('/api/vehicle-tracking?action=trips');
+
+        if (tripsResponse.ok) {
+          const tripsData = await tripsResponse.json();
+          if (tripsData.success && Array.isArray(tripsData.data)) {
+            setTrips(tripsData.data);
+          } else {
+            setTrips([]);
+          }
+        } else {
+          setTrips([]);
         }
-        
       } catch (err) {
-        setError('Failed to fetch data');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data';
+        setError(errorMessage);
         console.error('Data fetch error:', err);
+        // Set empty arrays on error 
+        setVehicles([]);
+        setTrips([]);
       } finally {
         setIsLoading(false);
       }

@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { Vehicle, Trip } from '@/app/types/vehicle'
@@ -38,9 +38,20 @@ interface VehicleMarkerProps {
 }
 
 const VehicleMarker = memo(({ vehicle, location, selectedTrip }: VehicleMarkerProps) => {
+  const markerRef = useRef<L.Marker | null>(null)
+  const position: [number, number] = [location.latitude, location.longitude]
+
+  // Update marker position when location changes 
+  useEffect(() => {
+    if (markerRef.current) {
+      markerRef.current.setLatLng(position)
+    }
+  }, [position])
+
   return (
     <Marker
-      position={[location.latitude, location.longitude]}
+      ref={markerRef}
+      position={position}
       icon={getVehicleIcon(vehicle)}
       eventHandlers={{
         mouseover: (e) => {

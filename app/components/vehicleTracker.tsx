@@ -5,8 +5,9 @@ import 'leaflet/dist/leaflet.css'
 import { LatLngExpression } from 'leaflet'
 import { useVehicleData } from '@/hooks/useVehicleData'
 import { useRouting } from '@/hooks/useRouting'
-import { Vehicle, Trip } from '@/app/types/vehicle'
-import { useEffect, useState, useMemo, forwardRef, useImperativeHandle } from 'react'
+import { useWebSocket, VehicleLocationUpdate } from '@/hooks/useWebSocket'
+import { Vehicle, Trip, VehicleLocation } from '@/app/types/vehicle'
+import { useEffect, useState, useMemo, forwardRef, useImperativeHandle, useCallback } from 'react'
 import L from 'leaflet'
 import VehicleMarker from './vehicleTracker/VehicleMarker'
 import TripRoute from './vehicleTracker/TripRoute'
@@ -50,12 +51,79 @@ interface VehicleTrackerProps {
   onTripSelect?: (trip: Trip | null) => void;
 }
 
-const VehicleTracker = forwardRef<any, VehicleTrackerProps>(({ selectedVehicle, selectedTrip, onTripSelect }, ref) => {
-  const { vehicles, trips, isLoading, error } = useVehicleData()
+interface VehicleTrackerRef {
+  setView: (center: [number, number], zoom: number) => void;
+}
+
+const VehicleTracker = forwardRef<VehicleTrackerRef, VehicleTrackerProps>(
+  ({ selectedVehicle, selectedTrip, onTripSelect }: VehicleTrackerProps, ref: React.ForwardedRef<VehicleTrackerRef>) => {
+  const { vehicles: initialVehicles, trips, isLoading, error } = useVehicleData()
   const { getRoadRoute, isLoading: routingLoading } = useRouting()
   const [mapCenter, setMapCenter] = useState<LatLngExpression>([-6.7924, 39.2083])
   const [mapInstance, setMapInstance] = useState<any>(null)
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([])
+  
+  // State to hold vehicles with real-time updates
+  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles)
+
+  // Update vehicles when initial data loads 
+  useEffect(() => {
+    if (initialVehicles.length > 0 || vehicles.length === 0) {
+      setVehicles(initialVehicles)
+    }
+  }, [initialVehicles])
+
+  // Get all vehicle IDs for WebSocket subscription
+  const vehicleIds = useMemo(() => {
+    return vehicles.filter((v: Vehicle) => v.id && v.currentLocation).map((v: Vehicle) => v.id)
+  }, [vehicles])
+
+  // Handle WebSocket location updates - smooth real-time tracking
+  const handleLocationUpdate = useCallback((update: VehicleLocationUpdate) => {
+    setVehicles((prevVehicles: Vehicle[]) => {
+      return prevVehicles.map((vehicle: Vehicle) => {
+        if (vehicle.id === update.vehicleId) {
+          // Update vehicle location with new real-time data
+          const updatedLocation: VehicleLocation = {
+            id: vehicle.currentLocation?.id || `loc-${update.vehicleId}`,
+            vehicleId: update.vehicleId,
+            latitude: update.location.latitude,
+            longitude: update.location.longitude,
+            speed: update.location.speed ?? vehicle.currentLocation?.speed ?? 0,
+            heading: update.location.heading ?? vehicle.currentLocation?.heading ?? 0,
+            timestamp: update.timestamp.toISOString(),
+            batteryLevel: vehicle.currentLocation?.batteryLevel,
+            fuelLevel: vehicle.currentLocation?.fuelLevel,
+            engineStatus: vehicle.currentLocation?.engineStatus ?? 'off',
+            alertStatus: vehicle.currentLocation?.alertStatus ?? 'normal',
+            address: vehicle.currentLocation?.address,
+          }
+
+          return {
+            ...vehicle,
+            currentLocation: updatedLocation,
+            lastUpdate: update.timestamp.toISOString(),
+          }
+        }
+        return vehicle
+      })
+    })
+  }, [])
+
+  // WebSocket connection for real-time updates
+  const { isConnected, error: wsError } = useWebSocket({
+    vehicleIds,
+    onMessage: handleLocationUpdate,
+    autoReconnect: true,
+  })
+
+  // Subscribe/unsubscribe to vehicles when list changes
+  useEffect(() => {
+    if (isConnected && vehicleIds.length > 0) {
+      // WebSocket hook handles subscriptions automatically via vehicleIds prop
+      // No manual subscription needed
+    }
+  }, [isConnected, vehicleIds])
 
   const {
     simulatedLocation,
@@ -66,27 +134,38 @@ const VehicleTracker = forwardRef<any, VehicleTrackerProps>(({ selectedVehicle, 
 
   useImperativeHandle(ref, () => ({
     setView: (center: [number, number], zoom: number) => {
-      if (mapInstance) mapInstance.setView(center, zoom);
+      if (mapInstance) {
+        mapInstance.setView(center, zoom);
+      }
     }
-  }))
+  }), [mapInstance])
 
+  // Filter vehicles based on selection 
   const filteredVehicles = useMemo(() => {
+    const vehiclesWithLocations = vehicles.filter((v: Vehicle) => v.currentLocation)
+    
     if (selectedTrip) {
-      return vehicles.filter(vehicle => selectedTrip.vehicleIds.includes(vehicle.id))
+      return vehiclesWithLocations.filter((vehicle: Vehicle) => selectedTrip.vehicleIds.includes(vehicle.id))
     }
     if (selectedVehicle) {
-      return [selectedVehicle]
+      const selected = vehiclesWithLocations.find((v: Vehicle) => v.id === selectedVehicle.id)
+      return selected ? [selected] : []
     }
-    return vehicles
+    return vehiclesWithLocations
   }, [vehicles, selectedTrip, selectedVehicle])
 
+  // Center map on selected vehicle when location updates (smooth tracking)
   useEffect(() => {
     if (selectedVehicle?.currentLocation && mapInstance) {
-      mapInstance.setView([selectedVehicle.currentLocation.latitude, selectedVehicle.currentLocation.longitude], 15)
+      const { latitude, longitude } = selectedVehicle.currentLocation
+      mapInstance.setView([latitude, longitude], 15, {
+        animate: true,
+        duration: 0.5,
+      })
     } else if (selectedTrip && mapInstance) {
       mapInstance.setView([selectedTrip.startLocation.latitude, selectedTrip.startLocation.longitude], 10)
     }
-  }, [selectedVehicle, selectedTrip, mapInstance])
+  }, [selectedVehicle?.currentLocation?.latitude, selectedVehicle?.currentLocation?.longitude, selectedTrip, mapInstance])
 
   useEffect(() => {
     const generateRoadRoute = async () => {
@@ -133,9 +212,9 @@ const VehicleTracker = forwardRef<any, VehicleTrackerProps>(({ selectedVehicle, 
         zoomControl={true}
         zoom={selectedVehicle ? 15 : selectedTrip ? 8 : 6}
         style={{ height: '100%', width: '100%' }}
-        ref={(map) => {
+        ref={(map: L.Map | null) => {
           setMapInstance(map);
-          if (map) (map as any)._mapInstance = map;
+          if (map) (map as unknown as { _mapInstance: L.Map })._mapInstance = map;
         }}
       >
         <TileLayer 
@@ -153,7 +232,7 @@ const VehicleTracker = forwardRef<any, VehicleTrackerProps>(({ selectedVehicle, 
           zoomToBoundsOnClick={true}
           removeOutsideVisibleBounds={true}
         >
-          {filteredVehicles.map(vehicle => {
+          {filteredVehicles.map((vehicle: Vehicle) => {
             const location = vehicle.currentLocation
             if (!location) return null
             return (
@@ -185,6 +264,17 @@ const VehicleTracker = forwardRef<any, VehicleTrackerProps>(({ selectedVehicle, 
           </div>
         </div>
       )}
+
+      {/* WebSocket connection status indicator */}
+      <div className="absolute top-4 left-4 bg-white p-2 rounded-lg shadow-lg flex items-center gap-2">
+        <div
+          className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+          title={isConnected ? 'WebSocket connected' : 'WebSocket disconnected'}
+        />
+        <span className="text-xs text-gray-600">
+          {isConnected ? 'Live' : 'Offline'}
+        </span>
+      </div>
 
       {selectedTrip && simulatedLocation && (
         <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg text-xs text-gray-800 space-y-1">
