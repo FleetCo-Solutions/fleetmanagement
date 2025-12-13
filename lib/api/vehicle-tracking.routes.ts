@@ -16,6 +16,8 @@ import type { VehicleLocationPayload } from './vehicle-tracking.types';
 export async function fetchAllVehicles(): Promise<VehicleLocationPayload[]> {
   const url = `${IOT_BACKEND_URL}${API_ENDPOINTS.VEHICLES}`;
 
+  console.log('[fetchAllVehicles] Attempting to fetch from:', url);
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
@@ -30,18 +32,24 @@ export async function fetchAllVehicles(): Promise<VehicleLocationPayload[]> {
 
     clearTimeout(timeoutId);
 
+    console.log('[fetchAllVehicles] Response status:', response.status, response.statusText);
+
     if (!response.ok) {
       let errorMessage = `IoT backend returned ${response.status}: ${response.statusText}`;
+      let errorBody = '';
 
       // Try to parse error response (RFC 7807 format)
       try {
-        const errorData = (await response.json()) as ApiErrorResponse;
+        errorBody = await response.text();
+        const errorData = JSON.parse(errorBody) as ApiErrorResponse;
         errorMessage = errorData.detail || errorMessage;
+        console.error('[fetchAllVehicles] Error response:', errorData);
       } catch {
         // If error response is not JSON, use default message
+        console.error('[fetchAllVehicles] Non-JSON error response:', errorBody);
       }
 
-      throw new Error(errorMessage);
+      throw new Error(`${errorMessage} (URL: ${url})`);
     }
 
     const result = (await response.json()) as ApiResponse<BackendVehicleLocation[]>;
@@ -157,7 +165,7 @@ export async function fetchVehicleLocationHistory(
   start: string,
   end: string
 ): Promise<Array<VehicleLocationPayload & { time: string }>> {
-  const url = `${IOT_BACKEND_URL}${API_ENDPOINTS.VEHICLE_LOCATION_HISTORY(vehicleId)}?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
+  const url = `${IOT_BACKEND_URL}${API_ENDPOINTS.VEHICLE_LOCATION_HISTORY}?vehicleId=${encodeURIComponent(vehicleId)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);

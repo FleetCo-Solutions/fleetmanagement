@@ -27,8 +27,8 @@ export const API_TIMEOUT_MS = 10000;
  */
 export const API_ENDPOINTS = {
   VEHICLES: '/api/analytics/vehicles',
-  VEHICLE_LATEST_LOCATION: (vehicleId: string) => `/api/analytics/vehicles/${vehicleId}/latest`,
-  VEHICLE_LOCATION_HISTORY: (vehicleId: string) => `/api/analytics/vehicles/${vehicleId}/history`,
+  VEHICLE_LATEST_LOCATION: (vehicleId: string) => `/api/analytics/location/${vehicleId}/latest`,
+  VEHICLE_LOCATION_HISTORY: (vehicleId: string) => `/api/analytics/location/history`,
 } as const;
 
 
