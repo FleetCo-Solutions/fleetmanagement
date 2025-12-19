@@ -3,6 +3,7 @@ import { useParams } from 'next/navigation'
 import { maintenanceData } from '../components/maintenanceList'
 import OverviewRealTime from '@/app/components/cards/overviewRealTime'
 import React from 'react'
+import { useMaintenanceRecordByIdQuery } from '../query'
 
 // Mock maintenance history data
 const getMaintenanceHistory = () => {
@@ -75,10 +76,10 @@ const getHealthTrends = () => {
 export default function MaintenanceDetail() {
   const params = useParams()
   const vehicleId = params.id as string
+  const {data: maintenanceRecord} = useMaintenanceRecordByIdQuery(vehicleId)
   
-  const vehicle = maintenanceData.find(v => v.vehicleId === vehicleId)
-  
-  if (!vehicle) {
+
+  if (!maintenanceRecord) {
     return (
       <div className="bg-white w-full h-full flex items-center justify-center">
         <div className="text-center">
@@ -105,7 +106,7 @@ export default function MaintenanceDetail() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-black">Maintenance Details</h1>
-            <p className="text-black/70">{vehicle.vehicleRegNo} • {vehicle.driver}</p>
+            <p className="text-black/70">{maintenanceRecord.dto.content.vehicle.registrationNumber} • {maintenanceRecord.dto.content.vehicle.manufacturer}</p>
           </div>
           <div className="flex gap-3">
             <button className="bg-[#004953] text-white px-4 py-2 rounded-lg hover:bg-[#014852] transition-colors">
@@ -121,12 +122,12 @@ export default function MaintenanceDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <OverviewRealTime
             title="Current Health Score"
-            quantity={`${vehicle.healthScore}%`}
-            description={`Next service: ${new Date(vehicle.nextServiceDate).toLocaleDateString()}`}
+            quantity={`${ maintenanceRecord.dto.content.healthScoreAfter}%`}
+            description={`Next service: ${maintenanceRecord.dto.content.completedDate}`}
           />
           <OverviewRealTime
             title="Total Maintenance Cost"
-            quantity={`TZS ${totalMaintenanceCost.toLocaleString()}`}
+            quantity={`TZS ${maintenanceRecord.dto.content.actualCost}`}
             description={`${totalServices} services completed`}
           />
           <OverviewRealTime
@@ -136,8 +137,8 @@ export default function MaintenanceDetail() {
           />
           <OverviewRealTime
             title="Estimated Next Cost"
-            quantity={`TZS ${vehicle.estimatedCost.toLocaleString()}`}
-            description={`${vehicle.serviceType.replace('_', ' ')}`}
+            quantity={`TZS ${maintenanceRecord.dto.content.actualCost}`}
+            description={`${maintenanceRecord.dto.content.title.replace('_', ' ')}`}
           />
         </div>
 
@@ -151,58 +152,58 @@ export default function MaintenanceDetail() {
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Service Type:</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    vehicle.status === 'good' ? 'bg-green-100 text-green-800' :
-                    vehicle.status === 'due_soon' ? 'bg-yellow-100 text-yellow-800' :
-                    vehicle.status === 'overdue' ? 'bg-orange-100 text-orange-800' :
+                    maintenanceRecord.dto.content.status === 'good' ? 'bg-green-100 text-green-800' :
+                    maintenanceRecord.dto.content.status === 'due_soon' ? 'bg-yellow-100 text-yellow-800' :
+                    maintenanceRecord.dto.content.status === 'overdue' ? 'bg-orange-100 text-orange-800' :
                     'bg-red-100 text-red-800'
                   }`}>
-                    {vehicle.serviceType.replace('_', ' ').toUpperCase()}
+                    {maintenanceRecord.dto.content.type.replace('_', ' ').toUpperCase()}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Health Score:</span>
-                  <span className={`font-semibold ${
-                    vehicle.healthScore >= 80 ? 'text-green-600' : 
-                    vehicle.healthScore >= 60 ? 'text-yellow-600' : 'text-red-600'
+                 {maintenanceRecord.dto.content.healthScoreAfter ? <span className={`font-semibold ${
+                    maintenanceRecord.dto.content.healthScoreAfter >= 80 ? 'text-green-600' : 
+                    maintenanceRecord.dto.content.healthScoreAfter >= 60 ? 'text-yellow-600' : 'text-red-600'
                   }`}>
-                    {vehicle.healthScore}%
-                  </span>
+                    {maintenanceRecord.dto.content.healthScoreAfter}%
+                  </span> : <span className="font-semibold text-black/70">N/A</span>}
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Priority:</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    vehicle.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-                    vehicle.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                    vehicle.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                    maintenanceRecord.dto.content.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                    maintenanceRecord.dto.content.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                    maintenanceRecord.dto.content.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-green-100 text-green-800'
                   }`}>
-                    {vehicle.priority.toUpperCase()}
+                    {maintenanceRecord.dto.content.priority.toUpperCase()}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Last Service:</span>
-                  <span className="text-black/70">{new Date(vehicle.lastServiceDate).toLocaleDateString()}</span>
+                  <span className="text-black/70">{maintenanceRecord.dto.content.completedDate}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Next Service:</span>
-                  <span className="text-black/70">{new Date(vehicle.nextServiceDate).toLocaleDateString()}</span>
+                  <span className="text-black/70">{maintenanceRecord.dto.content.completedDate}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Current Mileage:</span>
-                  <span className="text-black/70">{vehicle.mileage.toLocaleString()} km</span>
+                  <span className="text-black/70">{maintenanceRecord.dto.content.mileage} km</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Downtime:</span>
-                  <span className="text-black/70">{vehicle.downtime} hours</span>
+                  <span className="text-black/70">{maintenanceRecord.dto.content.downtimeHours} hours</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Warranty:</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    vehicle.warrantyStatus === 'active' ? 'bg-green-100 text-green-800' :
-                    vehicle.warrantyStatus === 'expired' ? 'bg-red-100 text-red-800' :
+                    maintenanceRecord.dto.content.warrantyCovered === true ? 'bg-green-100 text-green-800' :
+                    maintenanceRecord.dto.content.warrantyCovered === false ? 'bg-red-100 text-red-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                    {vehicle.warrantyStatus.toUpperCase()}
+                    {maintenanceRecord.dto.content.warrantyCovered ? 'Covered' : 'Not Covered'}
                   </span>
                 </div>
               </div>
@@ -257,7 +258,7 @@ export default function MaintenanceDetail() {
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold text-black/70">Estimated Next Service:</span>
-                <span className="text-black/70">TZS {vehicle.estimatedCost.toLocaleString()}</span>
+                <span className="text-black/70">TZS {maintenanceRecord.dto.content.estimatedCost}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold text-black/70">Total Services:</span>
@@ -266,9 +267,9 @@ export default function MaintenanceDetail() {
               <div className="flex justify-between">
                 <span className="font-semibold text-black/70">Warranty Coverage:</span>
                 <span className={`font-semibold ${
-                  vehicle.warrantyStatus === 'active' ? 'text-green-600' : 'text-red-600'
+                  maintenanceRecord.dto.content.warrantyCovered ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {vehicle.warrantyStatus === 'active' ? 'Active' : 'Expired'}
+                  {maintenanceRecord.dto.content.warrantyCovered ? 'Covered' : 'Not Covered'}
                 </span>
               </div>
             </div>
@@ -312,35 +313,35 @@ export default function MaintenanceDetail() {
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="font-semibold text-black/70">Provider:</span>
-                <span className="text-black/70">{vehicle.serviceProvider}</span>
+                <span className="text-black/70">{maintenanceRecord.dto.content.serviceProvider}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold text-black/70">Location:</span>
-                <span className="text-black/70">{vehicle.location}</span>
+                <span className="text-black/70">{maintenanceRecord.dto.content.serviceProvider}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold text-black/70">Technician:</span>
-                <span className="text-black/70">{vehicle.technician}</span>
+                <span className="text-black/70">{maintenanceRecord.dto.content.technician}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold text-black/70">Notes:</span>
-                <span className="text-black/70 text-sm">{vehicle.notes}</span>
+                <span className="text-black/70 text-sm">{maintenanceRecord.dto.content.notes}</span>
               </div>
             </div>
           </div>
 
           {/* Parts Used */}
-          <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
+          {/* <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
             <h2 className="text-xl font-bold text-black mb-4">Parts Required</h2>
-            <div className="space-y-2">
-              {vehicle.partsUsed.map((part, index) => (
+            {maintenanceRecord.dto.content.partsUsed && <div className="space-y-2">
+              {maintenanceRecord.dto.content.partsUsed.map((part, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                   <span className="text-black/70">{part}</span>
                 </div>
               ))}
-            </div>
-          </div>
+            </div>}
+          </div> */}
         </div>
       </div>
     </div>

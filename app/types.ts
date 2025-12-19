@@ -49,32 +49,31 @@ export interface BackendUser {
   deletedAt: Date | null;
 }
 
-
 export interface UserDetails {
-  timestamp:  Date;
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        UserDetail;
+  message: string;
+  dto: UserDetail;
 }
 
 export interface UserDetail {
-  profile:  UserProfile;
+  profile: UserProfile;
   activity: UserActivity;
   emergencyContacts: EmergencyContact[];
 }
 
 export interface UserActivity {
-  lastLogin:  Date;
+  lastLogin: Date;
   accountAge: number;
 }
 
 export interface UserProfile {
-  id:        string;
+  id: string;
   firstName: string;
-  lastName:  string;
-  email:     string;
-  phone:     string;
-  status:    "active" | "inactive" | "suspended";
+  lastName: string;
+  email: string;
+  phone: string;
+  status: "active" | "inactive" | "suspended";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -133,65 +132,65 @@ export interface DriverDto {
 }
 
 export interface Driver {
-  id:               string;
-  firstName:        string;
-  lastName:         string;
-  phone:            string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
   alternativePhone: string;
-  licenseNumber:    string;
-  licenseExpiry:    string;
-  status:           string;
-  passwordHash:     string;
-  role:             string;
-  vehicleId:        string;
-  lastLogin:        Date | null;
-  createdAt:        Date;
-  updatedAt:        Date;
-  deletedAt:        Date | null;
-  vehicle?:          tempVehicle;
+  licenseNumber: string;
+  licenseExpiry: string;
+  status: string;
+  passwordHash: string;
+  role: string;
+  vehicleId: string;
+  lastLogin: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  vehicle?: tempVehicle;
 }
 
 export interface IndividualDriver {
   timestamp: Date;
-  message:   string;
-  dto:       DriverData;
+  message: string;
+  dto: DriverData;
 }
 
 export interface DriverData {
-  profile:  DriverProfile;
+  profile: DriverProfile;
   activity: DriverActivity;
   emergencyContacts: EmergencyContact[];
 }
 
 export interface DriverActivity {
-  lastLogin:  null;
+  lastLogin: null;
   accountAge: number;
 }
 
 export interface DriverProfile {
-  id:               string;
-  firstName:        string;
-  lastName:         string;
-  phone:            string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
   alternativePhone: string;
-  licenseNumber:    string;
-  licenseExpiry:    Date;
-  status:           "active" | "inactive" | "suspended";
+  licenseNumber: string;
+  licenseExpiry: Date;
+  status: "active" | "inactive" | "suspended";
 }
 
 export interface EmergencyContact {
-  id:            string;
-  firstName:     string;
-  lastName:      string;
-  relationship:  string;
-  address:       string;
-  phone:         string;
-  email:         string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  relationship: string;
+  address: string;
+  phone: string;
+  email: string;
   alternativeNo: string;
-  createdAt:     Date;
-  updatedAt:     null;
-  userId:        null;
-  driverId:      string;
+  createdAt: Date;
+  updatedAt: null;
+  userId: null;
+  driverId: string;
 }
 
 export interface EmergencyContactPayload {
@@ -216,78 +215,77 @@ export interface ProfilePayload {
 
 export interface DriversList {
   mesage: string;
-  data:   DriverDetails[];
+  data: DriverDetails[];
 }
 
 export interface DriverDetails {
-  id:                string;
-  firstName:         string;
-  lastName:          string;
-  phone:             string;
-  LicenseNumber:     string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  LicenseNumber: string;
   licenseExpiryDate: Date;
 }
 
 export interface tempVehicle {
-  id:                 string;
+  id: string;
   registrationNumber: string;
-  model:              string;
-  manufacturer:       string;
-  vin:                string;
-  color:              string;
-  createdAt:          Date;
-  updatedAt:          Date;
-  deletedAt:          null;
+  model: string;
+  manufacturer: string;
+  vin: string;
+  color: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: null;
 }
 
 export interface VehiclesList {
   message: string;
-  data:    vehicleDetails[];
+  data: vehicleDetails[];
 }
 
 export interface vehicleDetails {
-  id:                 string;
+  id: string;
   registrationNumber: string;
-  model:              string;
+  model: string;
 }
 
 export interface VehicleDetailsResponse {
   timestamp: Date;
-  message:   string;
-  dto:       Dto;
+  message: string;
+  dto: vehicleDetails;
 }
 
 export interface vehicleDetails {
-  id:                 string;
+  id: string;
   registrationNumber: string;
-  model:              string;
-  manufacturer:       string;
-  vin:                string;
-  color:              string;
-  createdAt:          Date;
-  updatedAt:          null;
-  deletedAt:          null;
-  drivers:            VehicleDriver[];
+  model: string;
+  manufacturer: string;
+  vin: string;
+  color: string;
+  createdAt: Date;
+  updatedAt: null;
+  deletedAt: null;
+  drivers: VehicleDriver[];
 }
 
 export interface VehicleDriver {
-  id:               string;
-  firstName:        string;
-  lastName:         string;
-  phone:            string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
   alternativePhone: string;
-  licenseNumber:    string;
-  licenseExpiry:    Date;
-  status:           string;
-  passwordHash:     string;
-  role:             string;
-  vehicleId:        string;
-  lastLogin:        null;
-  createdAt:        Date;
-  updatedAt:        Date;
-  deletedAt:        null;
+  licenseNumber: string;
+  licenseExpiry: Date;
+  status: string;
+  passwordHash: string;
+  role: "main" | "substitute" | null;
+  vehicleId: string;
+  lastLogin: null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: null;
 }
-
 
 export interface RoleFormData {
   name: string;
@@ -334,21 +332,18 @@ export interface Dto {
   hasPrevious: boolean;
 }
 
-
 export interface Vehicle {
-  id:                 string;
+  id: string;
   registrationNumber: string;
-  model:              string;
-  manufacturer:       string;
-  vin:                string;
-  color:              string;
-  createdAt:          Date;
-  updatedAt:          Date;
-  deletedAt:          null;
-  drivers?:            Driver[];
+  model: string;
+  manufacturer: string;
+  vin: string;
+  color: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: null;
+  drivers?: Driver[];
 }
-
-
 
 export enum Group {
   Logistics = "Logistics",
@@ -444,3 +439,132 @@ export interface MaintenanceData {
   technician: string;
   location: string;
 }
+
+export interface MaintenanceRecord {
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        MaintenanceContntDto;
+}
+
+export interface MaintenanceContntDto {
+  content: MaintenanceContent;
+}
+
+export interface MaintenanceContent {
+  id:               string;
+  vehicleId:        string;
+  requestedBy:      null;
+  driverId:         null;
+  type:             string;
+  status:           string;
+  priority:         string;
+  title:            string;
+  description:      string;
+  serviceProvider:  string;
+  technician:       null;
+  scheduledDate:    null;
+  completedDate:    null;
+  mileage:          null;
+  estimatedCost:    string;
+  actualCost:       null;
+  downtimeHours:    null;
+  partsUsed:        null;
+  notes:            null;
+  healthScoreAfter: null;
+  warrantyCovered:  boolean;
+  createdAt:        Date;
+  updatedAt:        null;
+  vehicle:          MaintenanceVehicle;
+  driver:           null;
+  requester:        null;
+}
+
+export interface MaintenanceVehicle {
+  id:                 string;
+  registrationNumber: string;
+  model:              string;
+  manufacturer:       string;
+  vin:                string;
+  color:              string;
+  createdAt:          Date;
+  updatedAt:          Date;
+  deletedAt:          null;
+}
+
+export interface TripsList {
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        TripsListContent;
+}
+
+export interface TripDetails{
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        TripDetailsDto;
+}
+
+export interface TripDetailsDto {
+  content: Trips;
+}
+
+export interface TripsListContent {
+  content:       Trips[];
+  totalPages:    number;
+  totalElements: number;
+}
+
+export interface Trips {
+  id:                 string;
+  vehicleId:          string;
+  mainDriverId:       string;
+  substituteDriverId: null;
+  startLocation:      string;
+  endLocation:        string;
+  startTime:          Date;
+  endTime:            Date;
+  status:             string;
+  distanceKm:         string;
+  fuelUsed:           string;
+  durationMinutes:    string;
+  notes:              string;
+  createdAt:          Date;
+  updatedAt:          null;
+  vehicle:            TripVehicle;
+  mainDriver:         TripMainDriver;
+  substituteDriver:   null;
+}
+
+export interface TripMainDriver {
+  id:               string;
+  firstName:        string;
+  lastName:         string;
+  phone:            string;
+  alternativePhone: string;
+  licenseNumber:    string;
+  licenseExpiry:    Date;
+  status:           string;
+  passwordHash:     string;
+  role:             string;
+  vehicleId:        string;
+  lastLogin:        null;
+  createdAt:        Date;
+  updatedAt:        Date;
+  deletedAt:        null;
+}
+
+export interface TripVehicle {
+  id:                 string;
+  registrationNumber: string;
+  model:              string;
+  manufacturer:       string;
+  vin:                string;
+  color:              string;
+  createdAt:          Date;
+  updatedAt:          Date;
+  deletedAt:          null;
+}
+
+

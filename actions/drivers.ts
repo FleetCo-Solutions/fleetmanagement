@@ -106,6 +106,29 @@ export async function assignDriverToVehicle(payload: AssignDriverRequestBody) {
   }
 }
 
+export async function unassignDriver(driverId: string) {
+  try {
+    const response = await fetch(
+      `${process.env.LOCAL_BACKENDBASE_URL}/drivers/unassignDriver`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ driverId }),
+      }
+    );
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to unassign driver");
+    }
+    return result;
+  } catch (err) {
+    throw new Error((err as Error).message);
+  }
+}
+
 export async function getDriverDashboard() {
   try {
     const response = await fetch(

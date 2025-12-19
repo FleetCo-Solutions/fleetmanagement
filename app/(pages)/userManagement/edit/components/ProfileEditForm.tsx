@@ -173,7 +173,7 @@ export default function ProfileTab({ userData}: ProfileTabProps) {
             {new Date(userData.createdAt).toLocaleTimeString()}
           </p>
         </div>
-        <div>
+        {userData.updatedAt != null &&<div>
           <p className="text-sm text-gray-600 mb-1">Last Updated</p>
           <p className="font-medium text-gray-900">
             {new Date(userData.updatedAt).toLocaleDateString("en-US", {
@@ -185,7 +185,7 @@ export default function ProfileTab({ userData}: ProfileTabProps) {
           <p className="text-xs text-gray-500">
             {new Date(userData.updatedAt).toLocaleTimeString()}
           </p>
-        </div>
+        </div>}
       </div>
 
       {/* Submit Button */}
