@@ -127,6 +127,20 @@ export const emergencyContacts = pgTable(
   }
 );
 
+export const emergencyContactsRelations = relations(
+  emergencyContacts,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [emergencyContacts.userId],
+      references: [users.id],
+    }),
+    driver: one(drivers, {
+      fields: [emergencyContacts.driverId],
+      references: [drivers.id],
+    }),
+  })
+);
+
 export const passwordResetOtps = pgTable(
   "password_reset_otps",
   {
@@ -262,65 +276,6 @@ export const trips = pgTable(
   }
 );
 
-//Relationships
-// Relation: A user has many emergency contacts
-export const usersRelations = relations(users, ({ many }) => ({
-  emergencyContacts: many(emergencyContacts), // user -> multiple emergencyContacts
-  maintenanceRequests: many(maintenanceRecords), // user -> multiple maintenance requests
-}));
-
-// Relation: A driver has many emergency contacts
-export const driversRelation = relations(drivers, ({ many, one }) => ({
-  emergencyContacts: many(emergencyContacts), // driver -> multiple emergencyContacts
-  vehicle: one(vehicles, {
-    fields: [drivers.vehicleId],
-    references: [vehicles.id],
-  }),
-  maintenanceRecords: many(maintenanceRecords),
-  tripsAsMain: many(trips, { relationName: "mainDriver" }),
-  tripsAsSubstitute: many(trips, { relationName: "substituteDriver" }),
-}));
-
-// Relation: A vehicle has many drivers
-export const vehiclesRelation = relations(vehicles, ({ many }) => ({
-  drivers: many(drivers), //vehicle -> multiple drivers
-  maintenanceRecords: many(maintenanceRecords),
-  trips: many(trips),
-}));
-
-// Relation: An emergency contact belongs to one user or driver
-export const emergencyContactsRelations = relations(
-  emergencyContacts,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [emergencyContacts.userId],
-      references: [users.id],
-    }),
-    driver: one(drivers, {
-      fields: [emergencyContacts.driverId],
-      references: [drivers.id],
-    }),
-  })
-);
-
-export const maintenanceRecordsRelations = relations(
-  maintenanceRecords,
-  ({ one }) => ({
-    vehicle: one(vehicles, {
-      fields: [maintenanceRecords.vehicleId],
-      references: [vehicles.id],
-    }),
-    requester: one(users, {
-      fields: [maintenanceRecords.requestedBy],
-      references: [users.id],
-    }),
-    driver: one(drivers, {
-      fields: [maintenanceRecords.driverId],
-      references: [drivers.id],
-    }),
-  })
-);
-
 export const tripsRelations = relations(trips, ({ one }) => ({
   vehicle: one(vehicles, {
     fields: [trips.vehicleId],
@@ -336,4 +291,70 @@ export const tripsRelations = relations(trips, ({ one }) => ({
     references: [drivers.id],
     relationName: "substituteDriver",
   }),
+}));
+
+//Relationships
+// Relation: A user has many emergency contacts
+export const usersRelations = relations(users, ({ many }) => ({
+  emergencyContacts: many(emergencyContacts), // user -> multiple emergencyContacts
+  maintenanceRequests: many(maintenanceRecords), // user -> multiple maintenance requests
+}));
+
+// Relation: A driver has many emergency contacts
+
+export const assignmentStatusEnum = pgEnum("assignment_status", [
+  "active",
+  "completed",
+]);
+
+export const vehicleAssignments = pgTable("vehicle_assignments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  driverId: uuid("driver_id")
+    .references(() => drivers.id)
+    .notNull(),
+  vehicleId: uuid("vehicle_id")
+    .references(() => vehicles.id)
+    .notNull(),
+  role: driverRoleEnum("role").notNull(),
+  status: assignmentStatusEnum("status").default("active").notNull(),
+  assignedAt: timestamp("assigned_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  unassignedAt: timestamp("unassigned_at", { withTimezone: true }),
+  notes: varchar("notes", { length: 500 }),
+});
+
+export const vehicleAssignmentsRelations = relations(
+  vehicleAssignments,
+  ({ one }) => ({
+    driver: one(drivers, {
+      fields: [vehicleAssignments.driverId],
+      references: [drivers.id],
+    }),
+    vehicle: one(vehicles, {
+      fields: [vehicleAssignments.vehicleId],
+      references: [vehicles.id],
+    }),
+  })
+);
+
+// Update drivers relations to include assignments
+export const driversRelation = relations(drivers, ({ many, one }) => ({
+  emergencyContacts: many(emergencyContacts),
+  vehicle: one(vehicles, {
+    fields: [drivers.vehicleId],
+    references: [vehicles.id],
+  }),
+  maintenanceRecords: many(maintenanceRecords),
+  tripsAsMain: many(trips, { relationName: "mainDriver" }),
+  tripsAsSubstitute: many(trips, { relationName: "substituteDriver" }),
+  assignments: many(vehicleAssignments),
+}));
+
+// Update vehicles relations to include assignments
+export const vehiclesRelation = relations(vehicles, ({ many }) => ({
+  drivers: many(drivers),
+  maintenanceRecords: many(maintenanceRecords),
+  trips: many(trips),
+  assignments: many(vehicleAssignments),
 }));
