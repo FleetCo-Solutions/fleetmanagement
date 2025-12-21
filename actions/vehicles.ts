@@ -85,3 +85,47 @@ export async function updateVehicle(id: string, payload: UpdateVehiclePayload) {
     throw new Error((error as Error).message);
   }
 }
+
+export async function getVehicleDriverHistory(id: string) {
+  try {
+    const response = await fetch(
+      `${process.env.LOCAL_BACKENDBASE_URL}/vehicles/${id}/driver-history`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to fetch driver history");
+    }
+    return result;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+}
+
+export async function getVehicleTrips(id: string) {
+  try {
+    const response = await fetch(
+      `${process.env.LOCAL_BACKENDBASE_URL}/vehicles/${id}/trips`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to fetch vehicle trips");
+    }
+    return result;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+}
