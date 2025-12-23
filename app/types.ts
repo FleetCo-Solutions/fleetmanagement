@@ -443,70 +443,87 @@ export interface MaintenanceData {
   location: string;
 }
 
-export interface MaintenanceRecord {
-  timestamp:  Date;
+export interface MaintenanceApiResponse {
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        MaintenanceContntDto;
+  message: string;
+  dto: MaintenanceContntDto;
+}
+
+export interface MaintenanceDetailResponse {
+  timestamp: Date;
+  statusCode: string;
+  message: string;
+  dto: MaintenanceDetailDto;
+}
+
+export interface MaintenanceDetailDto {
+  content: MaintenanceRecord;
 }
 
 export interface MaintenanceContntDto {
-  content: MaintenanceContent;
+  content: MaintenanceRecord[];
+  totalElements: number;
+  totalPages: number;
 }
 
-export interface MaintenanceContent {
-  id:               string;
-  vehicleId:        string;
-  requestedBy:      null;
-  driverId:         null;
-  type:             string;
-  status:           string;
-  priority:         string;
-  title:            string;
-  description:      string;
-  serviceProvider:  string;
-  technician:       null;
-  scheduledDate:    null;
-  completedDate:    null;
-  mileage:          null;
-  estimatedCost:    string;
-  actualCost:       null;
-  downtimeHours:    null;
-  partsUsed:        null;
-  notes:            null;
-  healthScoreAfter: null;
-  warrantyCovered:  boolean;
-  createdAt:        Date;
-  updatedAt:        null;
-  vehicle:          MaintenanceVehicle;
-  driver:           null;
-  requester:        null;
+export interface MaintenanceRecord {
+  id: string;
+  vehicleId: string;
+  requestedBy?: string | null;
+  driverId?: string | null;
+  type: string;
+  status: string;
+  priority: string;
+  title: string;
+  description?: string | null;
+  serviceProvider?: string | null;
+  technician?: string | null;
+  scheduledDate?: string | null;
+  completedDate?: string | null;
+  mileage?: string | null;
+  estimatedCost?: string | null;
+  actualCost?: string | null;
+  downtimeHours?: string | null;
+  partsUsed?: string | null;
+  notes?: string | null;
+  healthScoreAfter?: string | null;
+  warrantyCovered: boolean;
+  createdAt: string | Date;
+  updatedAt?: string | Date | null;
+  vehicle?: MaintenanceVehicle;
+  driver?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  } | null;
+  requester?: null;
 }
 
 export interface MaintenanceVehicle {
-  id:                 string;
+  id: string;
   registrationNumber: string;
-  model:              string;
-  manufacturer:       string;
-  vin:                string;
-  color:              string;
-  createdAt:          Date;
-  updatedAt:          Date;
-  deletedAt:          null;
+  model: string;
+  manufacturer: string;
+  vin: string;
+  color: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: null;
 }
 
 export interface TripsList {
-  timestamp:  Date;
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        TripsListContent;
+  message: string;
+  dto: TripsListContent;
 }
 
-export interface TripDetails{
-  timestamp:  Date;
+export interface TripDetails {
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        TripDetailsDto;
+  message: string;
+  dto: TripDetailsDto;
 }
 
 export interface TripDetailsDto {
@@ -514,60 +531,58 @@ export interface TripDetailsDto {
 }
 
 export interface TripsListContent {
-  content:       Trips[];
-  totalPages:    number;
+  content: Trips[];
+  totalPages: number;
   totalElements: number;
 }
 
 export interface Trips {
-  id:                 string;
-  vehicleId:          string;
-  mainDriverId:       string;
+  id: string;
+  vehicleId: string;
+  mainDriverId: string;
   substituteDriverId: null;
-  startLocation:      string;
-  endLocation:        string;
-  startTime:          Date;
-  endTime:            Date;
-  status:             string;
-  distanceKm:         string;
-  fuelUsed:           string;
-  durationMinutes:    string;
-  notes:              string;
-  createdAt:          Date;
-  updatedAt:          null;
-  vehicle:            TripVehicle;
-  mainDriver:         TripMainDriver;
-  substituteDriver:   null;
+  startLocation: string;
+  endLocation: string;
+  startTime: Date;
+  endTime: Date;
+  status: string;
+  distanceKm: string;
+  fuelUsed: string;
+  durationMinutes: string;
+  notes: string;
+  createdAt: Date;
+  updatedAt: null;
+  vehicle: TripVehicle;
+  mainDriver: TripMainDriver;
+  substituteDriver: null;
 }
 
 export interface TripMainDriver {
-  id:               string;
-  firstName:        string;
-  lastName:         string;
-  phone:            string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
   alternativePhone: string;
-  licenseNumber:    string;
-  licenseExpiry:    Date;
-  status:           string;
-  passwordHash:     string;
-  role:             string;
-  vehicleId:        string;
-  lastLogin:        null;
-  createdAt:        Date;
-  updatedAt:        Date;
-  deletedAt:        null;
+  licenseNumber: string;
+  licenseExpiry: Date;
+  status: string;
+  passwordHash: string;
+  role: string;
+  vehicleId: string;
+  lastLogin: null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: null;
 }
 
 export interface TripVehicle {
-  id:                 string;
+  id: string;
   registrationNumber: string;
-  model:              string;
-  manufacturer:       string;
-  vin:                string;
-  color:              string;
-  createdAt:          Date;
-  updatedAt:          Date;
-  deletedAt:          null;
+  model: string;
+  manufacturer: string;
+  vin: string;
+  color: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: null;
 }
-
-

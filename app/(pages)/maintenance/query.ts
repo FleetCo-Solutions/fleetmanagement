@@ -9,22 +9,21 @@ import {
 } from "@/actions/maintenance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-interface MaintenanceResponse {
-  dto: {
-    content: MaintenanceRecord[];
-    totalElements: number;
-  };
-}
+import {
+  MaintenanceApiResponse,
+  MaintenanceDetailResponse,
+  MaintenanceRecord,
+} from "@/app/types";
 
 export const useMaintenanceRecordsQuery = () => {
-  return useQuery<MaintenanceResponse>({
+  return useQuery<MaintenanceApiResponse>({
     queryKey: ["MaintenanceRecords"],
     queryFn: async () => await getMaintenanceRecords(),
   });
 };
 
 export const useMaintenanceRecordByIdQuery = (id: string) => {
-  return useQuery<MaintenanceRecord>({
+  return useQuery<MaintenanceDetailResponse>({
     queryKey: ["MaintenanceRecordById"],
     queryFn: async () => await getMaintenanceRecordById(id),
   });
@@ -71,7 +70,7 @@ export const useDeleteMaintenanceRecord = () => {
 };
 
 import { getVehiclesList } from "@/actions/vehicles";
-import { MaintenanceRecord, VehiclesList } from "@/app/types";
+import { VehiclesList } from "@/app/types";
 
 export const useVehiclesListQuery = () => {
   return useQuery<VehiclesList>({

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import UniversalTable from "@/app/components/universalTable";
 import { ColumnDef } from "@tanstack/react-table";
-import { MaintenanceRecord } from "@/actions/maintenance";
+import { MaintenanceRecord } from "@/app/types";
 import { useMaintenanceRecordsQuery } from "../query";
 import ScheduleServiceModal from "./ScheduleServiceModal";
 

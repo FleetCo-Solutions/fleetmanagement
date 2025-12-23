@@ -1,45 +1,7 @@
 "use server";
 
-export interface MaintenanceRecord {
-  id: string;
-  vehicleId: string;
-  requestedBy?: string;
-  driverId?: string;
-  type: string;
-  status: string;
-  priority: string;
-  title: string;
-  description?: string;
-  serviceProvider?: string;
-  technician?: string;
-  scheduledDate?: string;
-  completedDate?: string;
-  mileage?: string;
-  estimatedCost?: string;
-  actualCost?: string;
-  downtimeHours?: string;
-  partsUsed?: string;
-  notes?: string;
-  healthScoreAfter?: string;
-  warrantyCovered: boolean;
-  createdAt: string;
-  updatedAt?: string;
-  vehicle?: {
-    id: string;
-    registrationNumber: string;
-    model: string;
-  };
-  driver?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-  };
-  requester?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-  };
-}
+import { MaintenanceRecord } from "@/app/types";
+export type { MaintenanceRecord };
 
 export interface CreateMaintenancePayload {
   vehicleId: string;

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import UniversalTable from "@/app/components/universalTable";
 import { useMaintenanceRecordsQuery } from "../query";

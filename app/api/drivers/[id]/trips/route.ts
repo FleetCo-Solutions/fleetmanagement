@@ -3,7 +3,8 @@ import { getDriverTrips } from "./get";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   return getDriverTrips(params.id);
 }
