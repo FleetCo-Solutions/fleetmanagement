@@ -21,7 +21,7 @@
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.4",
     "leaflet": "^1.9.4",
-    "next": "15.4.4",
+    "next": "15.4.10",
     "next-auth": "5.0.0-beta.29",
     "next-rest-framework": "^6.1.0",
     "pg": "^8.16.3",
