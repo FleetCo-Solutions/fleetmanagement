@@ -4,7 +4,15 @@ import OverviewRealTime from "@/app/components/cards/overviewRealTime";
 import UniversalTable from "@/app/components/universalTable";
 import { ColumnDef } from "@tanstack/react-table";
 import React, { useState } from "react";
-import { useDriverDetailsQuery, usePostEmergencyContact, useUpdateEmergencyContact, useDeleteEmergencyContact, useUpdateDriver } from "./query";
+import {
+  useDriverDetailsQuery,
+  usePostEmergencyContact,
+  useUpdateEmergencyContact,
+  useDeleteEmergencyContact,
+  useUpdateDriver,
+  useDriverVehicleHistory,
+  useDriverTrips,
+} from "./query";
 import DriverProfileForm from "../components/DriverProfileForm";
 import EmergencyContactForm from "@/app/components/forms/EmergencyContactForm";
 import { EmergencyContactPayload } from "@/app/types";
@@ -13,54 +21,113 @@ import { toast } from "sonner";
 export default function DriverProfile() {
   const params = useParams();
   const driverId = params.id as string;
-  const {
-    data: driverDetails,
-  } = useDriverDetailsQuery({ id: driverId });
-  const { mutateAsync: addEmergencyContact } = usePostEmergencyContact(driverId);
-  const { mutateAsync: updateEmergencyContactMutate } = useUpdateEmergencyContact(driverId);
-  const { mutateAsync: deleteEmergencyContactMutate } = useDeleteEmergencyContact(driverId);
+  const { data: driverDetails } = useDriverDetailsQuery({ id: driverId });
+  const { data: driverTrips } = useDriverTrips(driverId);
+  const { data: vehicleHistory } = useDriverVehicleHistory(driverId);
+  const { mutateAsync: addEmergencyContact } =
+    usePostEmergencyContact(driverId);
+  const { mutateAsync: updateEmergencyContactMutate } =
+    useUpdateEmergencyContact(driverId);
+  const { mutateAsync: deleteEmergencyContactMutate } =
+    useDeleteEmergencyContact(driverId);
 
-  // Mock recent trips for the driver
-  const recentTrips = [
+  const tripColumns: ColumnDef<any>[] = [
     {
-      date: "2024-06-01",
-      vehicle: "T 324 FDE",
-      origin: "Dar es Salaam",
-      destination: "Arusha",
-      distance: 600,
-      violations: 0,
-      fuelUsed: 50,
+      header: "Date",
+      accessorKey: "startTime",
+      cell: ({ row }) => new Date(row.original.startTime).toLocaleDateString(),
     },
     {
-      date: "2024-05-28",
-      vehicle: "T 432 FED",
-      origin: "Arusha",
-      destination: "Mwanza",
-      distance: 800,
-      violations: 1,
-      fuelUsed: 70,
+      header: "Vehicle",
+      accessorKey: "vehicle.registrationNumber",
+      cell: ({ row }) => row.original.vehicle?.registrationNumber || "Unknown",
+    },
+    {
+      header: "Model",
+      accessorKey: "vehicle.model",
+      cell: ({ row }) => row.original.vehicle?.model || "-",
+    },
+    {
+      header: "Origin",
+      accessorKey: "startLocation",
+    },
+    {
+      header: "Destination",
+      accessorKey: "endLocation",
+    },
+    {
+      header: "Distance (km)",
+      accessorKey: "distanceKm",
+      cell: ({ row }) => row.original.distanceKm || "-",
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: ({ row }) => (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
+            row.original.status === "completed"
+              ? "bg-green-100 text-green-800"
+              : row.original.status === "in_progress"
+              ? "bg-blue-100 text-blue-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {row.original.status.replace("_", " ")}
+        </span>
+      ),
     },
   ];
 
-  interface Trip {
-    date: string;
-    vehicle: string;
-    origin: string;
-    destination: string;
-    distance: number;
-    violations: number;
-    fuelUsed: number;
-  }
-
-  const tripColumns: ColumnDef<Trip>[] = [
-    { header: "Date", accessorKey: "date" },
-    { header: "Vehicle", accessorKey: "vehicle" },
-    { header: "Origin", accessorKey: "origin" },
-    { header: "Destination", accessorKey: "destination" },
-    { header: "Distance (km)", accessorKey: "distance" },
-    { header: "Violations", accessorKey: "violations" },
-    { header: "Fuel Used (L)", accessorKey: "fuelUsed" },
+  const historyColumns: ColumnDef<any>[] = [
+    {
+      header: "Vehicle",
+      accessorKey: "vehicle.registrationNumber",
+      cell: ({ row }) => row.original.vehicle?.registrationNumber || "Unknown",
+    },
+    {
+      header: "Model",
+      accessorKey: "vehicle.model",
+      cell: ({ row }) => row.original.vehicle?.model || "-",
+    },
+    {
+      header: "Role",
+      accessorKey: "role",
+      cell: ({ row }) => (
+        <span className="capitalize">{row.original.role}</span>
+      ),
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: ({ row }) => (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
+            row.original.status === "active"
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {row.original.status.toUpperCase()}
+        </span>
+      ),
+    },
+    {
+      header: "Assigned Date",
+      accessorKey: "assignedAt",
+      cell: ({ row }) => new Date(row.original.assignedAt).toLocaleDateString(),
+    },
+    {
+      header: "Unassigned Date",
+      accessorKey: "unassignedAt",
+      cell: ({ row }) =>
+        row.original.unassignedAt
+          ? new Date(row.original.unassignedAt).toLocaleDateString()
+          : "-",
+    },
   ];
+
+  // ... (historyColumns remain same)
 
   const [activeTab, setActiveTab] = useState<
     "profile" | "emergency" | "trips" | "vehicle"
@@ -135,11 +202,15 @@ export default function DriverProfile() {
               { key: "profile", label: "Profile" },
               { key: "emergency", label: "Emergency Contact" },
               { key: "trips", label: "Trips" },
-              { key: "vehicle", label: "Vehicle" },
+              { key: "vehicle", label: "Vehicle History" },
             ].map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as "profile" | "emergency" | "trips" | "vehicle")}
+                onClick={() =>
+                  setActiveTab(
+                    tab.key as "profile" | "emergency" | "trips" | "vehicle"
+                  )
+                }
                 className={`pb-3 px-1 text-lg font-semibold transition-colors ${
                   activeTab === tab.key
                     ? "border-b-2 border-[#004953] text-[#004953]"
@@ -156,79 +227,88 @@ export default function DriverProfile() {
         {activeTab === "profile" && (
           <div className="bg-white border border-black/20 rounded-xl p-10 shadow-sm">
             {driverDetails && (
-                <DriverProfileForm
-                  driver={driverDetails.dto.profile}
-                  onSave={async (data) => {
-                    try {
-                      // Convert Date object to string if needed, or ensure API handles it.
-                      // The form uses Date for licenseExpiry, but API expects string?
-                      // Schema says varchar(15).
-                      // Let's ensure we format it correctly.
-                      const payload = {
-                        ...data,
-                        licenseExpiry: data.licenseExpiry instanceof Date 
-                          ? data.licenseExpiry.toISOString().split('T')[0] 
-                          : String(data.licenseExpiry)
-                      };
-                      
-                      await toast.promise(updateDriver({ id: driverId, payload }), {
-                        loading: "Updating driver...",
-                        success: "Driver updated successfully",
-                        error: "Failed to update driver"
-                      });
-                      setIsEditing(false);
-                    } catch (error) {
-                      console.error("Error updating driver:", error);
-                    }
-                  }}
-                  onCancel={() => setIsEditing(false)}
-                />
-              )
-            }
+              <DriverProfileForm
+                driver={driverDetails.dto.profile}
+                onSave={async (data) => {
+                  try {
+                    // Convert Date object to string if needed, or ensure API handles it.
+                    // The form uses Date for licenseExpiry, but API expects string?
+                    // Schema says varchar(15).
+                    // Let's ensure we format it correctly.
+                    const payload = {
+                      ...data,
+                      licenseExpiry:
+                        data.licenseExpiry instanceof Date
+                          ? data.licenseExpiry.toISOString().split("T")[0]
+                          : String(data.licenseExpiry),
+                    };
+
+                    toast.promise(updateDriver({ id: driverId, payload }), {
+                      loading: "Updating driver...",
+                      success: (result) =>
+                        result.message || "Driver updated successfully",
+                      error: (error) =>
+                        error.message || "Failed to update driver",
+                    });
+                    setIsEditing(false);
+                  } catch (error) {
+                    console.error("Error updating driver:", error);
+                  }
+                }}
+                onCancel={() => setIsEditing(false)}
+              />
+            )}
           </div>
         )}
 
         {activeTab === "emergency" && (
           <div className="bg-white border border-black/20 rounded-xl px-10 py-7 shadow-sm">
-            {driverDetails && <EmergencyContactForm
-              contacts={driverDetails.dto.emergencyContacts}
-              onSave={async (contacts) => {
-                console.log("Saving bulk emergency contacts:", contacts);
-                try {
-                  const promises = [];
+            {driverDetails && (
+              <EmergencyContactForm
+                contacts={driverDetails.dto.emergencyContacts}
+                onSave={async (contacts) => {
+                  console.log("Saving bulk emergency contacts:", contacts);
+                  try {
+                    const promises = [];
 
-                  // Handle Updates and Adds
-                  for (const contact of contacts) {
-                    if (contact.id && contact.id.length > 10) { // Simple check for real ID vs temp
-                      promises.push(updateEmergencyContactMutate({ id: contact.id, payload: contact }));
-                    } else {
-                      const payload: EmergencyContactPayload = {
-                        ...contact,
-                        driverId: driverId
-                      };
-                      promises.push(addEmergencyContact(payload));
+                    // Handle Updates and Adds
+                    for (const contact of contacts) {
+                      if (contact.id && contact.id.length > 10) {
+                        // Simple check for real ID vs temp
+                        promises.push(
+                          updateEmergencyContactMutate({
+                            id: contact.id,
+                            payload: contact,
+                          })
+                        );
+                      } else {
+                        const payload: EmergencyContactPayload = {
+                          ...contact,
+                          driverId: driverId,
+                        };
+                        promises.push(addEmergencyContact(payload));
+                      }
                     }
-                  }
 
-                  await toast.promise(Promise.all(promises), {
-                    loading: "Saving changes...",
-                    success: "All changes saved successfully",
-                    error: "Failed to save some changes",
+                    await toast.promise(Promise.all(promises), {
+                      loading: "Saving changes...",
+                      success: "All changes saved successfully",
+                      error: "Failed to save some changes",
+                    });
+                  } catch (error) {
+                    console.error("Bulk save error:", error);
+                    toast.error("An error occurred while saving");
+                  }
+                }}
+                onDelete={async (id) => {
+                  await toast.promise(deleteEmergencyContactMutate(id), {
+                    loading: "Deleting contact...",
+                    success: "Contact deleted successfully",
+                    error: "Failed to delete contact",
                   });
-                  
-                } catch (error) {
-                  console.error("Bulk save error:", error);
-                  toast.error("An error occurred while saving");
-                }
-              }}
-              onDelete={async (id) => {
-                await toast.promise(deleteEmergencyContactMutate(id), {
-                  loading: "Deleting contact...",
-                  success: "Contact deleted successfully",
-                  error: "Failed to delete contact"
-                });
-              }}
-            />}
+                }}
+              />
+            )}
           </div>
         )}
 
@@ -236,14 +316,20 @@ export default function DriverProfile() {
           <div className="space-y-6">
             <div className="border border-black/20 rounded-xl bg-white p-5">
               <h2 className="text-2xl font-semibold text-black mb-5">
-                Recent Trips
+                Trip History
               </h2>
-              <UniversalTable
-                data={recentTrips}
-                columns={tripColumns}
-                showSearch={false}
-                showPagination={false}
-              />
+              {driverTrips?.dto && driverTrips.dto.length > 0 ? (
+                <UniversalTable
+                  data={driverTrips.dto}
+                  columns={tripColumns}
+                  showSearch={false}
+                  showPagination={true}
+                />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No trip history found.
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -251,15 +337,20 @@ export default function DriverProfile() {
         {activeTab === "vehicle" && (
           <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
             <h2 className="text-xl font-bold text-black mb-4">
-              Assigned Vehicle
+              Vehicle Assignment History
             </h2>
-            <div className="space-y-2 text-black/60">
-              <div>
-                <span className="font-semibold">Registration Number:</span>{" "}
-                {"T 321 EDS"}
+            {vehicleHistory?.dto && vehicleHistory.dto.length > 0 ? (
+              <UniversalTable
+                data={vehicleHistory.dto}
+                columns={historyColumns}
+                showSearch={false}
+                showPagination={true}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No vehicle assignment history found.
               </div>
-              {/* Additional vehicle details would be shown here when available */}
-            </div>
+            )}
           </div>
         )}
       </div>

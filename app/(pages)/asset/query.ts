@@ -83,3 +83,25 @@ export {
   useDriversListQuery,
   useAssignVehicleToDriver,
 } from "../drivers/query";
+
+export const useVehicleDriverHistory = (vehicleId: string) => {
+  return useQuery({
+    queryKey: ["vehicleDriverHistory", vehicleId],
+    queryFn: async () => {
+      const { getVehicleDriverHistory } = await import("@/actions/vehicles");
+      return await getVehicleDriverHistory(vehicleId);
+    },
+    enabled: !!vehicleId,
+  });
+};
+
+export const useVehicleTrips = (vehicleId: string) => {
+  return useQuery({
+    queryKey: ["vehicleTrips", vehicleId],
+    queryFn: async () => {
+      const { getVehicleTrips } = await import("@/actions/vehicles");
+      return await getVehicleTrips(vehicleId);
+    },
+    enabled: !!vehicleId,
+  });
+};

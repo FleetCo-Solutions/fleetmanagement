@@ -1,5 +1,5 @@
 import { db } from "@/app/db";
-import { drivers } from "@/app/db/schema";
+import { drivers, vehicleAssignments } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -74,13 +74,24 @@ export async function assignDriverToVehcle(request: NextRequest) {
       .set({ vehicleId: vehicleId, role: role, updatedAt: new Date() })
       .where(eq(drivers.id, driverId));
 
+    // Create assignment history record
+    await db.insert(vehicleAssignments).values({
+      driverId: driverId,
+      vehicleId: vehicleId,
+      role: role,
+      status: "active",
+      assignedAt: new Date(),
+    });
+
     return NextResponse.json(
       { message: "Driver assigned to vehicle successfully" },
       { status: 200 }
     );
   } catch (error) {
     return NextResponse.json(
-      { message: "Error checking assigned drivers" },
+      {
+        message: "Error checking assigned drivers: " + (error as Error).message,
+      },
       { status: 500 }
     );
   }

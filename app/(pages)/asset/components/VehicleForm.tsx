@@ -127,11 +127,19 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ onClose, onSuccess }) => {
           <Controller
             name="vin"
             control={control}
+            rules={{
+                maxLength: {
+                    value: 17,
+                    message: "VIN must be 17 characters",
+                  },
+                  minLength: {
+                    value: 17,
+                    message: "VIN must be 17 characters",
+                  },
+            }}
             render={({ field }) => (
               <input
                 {...field}
-                max={17}
-                min={17}
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent"
                 placeholder="Vehicle Identification Number"

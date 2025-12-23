@@ -1,6 +1,6 @@
 import { db } from "@/app/db";
-import { drivers } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { drivers, vehicleAssignments } from "@/app/db/schema";
+import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -36,10 +36,47 @@ export async function POST(request: NextRequest) {
       })
       .where(eq(drivers.id, driverId));
 
-    return NextResponse.json({
-      message: "Driver unassigned successfully",
-      success: true,
-    },{status: 200});
+    // Update assignment history record
+    if (driver.vehicleId) {
+      await db
+        .update(vehicleAssignments)
+        .set({
+          status: "completed",
+          unassignedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(vehicleAssignments.driverId, driverId),
+            eq(vehicleAssignments.vehicleId, driver.vehicleId),
+            eq(vehicleAssignments.status, "active")
+          )
+        );
+    }
+
+    // Update assignment history record
+    if (driver.vehicleId) {
+      await db
+        .update(vehicleAssignments)
+        .set({
+          status: "completed",
+          unassignedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(vehicleAssignments.driverId, driverId),
+            eq(vehicleAssignments.vehicleId, driver.vehicleId),
+            eq(vehicleAssignments.status, "active")
+          )
+        );
+    }
+
+    return NextResponse.json(
+      {
+        message: "Driver unassigned successfully",
+        success: true,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error unassigning driver:", error);
     return NextResponse.json(

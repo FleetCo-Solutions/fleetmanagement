@@ -8,8 +8,12 @@ import {
   useDriversListQuery,
   useAssignVehicleToDriver,
   useUnassignDriver,
+  useVehicleDriverHistory,
+  useVehicleTrips,
 } from "../../query";
 import ConfirmationModal from "@/app/components/ConfirmationModal";
+import UniversalTable from "@/app/components/universalTable";
+import { ColumnDef } from "@tanstack/react-table";
 
 interface VehicleFormData {
   registrationNumber: string;
@@ -30,10 +34,15 @@ export default function VehicleEditForm({
   onSave,
   isLoading,
 }: VehicleEditFormProps) {
-  const [activeTab, setActiveTab] = useState<"details" | "drivers">("details");
+  const [activeTab, setActiveTab] = useState<
+    "details" | "drivers" | "history" | "trips"
+  >("details");
   const { data: driversList } = useDriversListQuery();
   const { mutateAsync: assignDriverMutation } = useAssignVehicleToDriver();
   const { mutateAsync: unassignDriverMutation } = useUnassignDriver();
+  const { data: driverHistory } = useVehicleDriverHistory(vehicleData.dto.id);
+  const { data: vehicleTrips } = useVehicleTrips(vehicleData.dto.id);
+
   const [unassignModalOpen, setUnassignModalOpen] = useState(false);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
@@ -94,8 +103,8 @@ export default function VehicleEditForm({
         }),
         {
           loading: "Assigning driver...",
-          success: "Driver assigned successfully",
-          error: "Failed to assign driver",
+          success: (result) => result.message || "Driver assigned successfully",
+          error: (error) => error.message || "Failed to assign driver",
         }
       );
 
@@ -115,16 +124,13 @@ export default function VehicleEditForm({
 
   const handleConfirmUnassign = async () => {
     if (!selectedDriverId) return;
-
-    try {
-      await unassignDriverMutation(selectedDriverId);
-      toast.success("Driver unassigned successfully");
-      setUnassignModalOpen(false);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to unassign driver"
-      );
-    }
+    
+    toast.promise(unassignDriverMutation(selectedDriverId), {
+      loading: "Unassigning driver...",
+      success: (result) => result.message || "Driver unassigned successfully",
+      error: (error) => error.message || "Failed to unassign driver",
+    });
+    setUnassignModalOpen(false);
   };
 
   const mainDriver = vehicleData.dto.drivers?.find((d) => d.role === "main");
@@ -137,6 +143,94 @@ export default function VehicleEditForm({
     driversList?.data.filter(
       (d) => !vehicleData.dto.drivers?.some((assigned) => assigned.id === d.id)
     ) || [];
+
+  const historyColumns: ColumnDef<any>[] = [
+    {
+      header: "Driver",
+      accessorKey: "driver",
+      cell: ({ row }) =>
+        `${row.original.driver?.firstName} ${row.original.driver?.lastName}`,
+    },
+    {
+      header: "Role",
+      accessorKey: "role",
+      cell: ({ row }) => (
+        <span className="capitalize">{row.original.role}</span>
+      ),
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: ({ row }) => (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
+            row.original.status === "active"
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {row.original.status.toUpperCase()}
+        </span>
+      ),
+    },
+    {
+      header: "Assigned Date",
+      accessorKey: "assignedAt",
+      cell: ({ row }) => new Date(row.original.assignedAt).toLocaleDateString(),
+    },
+    {
+      header: "Unassigned Date",
+      accessorKey: "unassignedAt",
+      cell: ({ row }) =>
+        row.original.unassignedAt
+          ? new Date(row.original.unassignedAt).toLocaleDateString()
+          : "-",
+    },
+  ];
+
+  const tripColumns: ColumnDef<any>[] = [
+    {
+      header: "Date",
+      accessorKey: "startTime",
+      cell: ({ row }) => new Date(row.original.startTime).toLocaleDateString(),
+    },
+    {
+      header: "Main Driver",
+      accessorKey: "mainDriver",
+      cell: ({ row }) =>
+        `${row.original.mainDriver?.firstName} ${row.original.mainDriver?.lastName}`,
+    },
+    {
+      header: "Origin",
+      accessorKey: "startLocation",
+    },
+    {
+      header: "Destination",
+      accessorKey: "endLocation",
+    },
+    {
+      header: "Distance (km)",
+      accessorKey: "distanceKm",
+      cell: ({ row }) => row.original.distanceKm || "-",
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: ({ row }) => (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
+            row.original.status === "completed"
+              ? "bg-green-100 text-green-800"
+              : row.original.status === "in_progress"
+              ? "bg-blue-100 text-blue-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {row.original.status.replace("_", " ")}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
@@ -168,9 +262,35 @@ export default function VehicleEditForm({
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#004953]" />
           )}
         </button>
+        <button
+          onClick={() => setActiveTab("history")}
+          className={`pb-3 text-sm font-medium transition-colors relative ${
+            activeTab === "history"
+              ? "text-[#004953]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Driver History
+          {activeTab === "history" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#004953]" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("trips")}
+          className={`pb-3 text-sm font-medium transition-colors relative ${
+            activeTab === "trips"
+              ? "text-[#004953]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Trips
+          {activeTab === "trips" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#004953]" />
+          )}
+        </button>
       </div>
 
-      {activeTab === "details" ? (
+      {activeTab === "details" && (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Registration Number */}
@@ -416,7 +536,9 @@ export default function VehicleEditForm({
             </button>
           </div>
         </form>
-      ) : (
+      )}
+
+      {activeTab === "drivers" && (
         <div className="space-y-8">
           {/* Main Driver Section */}
           <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
@@ -528,6 +650,44 @@ export default function VehicleEditForm({
         </div>
       )}
 
+      {activeTab === "history" && (
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Driver Assignment History
+          </h3>
+          {driverHistory?.dto && driverHistory.dto.length > 0 ? (
+            <UniversalTable
+              data={driverHistory.dto}
+              columns={historyColumns}
+              showSearch={false}
+              showPagination={true}
+            />
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No driver assignment history found.
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "trips" && (
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-gray-900">Trip History</h3>
+          {vehicleTrips?.dto && vehicleTrips.dto.length > 0 ? (
+            <UniversalTable
+              data={vehicleTrips.dto}
+              columns={tripColumns}
+              showSearch={false}
+              showPagination={true}
+            />
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No trip history found.
+            </div>
+          )}
+        </div>
+      )}
+
       <ConfirmationModal
         isOpen={unassignModalOpen}
         onClose={() => setUnassignModalOpen(false)}
@@ -536,7 +696,7 @@ export default function VehicleEditForm({
         message="Are you sure you want to unassign this driver? This action cannot be undone."
         confirmText="Unassign"
         variant="danger"
-        isLoading={false} // Mutation loading handled by toast/async but modal doesn't need explicit loading state here as it closes fast or we can add it if needed
+        isLoading={false}
       />
 
       <ConfirmationModal

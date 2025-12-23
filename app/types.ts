@@ -248,6 +248,9 @@ export interface vehicleDetails {
   id: string;
   registrationNumber: string;
   model: string;
+  manufacturer: string;
+  mainDriver: Driver;
+  substituteDriver: Driver;
 }
 
 export interface VehicleDetailsResponse {

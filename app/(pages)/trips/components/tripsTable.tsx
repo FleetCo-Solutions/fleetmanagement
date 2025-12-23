@@ -229,7 +229,7 @@ export default function TripsTable() {
       >
         <AddTripForm
           onSubmit={async (values: AddTripFormValues) => {
-            await toast.promise(addTrip(values), {
+            toast.promise(addTrip(values), {
               loading: "Adding trip...",
               success: (res) => res?.message || "Trip added successfully!",
               error: (err) => err?.message || "Failed to add trip",
