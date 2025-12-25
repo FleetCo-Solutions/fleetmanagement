@@ -1,67 +1,59 @@
-import React from 'react';
-import MaintenanceTable from './components/maintenanceTable';
-import OverviewRealTime from '@/app/components/cards/overviewRealTime';
-import { maintenanceData } from './components/maintenanceList';
-import MaintenanceCharts from './components/maintenanceCharts';
+'use client'
+import React, { useState } from "react";
+import MaintenanceTable from "./components/maintenanceTable";
+import OverviewRealTime from "@/app/components/cards/overviewRealTime";
+import { maintenanceData } from "./components/maintenanceList";
+import MaintenanceCharts from "./components/maintenanceCharts";
 
-const Maintenance = () => {
+export default function Maintenance() {
+  const [activeTab, setActiveTab] = useState<
+    "history" | "financial" | "analysis"
+  >("history");
+
   // Calculate summary metrics from maintenance data
-  const totalVehicles = maintenanceData.length;
-  const avgHealthScore = Math.round(
-    maintenanceData.reduce((sum, vehicle) => sum + vehicle.healthScore, 0) / totalVehicles
-  );
-  
-  // Calculate vehicles due for service within 30 days
-  const today = new Date();
-  const vehiclesDueSoon = maintenanceData.filter(v => {
-    const nextService = new Date(v.nextServiceDate);
-    const daysUntilService = Math.ceil((nextService.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return daysUntilService <= 30 && daysUntilService > 0;
-  }).length;
-
   // Calculate overdue maintenance
-  const overdueMaintenance = maintenanceData.filter(v => {
+  const today = new Date();
+  const overdueMaintenance = maintenanceData.filter((v) => {
     const nextService = new Date(v.nextServiceDate);
     return nextService < today;
   }).length;
 
   // Calculate critical maintenance
-  const criticalMaintenance = maintenanceData.filter(v => v.status === 'critical').length;
+  const criticalMaintenance = maintenanceData.filter(
+    (v) => v.status === "critical"
+  ).length;
 
   // Calculate total estimated costs
-  const totalEstimatedCost = maintenanceData.reduce((sum, vehicle) => sum + vehicle.estimatedCost, 0);
-  
+  const totalEstimatedCost = maintenanceData.reduce(
+    (sum, vehicle) => sum + vehicle.estimatedCost,
+    0
+  );
+
   // Calculate total actual costs (for completed services)
   const totalActualCost = maintenanceData
-    .filter(v => v.actualCost)
+    .filter((v) => v.actualCost)
     .reduce((sum, vehicle) => sum + (vehicle.actualCost || 0), 0);
 
   // Calculate total downtime
-  const totalDowntime = maintenanceData.reduce((sum, vehicle) => sum + vehicle.downtime, 0);
-
-  // Calculate vehicles with active warranty
-  const vehiclesWithWarranty = maintenanceData.filter(v => v.warrantyStatus === 'active').length;
+  const totalDowntime = maintenanceData.reduce(
+    (sum, vehicle) => sum + vehicle.downtime,
+    0
+  );
 
   // Calculate high priority maintenance
-  const highPriorityMaintenance = maintenanceData.filter(v => 
-    v.priority === 'high' || v.priority === 'urgent'
+  const highPriorityMaintenance = maintenanceData.filter(
+    (v) => v.priority === "high" || v.priority === "urgent"
   ).length;
 
   return (
     <div className="bg-white w-full h-full flex items-center justify-center">
       <div className="w-[96%] h-[96%] flex flex-col gap-6">
-
-        {/* Maintenance Summary Cards */}
+        {/* Maintenance Summary Cards - Only 4 requested */}
         <div className="flex justify-between gap-6">
           <OverviewRealTime
-            title="Total Vehicles"
-            quantity={totalVehicles}
-            description={`Avg Health: ${avgHealthScore}%`}
-          />
-          <OverviewRealTime
-            title="Due for Service"
-            quantity={vehiclesDueSoon}
-            description="Within 30 days"
+            title="High Priority"
+            quantity={highPriorityMaintenance}
+            description="Need attention"
           />
           <OverviewRealTime
             title="Overdue Maintenance"
@@ -69,44 +61,71 @@ const Maintenance = () => {
             description={`${criticalMaintenance} critical`}
           />
           <OverviewRealTime
-            title="Total Estimated Cost"
-            quantity={`TZS ${(totalEstimatedCost / 1000000).toFixed(1)}M`}
-            description={`Actual: TZS ${(totalActualCost / 1000000).toFixed(1)}M`}
-          />
-        </div>
-
-        {/* Additional Maintenance Metrics */}
-        <div className="flex justify-between gap-6">
-          <OverviewRealTime
             title="Total Downtime"
             quantity={`${totalDowntime} hours`}
             description="This month"
           />
           <OverviewRealTime
-            title="Warranty Active"
-            quantity={vehiclesWithWarranty}
-            description="Vehicles covered"
-          />
-          <OverviewRealTime
-            title="High Priority"
-            quantity={highPriorityMaintenance}
-            description="Need attention"
-          />
-          <OverviewRealTime
-            title="Excellent Health"
-            quantity={maintenanceData.filter(v => v.healthScore >= 90).length}
-            description="90%+ health score"
+            title="Total Estimated Cost"
+            quantity={`TZS ${(totalEstimatedCost / 1000000).toFixed(1)}M`}
+            description={`Actual: TZS ${(totalActualCost / 1000000).toFixed(
+              1
+            )}M`}
           />
         </div>
 
-        {/* Maintenance Charts */}
-        <MaintenanceCharts />
+        {/* Tabs */}
+        <div className="flex space-x-6 border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`pb-3 text-sm font-medium transition-colors relative ${
+              activeTab === "history"
+                ? "text-[#004953]"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            History
+            {activeTab === "history" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#004953]" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("financial")}
+            className={`pb-3 text-sm font-medium transition-colors relative ${
+              activeTab === "financial"
+                ? "text-[#004953]"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Financial
+            {activeTab === "financial" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#004953]" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("analysis")}
+            className={`pb-3 text-sm font-medium transition-colors relative ${
+              activeTab === "analysis"
+                ? "text-[#004953]"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Analysis
+            {activeTab === "analysis" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#004953]" />
+            )}
+          </button>
+        </div>
 
-        {/* Maintenance Table */}
-        <MaintenanceTable />
+        {/* Tab Content */}
+        <div className="flex-1 overflow-auto">
+          {activeTab === "history" && <MaintenanceTable />}
+
+          {activeTab === "financial" && <MaintenanceCharts type="financial" />}
+
+          {activeTab === "analysis" && <MaintenanceCharts type="analysis" />}
+        </div>
       </div>
     </div>
   );
 };
-
-export default Maintenance; 

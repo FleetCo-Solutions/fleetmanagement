@@ -1,11 +1,11 @@
-import type { NextConfig } from 'next'
- 
+import type { NextConfig } from "next";
+
 const config: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'img.freepik.com',
+        protocol: "https",
+        hostname: "img.freepik.com",
       },
     ],
   },
@@ -14,6 +14,6 @@ const config: NextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-}
- 
-export default config
+};
+
+export default config;

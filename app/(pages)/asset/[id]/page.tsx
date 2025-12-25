@@ -15,12 +15,19 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import VehicleInfoCard from "./components/VehicleInfoCard";
-import RealTimeMonitoringCard from "./components/RealTimeMonitoringCard";
-import TripHistoryCard from "./components/TripHistoryCard";
 import { vehicleData } from "./components/vehicleData";
+import VehicleEditForm from "./components/VehicleEditForm";
+import { useVehicleDetailsQuery, useUpdateVehicle } from "../query";
+import { useParams } from "next/navigation";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function VehicleDetails() {
+  const params = useParams();
+  const vehicleId = params.id as string;
+  const { data: vehicleDetails, isLoading } = useVehicleDetailsQuery(vehicleId);
+  const { mutateAsync: updateVehicleMutation, isPending } =
+    useUpdateVehicle(vehicleId);
   const [activeTab, setActiveTab] = useState("overview");
 
   const tabs = [
@@ -174,17 +181,43 @@ export default function VehicleDetails() {
     },
   ];
 
-  const renderOverviewTab = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      <div className="lg:col-span-2">
-        <TripHistoryCard vehicleData={vehicleData} />
+  const renderOverviewTab = () => {
+    if (isLoading || !vehicleDetails) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#004953]"></div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 gap-6">
+        <VehicleEditForm
+          vehicleData={vehicleDetails}
+          onSave={(data) => {
+            toast.promise(updateVehicleMutation(data), {
+              loading: "Updating vehicle...",
+              success: (vehicle) =>
+                vehicle.message || "Vehicle updated successfully!",
+              error: (error) => error.message || "Failed to update vehicle",
+            });
+          }}
+          isLoading={isPending}
+        />
+
+        {/* Commented out old components - can be restored if needed */}
+        {/* <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-2">
+            <TripHistoryCard vehicleData={vehicleData} />
+          </div>
+          <div className="lg:col-span-2 flex flex-col gap-6">
+            <VehicleInfoCard vehicleData={vehicleData} />
+            <RealTimeMonitoringCard vehicleData={vehicleData} />
+          </div>
+        </div> */}
       </div>
-      <div className="lg:col-span-2 flex flex-col gap-6">
-        <VehicleInfoCard vehicleData={vehicleData} />
-        <RealTimeMonitoringCard vehicleData={vehicleData} />
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderFinanceTab = () => (
     <div className="space-y-6">
@@ -219,8 +252,12 @@ export default function VehicleDetails() {
             Vehicle Depreciation
           </h3>
           <div className="flex flex-col items-center space-y-4">
-            <div className=" bg-gray-100 rounded-full flex items-center justify-center shadow-inner">  
-              <img src="/truck.svg" alt="" className="w-full h-full fill-amber-400"/>
+            <div className=" bg-gray-100 rounded-full flex items-center justify-center shadow-inner">
+              <img
+                src="/truck.svg"
+                alt=""
+                className="w-full h-full fill-amber-400"
+              />
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-black">
@@ -544,17 +581,14 @@ export default function VehicleDetails() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-black">
-                {vehicleData.vehicleRegNo}
+                {vehicleDetails?.dto.registrationNumber}
               </h1>
               <p className="text-black/60">
-                {vehicleData.model} • {vehicleData.manufacturer}
+                {vehicleDetails?.dto.model} • {vehicleDetails?.dto.manufacturer}
               </p>
             </div>
           </div>
           <div className="flex gap-3">
-            <button className="bg-[#004953] text-white px-6 py-2 rounded-lg hover:bg-[#014852] transition-colors">
-              Edit Vehicle
-            </button>
             <button className="border border-[#004953] text-[#004953] px-6 py-2 rounded-lg hover:bg-[#004953] hover:text-white transition-colors">
               Print Report
             </button>

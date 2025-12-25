@@ -17,7 +17,6 @@ const UsersTab = () => {
   const { data, isLoading, isError, error } = useUserQuery();
   const [users, setUsers] = useState<BackendUser[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<BackendUser | null>(null);
   const [filterValue, setFilterValue] = useState("all");
   const  {mutateAsync: toggleUserStatus}  = useToggleUserStatus()
 
@@ -147,17 +146,6 @@ const UsersTab = () => {
   const handleAddUser = (userData: UserFormData & { id?: string }) => {
     // The React Query mutation will handle the opimistic update and cache invalidation
     setShowAddModal(false);
-  };
-
-  const handleEditUser = (userData: UserFormData & { id?: string }) => {
-    // The React Query mutation will handle the optimistic update and cache invalidation
-    setEditingUser(null);
-  };
-
-  const handleDeleteUser = (user: IUser) => {
-    if (confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter((u) => u.id !== user.id)); // Optimistic update
-    }
   };
 
   const changeUserStatus = async(user: User) => {
@@ -305,20 +293,17 @@ const UsersTab = () => {
 
           {/* Add/Edit User Modal */}
           <Modal
-            isOpen={showAddModal || !!editingUser}
+            isOpen={showAddModal}
             onClose={() => {
               setShowAddModal(false);
-              setEditingUser(null);
             }}
-            title={editingUser ? "Edit User" : "Add New User"}
+            title="Add New User"
             size="2xl"
           >
             <UserForm
-              user={editingUser}
-              onSave={editingUser ? handleEditUser : handleAddUser}
+              onSave={handleAddUser}
               onClose={() => {
                 setShowAddModal(false);
-                setEditingUser(null);
               }}
             />
           </Modal>
