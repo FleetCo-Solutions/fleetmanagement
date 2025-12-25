@@ -1,10 +1,20 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { vehicles } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export default async function putVehicle(id: string, request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { registrationNumber, model, manufacturer, vin, color } = body;
 
@@ -13,6 +23,21 @@ export default async function putVehicle(id: string, request: NextRequest) {
       return NextResponse.json(
         { message: "All fields are required" },
         { status: 400 }
+      );
+    }
+
+    // Verify vehicle belongs to company
+    const existing = await db.query.vehicles.findFirst({
+      where: and(
+        eq(vehicles.id, id),
+        eq(vehicles.companyId, session.user.companyId)
+      ),
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { message: "Vehicle not found or access denied" },
+        { status: 404 }
       );
     }
 
@@ -39,7 +64,7 @@ export default async function putVehicle(id: string, request: NextRequest) {
 
     return NextResponse.json({
       message: "Vehicle updated successfully",
-      vehicle: updatedVehicle[0],
+      dto: updatedVehicle[0],
     });
   } catch (error) {
     console.error("Error updating vehicle:", error);
