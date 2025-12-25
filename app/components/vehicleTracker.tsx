@@ -1,13 +1,17 @@
 'use client'
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
+import { MapContainer, TileLayer } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import 'leaflet/dist/leaflet.css'
-import { LatLngExpression, LatLngTuple } from 'leaflet'
+import { LatLngExpression } from 'leaflet'
 import { useVehicleData } from '@/hooks/useVehicleData'
 import { useRouting } from '@/hooks/useRouting'
-import { Vehicle, Trip } from '@/app/types/vehicle'
-import { useEffect, useState, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react'
+import { useWebSocket, VehicleLocationUpdate } from '@/hooks/useWebSocket'
+import { Vehicle, Trip, VehicleLocation } from '@/app/types/vehicle'
+import { useEffect, useState, useMemo, forwardRef, useImperativeHandle, useCallback } from 'react'
 import L from 'leaflet'
+import VehicleMarker from './vehicleTracker/VehicleMarker'
+import TripRoute from './vehicleTracker/TripRoute'
+import { useSimulatedTripProgress } from '@/hooks/useSimulatedTripProgress'
 
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -41,226 +45,127 @@ const createClusterCustomIcon = (cluster: any) => {
   })
 }
 
-const VehicleMarker = memo(({ vehicle, location, selectedTrip }: {
-  vehicle: Vehicle;
-  location: any;
-  selectedTrip?: Trip | null;
-}) => {
-  const getVehicleIcon = (vehicle: Vehicle, location: any) => {
-    const color = vehicle.color
-    const size = 30
-    
-    return L.divIcon({
-      html: `<div style="
-        background: ${color};
-        color: white;
-        border-radius: 50%;
-        width: ${size}px;
-        height: ${size}px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        border: 3px solid white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        transition: all 0.3s ease;
-        cursor: pointer;
-      ">${vehicle.icon}</div>`,
-      className: 'vehicle-marker',
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2]
-    })
-  }
-
-  return (
-    <Marker
-      position={[location.latitude, location.longitude]}
-      icon={getVehicleIcon(vehicle, location)}
-      eventHandlers={{
-        mouseover: (e) => {
-          const marker = e.target;
-          marker.openPopup();
-        },
-        mouseout: (e) => {
-          const marker = e.target;
-          marker.closePopup();
-        }
-      }}
-    >
-      <Popup>
-        <div className="p-3 w-64">
-          {/* Header */}
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-200">
-            <span className="text-xl">{vehicle.icon}</span>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm text-gray-900">{vehicle.name}</h3>
-              <p className="text-xs text-gray-600">{vehicle.licensePlate}</p>
-            </div>
-          </div>
-
-          {/* Driver & Speed */}
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <div>
-              <p className="text-xs font-medium text-gray-500">Driver</p>
-              <p className="text-sm text-gray-900">{vehicle.driverName}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Speed</p>
-              <p className="text-sm text-gray-900">{location.speed} km/h</p>
-            </div>
-          </div>
-
-          {/* Fuel & Battery */}
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <div>
-              <p className="text-xs font-medium text-gray-500">Fuel</p>
-              <div className="flex items-center gap-1">
-                <div className="w-8 h-1 bg-gray-200 rounded">
-                  <div 
-                    className="h-1 bg-green-500 rounded" 
-                    style={{ width: `${location.fuelLevel}%` }}
-                  ></div>
-                </div>
-                <span className="text-xs text-gray-900">{location.fuelLevel}%</span>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Battery</p>
-              <div className="flex items-center gap-1">
-                <div className="w-8 h-1 bg-gray-200 rounded">
-                  <div 
-                    className="h-1 bg-blue-500 rounded" 
-                    style={{ width: `${location.batteryLevel}%` }}
-                  ></div>
-                </div>
-                <span className="text-xs text-gray-900">{location.batteryLevel}%</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Trip Info */}
-          {selectedTrip && (
-            <div className="pt-2 border-t border-gray-200">
-              <p className="text-xs font-medium text-gray-500 mb-1">Current Trip</p>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">From:</span>
-                  <span className="text-gray-900 truncate ml-2">{selectedTrip.startLocation.address}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">To:</span>
-                  <span className="text-gray-900 truncate ml-2">{selectedTrip.endLocation.address}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">Distance:</span>
-                  <span className="text-gray-900">{selectedTrip.distance}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">Est. Time:</span>
-                  <span className="text-gray-900">{selectedTrip.estimatedDuration}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">Status:</span>
-                  <span className={`px-1 py-0.5 rounded text-xs ${
-                    selectedTrip.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    selectedTrip.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                    selectedTrip.status === 'planned' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {selectedTrip.status.replace('_', ' ')}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </Popup>
-    </Marker>
-  )
-})
-VehicleMarker.displayName = 'VehicleMarker'
-
-const TripRoute = ({ trip, routeCoords }: {
-  trip: Trip;
-  routeCoords: [number, number][];
-}) => {
-  if (!routeCoords || routeCoords.length < 2) return null
-
-  return (
-    <>
-      <Polyline
-        positions={routeCoords}
-        pathOptions={{
-          color: '#144CEA',
-          weight: 5,
-          opacity: 0.8,
-          dashArray: '10, 5',
-        }}
-      />
-      <Marker position={[trip.startLocation.latitude, trip.startLocation.longitude]}>
-        <Popup>
-          <div className="p-2">
-            <h3 className="font-bold text-green-600">Trip Start</h3>
-            <p className="text-sm">{trip.name}</p>
-            <p className="text-sm">{trip.startLocation.address}</p>
-          </div>
-        </Popup>
-      </Marker>
-      <Marker position={[trip.endLocation.latitude, trip.endLocation.longitude]}>
-        <Popup>
-          <div className="p-2">
-            <h3 className="font-bold text-red-600">Trip End</h3>
-            <p className="text-sm">{trip.name}</p>
-            <p className="text-sm">{trip.endLocation.address}</p>
-          </div>
-        </Popup>
-      </Marker>
-    </>
-  )
-}
-
 interface VehicleTrackerProps {
   selectedVehicle?: Vehicle | null;
   selectedTrip?: Trip | null;
   onTripSelect?: (trip: Trip | null) => void;
 }
 
-const VehicleTracker = forwardRef<any, VehicleTrackerProps>(({ selectedVehicle, selectedTrip, onTripSelect }, ref) => {
-  const { vehicles, trips, isLoading, error } = useVehicleData()
+interface VehicleTrackerRef {
+  setView: (center: [number, number], zoom: number) => void;
+}
+
+const VehicleTracker = forwardRef<VehicleTrackerRef, VehicleTrackerProps>(
+  ({ selectedVehicle, selectedTrip, onTripSelect }: VehicleTrackerProps, ref: React.ForwardedRef<VehicleTrackerRef>) => {
+  const { vehicles: initialVehicles, trips, isLoading, error } = useVehicleData()
   const { getRoadRoute, isLoading: routingLoading } = useRouting()
   const [mapCenter, setMapCenter] = useState<LatLngExpression>([-6.7924, 39.2083])
   const [mapInstance, setMapInstance] = useState<any>(null)
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([])
+  
+  // State to hold vehicles with real-time updates
+  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles)
+
+  // Update vehicles when initial data loads 
+  useEffect(() => {
+    if (initialVehicles.length > 0 || vehicles.length === 0) {
+      setVehicles(initialVehicles)
+    }
+  }, [initialVehicles])
+
+  // Get all vehicle IDs for WebSocket subscription
+  const vehicleIds = useMemo(() => {
+    return vehicles.filter((v: Vehicle) => v.id && v.currentLocation).map((v: Vehicle) => v.id)
+  }, [vehicles])
+
+  // Handle WebSocket location updates - smooth real-time tracking
+  const handleLocationUpdate = useCallback((update: VehicleLocationUpdate) => {
+    setVehicles((prevVehicles: Vehicle[]) => {
+      return prevVehicles.map((vehicle: Vehicle) => {
+        if (vehicle.id === update.vehicleId) {
+          // Update vehicle location with new real-time data
+          const updatedLocation: VehicleLocation = {
+            id: vehicle.currentLocation?.id || `loc-${update.vehicleId}`,
+            vehicleId: update.vehicleId,
+            latitude: update.location.latitude,
+            longitude: update.location.longitude,
+            speed: update.location.speed ?? vehicle.currentLocation?.speed ?? 0,
+            heading: update.location.heading ?? vehicle.currentLocation?.heading ?? 0,
+            timestamp: update.timestamp.toISOString(),
+            batteryLevel: vehicle.currentLocation?.batteryLevel,
+            fuelLevel: vehicle.currentLocation?.fuelLevel,
+            engineStatus: vehicle.currentLocation?.engineStatus ?? 'off',
+            alertStatus: vehicle.currentLocation?.alertStatus ?? 'normal',
+            address: vehicle.currentLocation?.address,
+          }
+
+          return {
+            ...vehicle,
+            currentLocation: updatedLocation,
+            lastUpdate: update.timestamp.toISOString(),
+          }
+        }
+        return vehicle
+      })
+    })
+  }, [])
+
+  // WebSocket connection for real-time updates
+  const { isConnected, error: wsError } = useWebSocket({
+    vehicleIds,
+    onMessage: handleLocationUpdate,
+    autoReconnect: true,
+  })
+
+  // Subscribe/unsubscribe to vehicles when list changes
+  useEffect(() => {
+    if (isConnected && vehicleIds.length > 0) {
+      // WebSocket hook handles subscriptions automatically via vehicleIds prop
+      // No manual subscription needed
+    }
+  }, [isConnected, vehicleIds])
+
+  const {
+    simulatedLocation,
+    totalDistanceKm,
+    distanceCoveredKm,
+    distanceRemainingKm,
+  } = useSimulatedTripProgress(selectedTrip ?? null, routeCoords)
 
   useImperativeHandle(ref, () => ({
     setView: (center: [number, number], zoom: number) => {
-      if (mapInstance) mapInstance.setView(center, zoom);
+      if (mapInstance) {
+        mapInstance.setView(center, zoom);
+      }
     }
-  }))
+  }), [mapInstance])
 
+  // Filter vehicles based on selection 
   const filteredVehicles = useMemo(() => {
+    const vehiclesWithLocations = vehicles.filter((v: Vehicle) => v.currentLocation)
+    
     if (selectedTrip) {
-      return vehicles.filter(vehicle => selectedTrip.vehicleIds.includes(vehicle.id))
+      return vehiclesWithLocations.filter((vehicle: Vehicle) => selectedTrip.vehicleIds.includes(vehicle.id))
     }
     if (selectedVehicle) {
-      return [selectedVehicle]
+      const selected = vehiclesWithLocations.find((v: Vehicle) => v.id === selectedVehicle.id)
+      return selected ? [selected] : []
     }
-    return vehicles
+    return vehiclesWithLocations
   }, [vehicles, selectedTrip, selectedVehicle])
 
-  const filteredLocations = useMemo(() => {
-    return filteredVehicles
-      .map(vehicle => vehicle.currentLocation)
-      .filter(Boolean)
-  }, [filteredVehicles])
-
+  // Center map on selected vehicle when location updates (smooth tracking)
   useEffect(() => {
     if (selectedVehicle?.currentLocation && mapInstance) {
-      mapInstance.setView([selectedVehicle.currentLocation.latitude, selectedVehicle.currentLocation.longitude], 15)
+      const { latitude, longitude } = selectedVehicle.currentLocation
+      mapInstance.setView([latitude, longitude], 15, {
+        animate: true,
+        duration: 0.5,
+      })
     } else if (selectedTrip && mapInstance) {
       mapInstance.setView([selectedTrip.startLocation.latitude, selectedTrip.startLocation.longitude], 10)
     }
-  }, [selectedVehicle, selectedTrip, mapInstance])
+  }, [selectedVehicle?.currentLocation?.latitude, selectedVehicle?.currentLocation?.longitude, selectedTrip, mapInstance])
 
   useEffect(() => {
     const generateRoadRoute = async () => {
@@ -307,9 +212,9 @@ const VehicleTracker = forwardRef<any, VehicleTrackerProps>(({ selectedVehicle, 
         zoomControl={true}
         zoom={selectedVehicle ? 15 : selectedTrip ? 8 : 6}
         style={{ height: '100%', width: '100%' }}
-        ref={(map) => {
+        ref={(map: L.Map | null) => {
           setMapInstance(map);
-          if (map) (map as any)._mapInstance = map;
+          if (map) (map as unknown as { _mapInstance: L.Map })._mapInstance = map;
         }}
       >
         <TileLayer 
@@ -327,7 +232,7 @@ const VehicleTracker = forwardRef<any, VehicleTrackerProps>(({ selectedVehicle, 
           zoomToBoundsOnClick={true}
           removeOutsideVisibleBounds={true}
         >
-          {filteredVehicles.map(vehicle => {
+          {filteredVehicles.map((vehicle: Vehicle) => {
             const location = vehicle.currentLocation
             if (!location) return null
             return (
@@ -346,6 +251,7 @@ const VehicleTracker = forwardRef<any, VehicleTrackerProps>(({ selectedVehicle, 
             key={selectedTrip.id}
             trip={selectedTrip}
             routeCoords={routeCoords}
+            currentLocation={simulatedLocation}
           />
         )}
       </MapContainer>
@@ -356,6 +262,26 @@ const VehicleTracker = forwardRef<any, VehicleTrackerProps>(({ selectedVehicle, 
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#004953]"></div>
             <span className="text-sm text-gray-600">Loading route...</span>
           </div>
+        </div>
+      )}
+
+      {/* WebSocket connection status indicator */}
+      <div className="absolute top-4 left-4 bg-white p-2 rounded-lg shadow-lg flex items-center gap-2">
+        <div
+          className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+          title={isConnected ? 'WebSocket connected' : 'WebSocket disconnected'}
+        />
+        <span className="text-xs text-gray-600">
+          {isConnected ? 'Live' : 'Offline'}
+        </span>
+      </div>
+
+      {selectedTrip && simulatedLocation && (
+        <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg text-xs text-gray-800 space-y-1">
+          <div className="font-semibold text-sm">Trip progress (simulated)</div>
+          <div>Total distance: {totalDistanceKm.toFixed(1)} km</div>
+          <div>Covered: {distanceCoveredKm.toFixed(1)} km</div>
+          <div>Remaining: {distanceRemainingKm.toFixed(1)} km</div>
         </div>
       )}
     </div>
