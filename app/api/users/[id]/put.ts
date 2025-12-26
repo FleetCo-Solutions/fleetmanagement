@@ -1,12 +1,34 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { users } from "@/app/db/schema";
 import { ProfilePayload } from "@/app/types";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function editUser(id: string, userData: ProfilePayload) {
   const date = new Date();
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
+    // Verify user belongs to company
+    const existing = await db.query.users.findFirst({
+      where: and(eq(users.id, id), eq(users.companyId, session.user.companyId)),
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { timestamp: date, message: "User not found or access denied" },
+        { status: 404 }
+      );
+    }
+
     const updatedUser = await db
       .update(users)
       .set({
@@ -15,17 +37,17 @@ export async function editUser(id: string, userData: ProfilePayload) {
         email: userData.email,
         phone: userData.phone,
         status: userData.status,
+        updatedAt: new Date(),
       })
       .where(eq(users.id, id))
       .returning();
-    if (updatedUser.length === 0) {
-      return NextResponse.json(
-        { timestamp: date, message: "User Not Found" },
-        { status: 404 }
-      );
-    }
+
     return NextResponse.json(
-      { timestamp: date, message: "User Updated Successfully" },
+      {
+        timestamp: date,
+        message: "User Updated Successfully",
+        dto: updatedUser[0],
+      },
       { status: 200 }
     );
   } catch (error) {
