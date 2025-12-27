@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import UniversalTable from "@/app/components/universalTable";
 import { ColumnDef } from "@tanstack/react-table";
-import { Trip } from "@/app/types";
+import { Trips } from "@/app/types";
 import { useTripsQuery } from "../query";
 import UniversalTableSkeleton from "@/app/components/universalTableSkeleton";
 import Modal from "@/app/components/Modal";
@@ -11,7 +11,7 @@ import AddTripForm, { AddTripFormValues } from "./AddTripForm";
 import { useAddTrip } from "../query";
 import { toast } from "sonner";
 
-const getStatusColor = (status: Trip["status"]) => {
+const getStatusColor = (status: Trips["status"]) => {
   switch (status) {
     case "completed":
       return "bg-green-100 text-green-800";
@@ -41,9 +41,23 @@ export default function TripsTable() {
   const { mutateAsync: addTrip } = useAddTrip();
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const columns: ColumnDef<Trip>[] = [
-    { header: "Vehicle", accessorKey: "vehicleRegNo" },
-    { header: "Driver", accessorKey: "driver" },
+  const columns: ColumnDef<Trips>[] = [
+    {
+      header: "Vehicle",
+      accessorKey: "vehicleRegNo",
+      cell: ({ row }) => <span>{row.original.vehicle.registrationNumber}</span>,
+    },
+    {
+      header: "Driver",
+      accessorKey: "driver",
+      cell: ({ row }) => (
+        <span>
+          {row.original.mainDriver.firstName +
+            " " +
+            row.original.mainDriver.lastName}
+        </span>
+      ),
+    },
     { header: "Start Location", accessorKey: "startLocation" },
     { header: "End Location", accessorKey: "endLocation" },
     {
@@ -106,39 +120,39 @@ export default function TripsTable() {
       cell: ({ row }) => (
         <span
           className={`font-semibold ${getViolationsColor(
-            row.original.violations
+            parseInt(row.original.fuelUsed)
           )}`}
         >
-          {row.original.violations}
+          {row.original.fuelUsed}
         </span>
       ),
     },
   ];
 
-  const actions = [
-    {
-      label: "View",
-      onClick: (row: Trip) => {
-        // Implement view logic or route
-        router.push(`/trips/${row.tripId}`);
-      },
-      variant: "primary" as const,
-    },
-    {
-      label: "Edit",
-      onClick: () => {
-        // Implement edit logic or route
-      },
-      variant: "secondary" as const,
-    },
-    {
-      label: "Cancel",
-      onClick: () => {
-        // Implement cancel logic
-      },
-      variant: "danger" as const,
-    },
-  ];
+  // const actions = [
+  //   {
+  //     label: "View",
+  //     onClick: (row: Trips) => {
+  //       // Implement view logic or route
+  //       router.push(`/trips/${row.id}`);
+  //     },
+  //     variant: "primary" as const,
+  //   },
+  //   {
+  //     label: "Edit",
+  //     onClick: () => {
+  //       // Implement edit logic or route
+  //     },
+  //     variant: "secondary" as const,
+  //   },
+  //   {
+  //     label: "Cancel",
+  //     onClick: () => {
+  //       // Implement cancel logic
+  //     },
+  //     variant: "danger" as const,
+  //   },
+  // ];
 
   const filterOptions = [
     { label: "All Status", value: "all" },
@@ -149,7 +163,7 @@ export default function TripsTable() {
     { label: "Cancelled", value: "cancelled" },
   ];
 
-   return (
+  return (
     <>
       {isLoading && (
         <div className="text-black">
@@ -181,11 +195,11 @@ export default function TripsTable() {
       )}
       {tripsData && (
         <UniversalTable
-          data={(tripsData.dto.content as unknown as Trip[]) || []}
+          data={tripsData.dto.content.length > 0 ? tripsData.dto.content : []}
           columns={columns}
           title="Trips"
           searchPlaceholder="Search trips..."
-          actions={actions}
+          // actions={actions}
           filters={{
             options: filterOptions,
             value: filterValue,
@@ -193,10 +207,13 @@ export default function TripsTable() {
             placeholder: "Filter by status",
           }}
           onRowClick={(row) => {
-            router.push(`/trips/${row.tripId}`);
+            router.push(`/trips/${row.id}`);
           }}
         >
-          <button onClick={() => setShowAddModal(true)} className="bg-[#004953] text-white px-4 py-2 rounded-lg hover:bg-[#014852] transition-colors">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-[#004953] text-white px-4 py-2 rounded-lg hover:bg-[#014852] transition-colors"
+          >
             Add Trip
           </button>
           <button className="border border-[#004953] text-[#004953] px-4 py-2 rounded-lg hover:bg-[#004953] hover:text-white transition-colors">
@@ -212,14 +229,11 @@ export default function TripsTable() {
       >
         <AddTripForm
           onSubmit={async (values: AddTripFormValues) => {
-            await toast.promise(
-              addTrip(values),
-              {
-                loading: "Adding trip...",
-                success: (res) => res?.message || "Trip added successfully!",
-                error: (err) => err?.message || "Failed to add trip",
-              }
-            );
+            toast.promise(addTrip(values), {
+              loading: "Adding trip...",
+              success: (res) => res?.message || "Trip added successfully!",
+              error: (err) => err?.message || "Failed to add trip",
+            });
             setShowAddModal(false);
           }}
           onCancel={() => setShowAddModal(false)}
