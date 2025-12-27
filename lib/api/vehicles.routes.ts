@@ -3,7 +3,10 @@
  * Functions to interact with frontend database for vehicle metadata
  */
 
-import type { Vehicle as DbVehicle } from '@/app/db/schema';
+import type { InferSelectModel } from 'drizzle-orm';
+import { vehicles } from '@/app/db/schema';
+
+type DbVehicle = InferSelectModel<typeof vehicles>;
 
 /**
  * Vehicle metadata from frontend database
