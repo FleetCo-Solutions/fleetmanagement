@@ -1,44 +1,70 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { users } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function getUserDetails(id: string) {
   const date = new Date();
   try {
-    const user = await db.query.users.findFirst({ with: { emergencyContacts: true }, where: eq(users.id, id) });
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
+    const user = await db.query.users.findFirst({
+      where: and(
+        eq(users.id, id),
+        eq(users.companyId, session.user.companyId),
+        isNull(users.deletedAt)
+      ),
+      with: {
+        emergencyContacts: true,
+      },
+    });
+
     if (!user) {
       return NextResponse.json(
         {
           timestamp: date,
           statusCode: "404",
-          message: "User not found",
+          message: "User not found or access denied",
           dto: null,
         },
         { status: 404 }
       );
     }
+
+    const accountAge = Math.floor(
+      (date.getTime() - new Date(user.createdAt).getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+
     return NextResponse.json(
       {
         timestamp: date,
         statusCode: "200",
-        message: "User fetched successful",
+        message: "User details retrieved successfully",
         dto: {
           profile: {
             id: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            phone: user.phone,
+            phone: user.phone || "",
             status: user.status,
             createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
+            updatedAt: user.updatedAt || user.createdAt,
           },
           activity: {
-            lastLogin: user.lastLogin,
-            accountAge: Math.floor((date.getTime() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)), // in days
+            lastLogin: user.lastLogin || user.createdAt,
+            accountAge,
           },
-          emergencyContacts: user.emergencyContacts,
+          emergencyContacts: user.emergencyContacts || [],
         },
       },
       { status: 200 }
