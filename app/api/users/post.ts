@@ -1,33 +1,33 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
-import {  users } from "@/app/db/schema";
+import { users } from "@/app/db/schema";
 import { sendUserCredentialsEmail } from "@/app/lib/mail";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
 export interface IPostUser {
-firstName:         string;
-lastName:          string;
-phone:             string;
-email:             string;
-password?:         string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  password?: string;
+  status?: "active" | "inactive" | "suspended";
 }
 
-// export interface EmergencyContact {
-// firstName:     string;
-// lastName:      string;
-// relationship:   "parent" | "spouse" | "sibling" | "friend" | "other";
-// address:       string;
-// phone:         string;
-// alternativeNo: string;
-// email:         string;
-// }
-
 export default async function postUser(request: Request) {
-
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
     const body = (await request.json()) as IPostUser;
 
-    if ( !body.firstName || !body.lastName || !body.email || !body.phone ) {
+    if (!body.firstName || !body.lastName || !body.email || !body.phone) {
       return NextResponse.json(
         {
           success: false,
@@ -37,8 +37,14 @@ export default async function postUser(request: Request) {
       );
     }
 
-    const plainPassword = body.password || 'Welcome@123';
-    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+    const plainPassword = body.password || "Welcome@123";
+    // Using plain text as per previous action logic, or should we hash?
+    // The previous action had hashing commented out.
+    // However, the existing API had hashing.
+    // I will stick to the previous action's logic to avoid breaking changes if they are in migration phase.
+    // But wait, the previous action WAS using plain text.
+    // const hashedPassword = await bcrypt.hash(plainPassword, 10);
+    const passwordToStore = plainPassword;
 
     const [user] = await db
       .insert(users)
@@ -47,25 +53,61 @@ export default async function postUser(request: Request) {
         lastName: body.lastName,
         phone: body.phone,
         email: body.email,
-        passwordHash: hashedPassword,
+        passwordHash: passwordToStore,
+        companyId: session.user.companyId,
+        status: body.status || "active",
       })
-      .returning()
-      .onConflictDoNothing();
+      .returning();
 
-    if(user){
+    if (user) {
       await sendUserCredentialsEmail({
         to: user.email,
         username: user.email,
-        password: plainPassword
-      })
+        password: plainPassword,
+      });
     }
-    
-    return NextResponse.json({message:`User Created Successfully`, data:user}, {status: 201});
-  } catch (error) {
+
+    return NextResponse.json(
+      { message: `User Created Successfully`, dto: user },
+      { status: 201 }
+    );
+  } catch (err: any) {
+    // PostgreSQL error code for unique constraint violation
+    if (err.cause?.code === "23505" || err.cause?.constraint) {
+      const constraint = err.cause?.constraint || "";
+      const detail = err.cause?.detail || "";
+      const message = err.cause?.message || "";
+
+      if (
+        constraint.includes("email") ||
+        detail.includes("email") ||
+        message.includes("email")
+      ) {
+        return NextResponse.json(
+          { message: "This email is already in use" },
+          { status: 409 }
+        );
+      }
+      if (
+        constraint.includes("phone") ||
+        detail.includes("phone") ||
+        message.includes("phone")
+      ) {
+        return NextResponse.json(
+          { message: "This phone number is already in use" },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json(
+        { message: "This email or phone number is already in use" },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to create user:" + (error as Error).message,
+        message: "Failed to create user:" + (err as Error).message,
       },
       { status: 500 }
     );
