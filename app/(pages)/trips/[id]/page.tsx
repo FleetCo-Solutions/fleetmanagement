@@ -1,9 +1,15 @@
 "use client";
 import { useParams } from "next/navigation";
-import { trips } from "../components/tripsList";
 import TripDetailCards from "../components/tripDetailCards";
-import TripRouteMap from "../components/tripRouteMap";
-import React from "react";
+import dynamic from "next/dynamic";
+import React, { useMemo } from "react";
+import { useTripByIdQuery } from "../query";
+import UniversalTableSkeleton from "@/app/components/universalTableSkeleton";
+
+const TripRouteMap = dynamic(
+  () => import("../components/tripRouteMap"),
+  { ssr: false }
+);
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -25,10 +31,62 @@ const getStatusColor = (status: string) => {
 export default function TripDetail() {
   const params = useParams();
   const tripId = params.id as string;
-  const trip = trips.find((t) => t.tripId === tripId);
+  const { data: tripData, isLoading, error } = useTripByIdQuery(tripId);
 
-  if (!trip) {
-    return <div className="p-10 text-xl text-red-600">Trip not found.</div>;
+  const trip = useMemo(() => {
+    if (!tripData?.dto?.content) return null;
+    
+    const dbTrip = tripData.dto.content;
+    const driver = dbTrip.mainDriver 
+      ? `${dbTrip.mainDriver.firstName} ${dbTrip.mainDriver.lastName}`
+      : 'Unknown Driver';
+    
+    return {
+      tripId: dbTrip.id,
+      vehicleRegNo: dbTrip.vehicle?.registrationNumber || 'N/A',
+      driver,
+      startLocation: typeof dbTrip.startLocation === 'string' 
+        ? dbTrip.startLocation 
+        : (dbTrip.startLocation as any)?.address || 'Unknown',
+      endLocation: typeof dbTrip.endLocation === 'string'
+        ? dbTrip.endLocation
+        : (dbTrip.endLocation as any)?.address || 'Unknown',
+      startTime: dbTrip.startTime instanceof Date 
+        ? dbTrip.startTime.toISOString() 
+        : typeof dbTrip.startTime === 'string'
+        ? dbTrip.startTime
+        : new Date(dbTrip.startTime).toISOString(),
+      endTime: dbTrip.endTime 
+        ? (dbTrip.endTime instanceof Date
+            ? dbTrip.endTime.toISOString()
+            : typeof dbTrip.endTime === 'string'
+            ? dbTrip.endTime
+            : new Date(dbTrip.endTime).toISOString())
+        : '',
+      status: dbTrip.status as "scheduled" | "in_progress" | "completed" | "delayed" | "cancelled",
+      distance: dbTrip.distanceKm ? parseFloat(dbTrip.distanceKm) : 0,
+      duration: dbTrip.durationMinutes ? parseInt(dbTrip.durationMinutes) : 0,
+      fuelUsed: dbTrip.fuelUsed ? parseFloat(dbTrip.fuelUsed) : 0,
+      violations: 0, // This field doesn't exist in the database schema, defaulting to 0
+    };
+  }, [tripData]);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white w-full h-full flex items-center justify-center">
+        <UniversalTableSkeleton />
+      </div>
+    );
+  }
+
+  if (error || !trip) {
+    return (
+      <div className="bg-white w-full h-full flex items-center justify-center">
+        <div className="p-10 text-xl text-red-600">
+          {error ? `Error loading trip: ${error instanceof Error ? error.message : 'Unknown error'}` : 'Trip not found.'}
+        </div>
+      </div>
+    );
   }
 
   // Mock real-time data

@@ -107,6 +107,10 @@ export async function getTripById(id: string) {
     });
     
     if (!response.ok) {
+      if (response.status === 404) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Trip not found");
+      }
       throw new Error(`Failed to fetch trip: ${response.statusText}`);
     }
     
