@@ -55,7 +55,13 @@ export async function addVehicle(vehicleData: IPostVehicle) {
         body: JSON.stringify(vehicleData),
       }
     );
-    return await response.json();
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to add vehicle");
+    }
+    
+    return result;
   } catch (error) {
     throw new Error((error as Error).message);
   }
