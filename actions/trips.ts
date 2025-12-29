@@ -1,5 +1,22 @@
 "use server";
 
+function getBaseUrl(): string {
+  // In production, use VERCEL_URL if available
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Use NEXT_PUBLIC_BASE_URL if set
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+  
+  // Default to localhost in development
+  return process.env.NODE_ENV === 'production' 
+    ? 'https://your-domain.com' // Replace with your production domain
+    : 'http://localhost:3000';
+}
+
 export interface Trip {
   id: string;
   vehicleId: string;
@@ -53,7 +70,8 @@ export interface UpdateTripPayload {
 
 export async function getTrips() {
   try {
-    const response = await fetch('/api/trips', {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/trips`, {
       cache: "no-store",
     });
     
@@ -83,7 +101,8 @@ export async function getTrips() {
 
 export async function getTripById(id: string) {
   try {
-    const response = await fetch(`/api/trips/${id}`, {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/trips/${id}`, {
       cache: "no-store",
     });
     
@@ -99,7 +118,8 @@ export async function getTripById(id: string) {
 
 export async function addTrip(tripData: CreateTripPayload) {
   try {
-    const response = await fetch('/api/trips', {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/trips`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -121,7 +141,8 @@ export async function addTrip(tripData: CreateTripPayload) {
 
 export async function updateTrip(id: string, payload: UpdateTripPayload) {
   try {
-    const response = await fetch(`/api/trips/${id}`, {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/trips/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -143,7 +164,8 @@ export async function updateTrip(id: string, payload: UpdateTripPayload) {
 
 export async function deleteTrip(id: string) {
   try {
-    const response = await fetch(`/api/trips/${id}`, {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/trips/${id}`, {
       method: "DELETE",
     });
 
