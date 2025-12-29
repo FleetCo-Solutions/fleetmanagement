@@ -16,6 +16,7 @@ export const useTripsQuery = () => {
   return useQuery<TripsList>({
     queryKey: ["Trips"],
     queryFn: async () => await getTrips(),
+    refetchInterval: 30000, // Auto-refresh every 30 seconds for real-time updates
   });
 };
 

@@ -53,10 +53,29 @@ export interface UpdateTripPayload {
 
 export async function getTrips() {
   try {
-    const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/trips`, {
+    const response = await fetch('/api/trips', {
       cache: "no-store",
     });
-    return await response.json();
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trips: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    // Handle the response format from /api/trips/get.ts
+    if (result.dto && Array.isArray(result.dto.content)) {
+      return {
+        dto: {
+          content: result.dto.content,
+          totalPages: result.dto.totalPages || 1,
+          totalElements: result.dto.totalElements || result.dto.content.length,
+        },
+      };
+    }
+    
+    // Fallback if format is different
+    return result;
   } catch (error) {
     throw new Error((error as Error).message);
   }
@@ -64,10 +83,14 @@ export async function getTrips() {
 
 export async function getTripById(id: string) {
   try {
-    const response = await fetch(
-      `${process.env.LOCAL_BACKENDBASE_URL}/trips/${id}`,
-      { cache: "no-store" }
-    );
+    const response = await fetch(`/api/trips/${id}`, {
+      cache: "no-store",
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trip: ${response.statusText}`);
+    }
+    
     return await response.json();
   } catch (error) {
     throw new Error((error as Error).message);
@@ -76,7 +99,7 @@ export async function getTripById(id: string) {
 
 export async function addTrip(tripData: CreateTripPayload) {
   try {
-    const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/trips`, {
+    const response = await fetch('/api/trips', {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -98,16 +121,13 @@ export async function addTrip(tripData: CreateTripPayload) {
 
 export async function updateTrip(id: string, payload: UpdateTripPayload) {
   try {
-    const response = await fetch(
-      `${process.env.LOCAL_BACKENDBASE_URL}/trips/${id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await fetch(`/api/trips/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
     const result = await response.json();
 
@@ -123,12 +143,9 @@ export async function updateTrip(id: string, payload: UpdateTripPayload) {
 
 export async function deleteTrip(id: string) {
   try {
-    const response = await fetch(
-      `${process.env.LOCAL_BACKENDBASE_URL}/trips/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
+    const response = await fetch(`/api/trips/${id}`, {
+      method: "DELETE",
+    });
 
     const result = await response.json();
 
