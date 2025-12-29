@@ -27,9 +27,9 @@ interface DriverLoginResponse {
     role: 'main' | 'substitute';
     assignedTrips: Array<{
       id: string;
-      vehicleId: string;
-      startLocation: string;
-      endLocation: string;
+      vehicleId: string | null;
+      startLocation: string | null;
+      endLocation: string | null;
       startTime: string;
       status: string;
     }>;
