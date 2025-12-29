@@ -58,13 +58,18 @@ export async function fetchAllVehicles(): Promise<VehicleLocationPayload[]> {
       throw new Error('Invalid response format from IoT backend');
     }
 
+    // IoT backend returns VehicleLocationPayload & { time: Date }
+    // When serialized to JSON, time becomes ISO string
     return result.data.map((item) => ({
       vehicleId: item.vehicleId,
       source: item.source,
-      timestamp: item.time || item.timestamp,
+      timestamp: item.timestamp || item.time, // timestamp is ISO string
       location: item.location,
+      tripId: item.tripId, // Include tripId if present
       mobile: item.mobile,
       iot: item.iot,
+      // Convert time (ISO string from JSON) back to Date for transformer
+      time: item.time ? new Date(item.time) : new Date(item.timestamp || Date.now()),
     }));
   } catch (error) {
     clearTimeout(timeoutId);

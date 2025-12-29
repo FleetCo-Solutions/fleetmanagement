@@ -38,12 +38,12 @@ const VehiclesOverview = () => {
   const [openOverview, setOpenOverview] = useState(false)
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null)
-  const { vehicles } = useVehicleData()
+  const { vehicles, trips } = useVehicleData()
   const mapRef = useRef<any>(null)
   
   // Debug: Log when component re-renders
   console.log('VehiclesOverview re-rendered at:', new Date().toISOString())
-  
+
   // Memoize stats calculations to prevent unnecessary recalculations
   const stats = useMemo(() => {
     const vehiclesWithErrors = vehicles.filter(v => 
@@ -56,12 +56,20 @@ const VehiclesOverview = () => {
     
     const activeVehicles = vehicles.filter(v => v.status === 'active').length
     
+    // Count vehicles with active trips
+    const vehiclesOnTrip = vehicles.filter(v => {
+      return trips.some(trip => 
+        trip.vehicleIds.includes(v.id) && trip.status === 'in_progress'
+      )
+    }).length
+    
     return {
       vehiclesWithErrors,
       vehiclesWithWarnings,
-      activeVehicles
+      activeVehicles,
+      vehiclesOnTrip
     }
-  }, [vehicles])
+  }, [vehicles, trips])
 
   const handleVehicleSelect = (vehicle: Vehicle) => {
     console.log('Vehicle selected:', vehicle);
@@ -147,6 +155,10 @@ const VehiclesOverview = () => {
         <VehicleCard
           vehiclesNo={stats.activeVehicles}
           description="Active Vehicles"
+        />
+        <VehicleCard
+          vehiclesNo={stats.vehiclesOnTrip}
+          description="On Trip"
         />
         <div className="bg-white flex items-center px-3 rounded-lg mr-4">
         </div>

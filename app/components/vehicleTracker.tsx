@@ -57,7 +57,7 @@ interface VehicleTrackerRef {
 
 const VehicleTracker = forwardRef<VehicleTrackerRef, VehicleTrackerProps>(
   ({ selectedVehicle, selectedTrip, onTripSelect }: VehicleTrackerProps, ref: React.ForwardedRef<VehicleTrackerRef>) => {
-  const { vehicles: initialVehicles, trips, isLoading, error } = useVehicleData()
+  const { vehicles: initialVehicles, trips: allTrips, isLoading, error } = useVehicleData()
   const { getRoadRoute, isLoading: routingLoading } = useRouting()
   const [mapCenter, setMapCenter] = useState<LatLngExpression>([-6.7924, 39.2083])
   const [mapInstance, setMapInstance] = useState<any>(null)
@@ -131,6 +131,9 @@ const VehicleTracker = forwardRef<VehicleTrackerRef, VehicleTrackerProps>(
     distanceCoveredKm,
     distanceRemainingKm,
   } = useSimulatedTripProgress(selectedTrip ?? null, routeCoords)
+
+  // Use allTrips for vehicle markers
+  const trips = allTrips
 
   useImperativeHandle(ref, () => ({
     setView: (center: [number, number], zoom: number) => {
@@ -235,12 +238,19 @@ const VehicleTracker = forwardRef<VehicleTrackerRef, VehicleTrackerProps>(
           {filteredVehicles.map((vehicle: Vehicle) => {
             const location = vehicle.currentLocation
             if (!location) return null
+            
+            // Find active trip for this vehicle
+            const activeTrip = allTrips.find(trip => 
+              trip.vehicleIds.includes(vehicle.id) && trip.status === 'in_progress'
+            )
+            
             return (
               <VehicleMarker
                 key={vehicle.id}
                 vehicle={vehicle}
                 location={location}
                 selectedTrip={selectedTrip}
+                activeTrip={activeTrip}
               />
             )
           })}
