@@ -32,9 +32,10 @@ export const useAddVehicle = () => {
     mutationFn: async (vehicleData: IPostVehicle) =>
       await addVehicle(vehicleData),
 
-    // Always refetch to be safe
-    onSettled: () => {
+    // Invalidate and refetch vehicle queries on success
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["Vehicles"] });
+      queryClient.invalidateQueries({ queryKey: ["VehiclesList"] });
     },
   });
 };
