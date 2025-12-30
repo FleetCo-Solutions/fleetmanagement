@@ -1,13 +1,23 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function getTripById(id: string) {
   const date = new Date();
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
     const trip = await db.query.trips.findFirst({
-      where: eq(trips.id, id),
+      where: and(eq(trips.id, id), eq(trips.companyId, session.user.companyId)),
       with: {
         vehicle: true,
         mainDriver: true,
@@ -19,7 +29,7 @@ export async function getTripById(id: string) {
       return NextResponse.json(
         {
           success: false,
-          message: "Trip not found",
+          message: "Trip not found or access denied",
         },
         { status: 404 }
       );
