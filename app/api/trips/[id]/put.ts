@@ -1,6 +1,7 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -56,18 +57,27 @@ const VALID_STATUS_TRANSITIONS: Record<
 export async function putTrip(request: NextRequest, id: string) {
   const date = new Date();
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
     const body = (await request.json()) as TripUpdateRequest;
 
-    // Get current trip to validate status transitions
+    // Get current trip to validate status transitions and ownership
     const currentTrip = await db.query.trips.findFirst({
-      where: eq(trips.id, id),
+      where: and(eq(trips.id, id), eq(trips.companyId, session.user.companyId)),
     });
 
     if (!currentTrip) {
       return NextResponse.json(
         {
           success: false,
-          message: "Trip not found",
+          message: "Trip not found or access denied",
         },
         { status: 404 }
       );
@@ -75,12 +85,17 @@ export async function putTrip(request: NextRequest, id: string) {
 
     // Validate status transition if status is being updated
     if (body.status && body.status !== currentTrip.status) {
-      const allowedTransitions = VALID_STATUS_TRANSITIONS[currentTrip.status] || [];
+      const allowedTransitions =
+        VALID_STATUS_TRANSITIONS[currentTrip.status] || [];
       if (!allowedTransitions.includes(body.status)) {
         return NextResponse.json(
           {
             success: false,
-            message: `Invalid status transition from "${currentTrip.status}" to "${body.status}". Allowed transitions: ${allowedTransitions.join(", ")}`,
+            message: `Invalid status transition from "${
+              currentTrip.status
+            }" to "${
+              body.status
+            }". Allowed transitions: ${allowedTransitions.join(", ")}`,
           },
           { status: 400 }
         );
@@ -132,7 +147,8 @@ export async function putTrip(request: NextRequest, id: string) {
         // Calculate duration if actualStartTime exists
         if (currentTrip.actualStartTime) {
           const durationMs =
-            new Date().getTime() - new Date(currentTrip.actualStartTime).getTime();
+            new Date().getTime() -
+            new Date(currentTrip.actualStartTime).getTime();
           const durationMinutes = Math.round(durationMs / (1000 * 60));
           updateData.durationMinutes = durationMinutes.toString();
         }
@@ -177,8 +193,10 @@ export async function putTrip(request: NextRequest, id: string) {
     if (body.durationMinutes !== undefined)
       updateData.durationMinutes = body.durationMinutes?.toString() || null;
     if (body.notes !== undefined) updateData.notes = body.notes || null;
-    if (body.actualStartLocation) updateData.actualStartLocation = body.actualStartLocation;
-    if (body.actualEndLocation) updateData.actualEndLocation = body.actualEndLocation;
+    if (body.actualStartLocation)
+      updateData.actualStartLocation = body.actualStartLocation;
+    if (body.actualEndLocation)
+      updateData.actualEndLocation = body.actualEndLocation;
 
     const updatedTrip = await db
       .update(trips)
