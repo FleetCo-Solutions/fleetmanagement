@@ -1,7 +1,16 @@
 'use client'
 import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet default icon paths (required for markers to display)
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 interface TripRouteMapProps {
   startLocation: string;
@@ -31,6 +40,51 @@ const getCoords = (city: string): [number, number] => {
   return cityCoords[cityName] || [-6.7924, 39.2083]; // Default to Dar es Salaam
 };
 
+// Create custom icons for start and end markers
+const createStartIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background: #10B981;
+      color: white;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      font-weight: bold;
+    ">S</div>`,
+    className: 'start-marker',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+};
+
+const createEndIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background: #EF4444;
+      color: white;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      font-weight: bold;
+    ">E</div>`,
+    className: 'end-marker',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+};
+
 const TripRouteMap: React.FC<TripRouteMapProps> = ({ startLocation, endLocation, tripId }) => {
   const startCoords = getCoords(startLocation);
   const endCoords = getCoords(endLocation);
@@ -49,7 +103,7 @@ const TripRouteMap: React.FC<TripRouteMapProps> = ({ startLocation, endLocation,
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           
           {/* Start Marker */}
-          <Marker position={startCoords}>
+          <Marker position={startCoords} icon={createStartIcon()}>
             <Popup>
               <div className="text-center">
                 <div className="font-semibold text-black">Start: {startLocation}</div>
@@ -59,7 +113,7 @@ const TripRouteMap: React.FC<TripRouteMapProps> = ({ startLocation, endLocation,
           </Marker>
           
           {/* End Marker */}
-          <Marker position={endCoords}>
+          <Marker position={endCoords} icon={createEndIcon()}>
             <Popup>
               <div className="text-center">
                 <div className="font-semibold text-black">Destination: {endLocation}</div>

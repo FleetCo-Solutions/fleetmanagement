@@ -66,6 +66,13 @@ export function useVehicleData(): UseVehicleDataReturn {
     };
 
     fetchData();
+    
+    // Auto-refresh every 30 seconds for real-time updates
+    const interval = setInterval(() => {
+      fetchData();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return { vehicles, trips, isLoading, error };

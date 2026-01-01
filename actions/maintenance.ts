@@ -1,8 +1,5 @@
 "use server";
 
-import { MaintenanceRecord } from "@/app/types";
-export type { MaintenanceRecord };
-
 export interface CreateMaintenancePayload {
   vehicleId: string;
   type:

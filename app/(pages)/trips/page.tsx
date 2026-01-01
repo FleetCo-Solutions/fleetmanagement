@@ -1,28 +1,43 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import TripsTable from "./components/tripsTable";
 import OverviewRealTime from "@/app/components/cards/overviewRealTime";
-import { trips } from "./components/tripsList";
 import TripCharts from "./components/tripCharts";
+import { useTripsQuery } from "./query";
 
 const Trips = () => {
   const [activeTab, setActiveTab] = useState<"overview" | "statistics">(
     "overview"
   );
 
-  // Calculate summary metrics
+  const { data: tripsData, isLoading } = useTripsQuery();
+  
+  // Extract trips from the response
+  const trips = useMemo(() => {
+    if (!tripsData?.dto?.content) return [];
+    return tripsData.dto.content;
+  }, [tripsData]);
+
+  // Calculate summary metrics from real data
   const totalTrips = trips.length;
-  const activeTrips = trips.filter((t) => t.status === "in_progress").length;
-  const completedTrips = trips.filter((t) => t.status === "completed").length;
-  const delayedTrips = trips.filter((t) => t.status === "delayed").length;
-  const scheduledTrips = trips.filter((t) => t.status === "scheduled").length;
-  const cancelledTrips = trips.filter((t) => t.status === "cancelled").length;
-  const totalDistance = trips.reduce((sum, t) => sum + t.distance, 0);
-  const totalFuel = trips.reduce((sum, t) => sum + t.fuelUsed, 0);
-  const avgDuration =
-    totalTrips > 0
-      ? Math.round(trips.reduce((sum, t) => sum + t.duration, 0) / totalTrips)
-      : 0;
+  const activeTrips = trips.filter((t: any) => t.status === "in_progress").length;
+  const completedTrips = trips.filter((t: any) => t.status === "completed").length;
+  const delayedTrips = trips.filter((t: any) => t.status === "delayed").length;
+  const scheduledTrips = trips.filter((t: any) => t.status === "scheduled").length;
+  const cancelledTrips = trips.filter((t: any) => t.status === "cancelled").length;
+  
+  // Calculate distance and duration from actual trip data
+  const totalDistance = trips.reduce((sum: number, t: any) => {
+    const distance = t.distanceKm ? parseFloat(t.distanceKm) : 0;
+    return sum + distance;
+  }, 0);
+  
+  const totalDuration = trips.reduce((sum: number, t: any) => {
+    const duration = t.durationMinutes ? parseInt(t.durationMinutes) : 0;
+    return sum + duration;
+  }, 0);
+  
+  const avgDuration = totalTrips > 0 ? Math.round(totalDuration / totalTrips) : 0;
 
   return (
     <div className="bg-white w-full h-full flex items-center justify-center">

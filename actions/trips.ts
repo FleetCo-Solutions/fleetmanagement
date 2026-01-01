@@ -1,5 +1,22 @@
 "use server";
 
+function getBaseUrl(): string {
+  // In production, use VERCEL_URL if available
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Use NEXT_PUBLIC_BASE_URL if set
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+  
+  // Default to localhost in development
+  return process.env.NODE_ENV === 'production' 
+    ? 'https://your-domain.com' // Replace with your production domain
+    : 'http://localhost:3000';
+}
+
 export interface Trip {
   id: string;
   vehicleId: string;
@@ -53,10 +70,30 @@ export interface UpdateTripPayload {
 
 export async function getTrips() {
   try {
-    const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/trips`, {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/trips`, {
       cache: "no-store",
     });
-    return await response.json();
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trips: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    // Handle the response format from /api/trips/get.ts
+    if (result.dto && Array.isArray(result.dto.content)) {
+      return {
+        dto: {
+          content: result.dto.content,
+          totalPages: result.dto.totalPages || 1,
+          totalElements: result.dto.totalElements || result.dto.content.length,
+        },
+      };
+    }
+    
+    // Fallback if format is different
+    return result;
   } catch (error) {
     throw new Error((error as Error).message);
   }
@@ -64,10 +101,19 @@ export async function getTrips() {
 
 export async function getTripById(id: string) {
   try {
-    const response = await fetch(
-      `${process.env.LOCAL_BACKENDBASE_URL}/trips/${id}`,
-      { cache: "no-store" }
-    );
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/trips/${id}`, {
+      cache: "no-store",
+    });
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Trip not found");
+      }
+      throw new Error(`Failed to fetch trip: ${response.statusText}`);
+    }
+    
     return await response.json();
   } catch (error) {
     throw new Error((error as Error).message);
@@ -76,7 +122,8 @@ export async function getTripById(id: string) {
 
 export async function addTrip(tripData: CreateTripPayload) {
   try {
-    const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/trips`, {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/trips`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -98,16 +145,14 @@ export async function addTrip(tripData: CreateTripPayload) {
 
 export async function updateTrip(id: string, payload: UpdateTripPayload) {
   try {
-    const response = await fetch(
-      `${process.env.LOCAL_BACKENDBASE_URL}/trips/${id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/trips/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
     const result = await response.json();
 
@@ -123,12 +168,10 @@ export async function updateTrip(id: string, payload: UpdateTripPayload) {
 
 export async function deleteTrip(id: string) {
   try {
-    const response = await fetch(
-      `${process.env.LOCAL_BACKENDBASE_URL}/trips/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/trips/${id}`, {
+      method: "DELETE",
+    });
 
     const result = await response.json();
 

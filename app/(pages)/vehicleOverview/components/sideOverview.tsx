@@ -30,6 +30,7 @@ const SideOverview = ({
 
   const vehicleTrips = useMemo(() => {
     if (!selectedVehicle) return [];
+    // Filter trips by vehicle ID (trips have vehicleIds array)
     return trips.filter(trip => trip.vehicleIds.includes(selectedVehicle.id));
   }, [selectedVehicle, trips]);
 
@@ -94,12 +95,23 @@ const SideOverview = ({
               <div className="flex items-center gap-3">
                 <div className="text-2xl">{vehicle.icon}</div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">{vehicle.name}</h3>
-                  <p className="text-sm text-gray-600">{vehicle.licensePlate}</p>
-                  <p className="text-sm text-gray-500">{vehicle.driverName}</p>
-                  <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${getStatusColor(vehicle.status)}`}>
-                    {vehicle.status}
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{vehicle.name}</h3>
+                      <p className="text-sm text-gray-600">{vehicle.licensePlate}</p>
+                      <p className="text-sm text-gray-500">{vehicle.driverName}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(vehicle.status)}`}>
+                        {vehicle.status}
+                      </span>
+                      {trips.some(trip => trip.vehicleIds.includes(vehicle.id) && trip.status === 'in_progress') && (
+                        <span className="inline-block px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                          On Trip
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -152,14 +164,20 @@ const SideOverview = ({
                   <p className="text-sm text-gray-600">
                     To: {trip.endLocation.address}
                   </p>
+                  {trip.distance && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Distance: {trip.distance}
+                    </p>
+                  )}
                   <div className="flex items-center justify-between mt-2">
                     <span className={`px-2 py-1 text-xs rounded-full ${
                       trip.status === 'completed' ? 'bg-green-100 text-green-800' :
                       trip.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
                       trip.status === 'planned' ? 'bg-yellow-100 text-yellow-800' :
+                      trip.status === 'cancelled' ? 'bg-red-100 text-red-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
-                      {trip.status.replace('_', ' ')}
+                      {trip.status.replace('_', ' ').toUpperCase()}
                     </span>
                     <span className="text-xs text-gray-500">
                       {new Date(trip.startTime).toLocaleDateString()}
