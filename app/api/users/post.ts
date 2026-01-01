@@ -8,6 +8,7 @@ firstName:         string;
 lastName:          string;
 phone:             string;
 email:             string;
+password?:         string;
 }
 
 // export interface EmergencyContact {
@@ -42,6 +43,7 @@ export default async function postUser(request: Request) {
         lastName: body.lastName,
         phone: body.phone,
         email: body.email,
+        passwordHash: body.password || 'Welcome@123',
       })
       .returning()
       .onConflictDoNothing();
@@ -50,7 +52,7 @@ export default async function postUser(request: Request) {
       await sendUserCredentialsEmail({
         to: user.email,
         username: user.email,
-        password: 'Welcome@123'
+        password: body.password || 'Welcome@123'
       })
     }
     
