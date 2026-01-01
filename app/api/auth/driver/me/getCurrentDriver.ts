@@ -15,6 +15,7 @@ interface DriverProfileResponse {
     lastName: string;
     phoneNumber: string;
     vehicleId: string | null;
+    vehicleName: string | null;
     role: 'main' | 'substitute';
     assignedTrips: Array<{
       id: string;
@@ -67,21 +68,15 @@ export async function getCurrentDriver(
       );
     }
 
-    // Query driver by ID
-    const [driver] = await db
-      .select({
-        id: drivers.id,
-        firstName: drivers.firstName,
-        lastName: drivers.lastName,
-        phoneNumber: drivers.phone,
-        vehicleId: drivers.vehicleId,
-        role: drivers.role,
-      })
-      .from(drivers)
-      .where(eq(drivers.id, payload.driverId))
-      .limit(1);
+    // Query driver by ID with vehicle relation
+    const driverData = await db.query.drivers.findFirst({
+      where: eq(drivers.id, payload.driverId),
+      with: {
+        vehicle: true,
+      },
+    });
 
-    if (!driver) {
+    if (!driverData) {
       return NextResponse.json(
         {
           success: false,
@@ -92,18 +87,11 @@ export async function getCurrentDriver(
     }
 
     // Check driver status
-    const driverDetails = await db.query.drivers.findFirst({
-      where: eq(drivers.id, driver.id),
-      columns: {
-        status: true,
-      },
-    });
-
-    if (driverDetails?.status !== 'active') {
+    if (driverData.status !== 'active') {
       return NextResponse.json(
         {
           success: false,
-          message: `Driver account is ${driverDetails?.status || 'inactive'}. Please contact administrator.`,
+          message: `Driver account is ${driverData.status || 'inactive'}. Please contact administrator.`,
         },
         { status: 403 }
       );
@@ -112,8 +100,8 @@ export async function getCurrentDriver(
     // Get assigned trips (scheduled or in_progress)
     const assignedTripsData = await db.query.trips.findMany({
       where: or(
-        eq(trips.mainDriverId, driver.id),
-        eq(trips.substituteDriverId, driver.id)
+        eq(trips.mainDriverId, driverData.id),
+        eq(trips.substituteDriverId, driverData.id)
       ),
       columns: {
         id: true,
@@ -138,18 +126,19 @@ export async function getCurrentDriver(
       }));
 
     // Ensure role is not null (default to 'substitute' if null)
-    const driverRole: 'main' | 'substitute' = driver.role || 'substitute';
+    const driverRole: 'main' | 'substitute' = driverData.role || 'substitute';
 
     // Return driver profile
     return NextResponse.json(
       {
         success: true,
         driver: {
-          id: driver.id,
-          firstName: driver.firstName,
-          lastName: driver.lastName,
-          phoneNumber: driver.phoneNumber,
-          vehicleId: driver.vehicleId,
+          id: driverData.id,
+          firstName: driverData.firstName,
+          lastName: driverData.lastName,
+          phoneNumber: driverData.phone,
+          vehicleId: driverData.vehicleId,
+          vehicleName: driverData.vehicle?.registrationNumber || null,
           role: driverRole,
           assignedTrips,
         },

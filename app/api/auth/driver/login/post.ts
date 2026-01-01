@@ -24,6 +24,7 @@ interface DriverLoginResponse {
     lastName: string;
     phoneNumber: string;
     vehicleId: string | null;
+    vehicleName: string | null;
     role: 'main' | 'substitute';
     assignedTrips: Array<{
       id: string;
@@ -58,24 +59,16 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
       );
     }
 
-    // Query driver by phone number
-    const [driver] = await db
-      .select({
-        id: drivers.id,
-        firstName: drivers.firstName,
-        lastName: drivers.lastName,
-        phoneNumber: drivers.phone,
-        passwordHash: drivers.passwordHash,
-        status: drivers.status,
-        vehicleId: drivers.vehicleId,
-        role: drivers.role,
-      })
-      .from(drivers)
-      .where(eq(drivers.phone, body.phoneNumber))
-      .limit(1);
+    // Query driver by phone number with vehicle relation
+    const driverData = await db.query.drivers.findFirst({
+      where: eq(drivers.phone, body.phoneNumber),
+      with: {
+        vehicle: true,
+      },
+    });
 
     // Check if driver exists
-    if (!driver) {
+    if (!driverData) {
       return NextResponse.json(
         {
           success: false,
@@ -86,11 +79,11 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
     }
 
     // Check driver status
-    if (driver.status !== 'active') {
+    if (driverData.status !== 'active') {
       return NextResponse.json(
         {
           success: false,
-          message: `Driver account is ${driver.status}. Please contact administrator.`,
+          message: `Driver account is ${driverData.status}. Please contact administrator.`,
         },
         { status: 403 }
       );
@@ -99,7 +92,7 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
     // Verify password
     // TODO: Implement proper password hashing (bcrypt) in future
     // Currently passwords are stored as plain text for development
-    if (driver.passwordHash !== body.password) {
+    if (driverData.passwordHash !== body.password) {
       return NextResponse.json(
         {
           success: false,
@@ -112,8 +105,8 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
     // Get assigned trips (scheduled or in_progress)
     const assignedTripsData = await db.query.trips.findMany({
       where: or(
-        eq(trips.mainDriverId, driver.id),
-        eq(trips.substituteDriverId, driver.id)
+        eq(trips.mainDriverId, driverData.id),
+        eq(trips.substituteDriverId, driverData.id)
       ),
       columns: {
         id: true,
@@ -134,16 +127,16 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
     await db
       .update(drivers)
       .set({ lastLogin: new Date() })
-      .where(eq(drivers.id, driver.id));
+      .where(eq(drivers.id, driverData.id));
 
     // Generate JWT token
     // Ensure role is not null (default to 'substitute' if null)
-    const driverRole: 'main' | 'substitute' = driver.role || 'substitute';
+    const driverRole: 'main' | 'substitute' = driverData.role || 'substitute';
     const token = generateDriverToken({
-      driverId: driver.id,
-      vehicleId: driver.vehicleId,
+      driverId: driverData.id,
+      vehicleId: driverData.vehicleId,
       role: driverRole,
-      phoneNumber: driver.phoneNumber,
+      phoneNumber: driverData.phone,
     });
 
     // Return success response with token and driver profile
@@ -152,11 +145,12 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
         success: true,
         token,
         driver: {
-          id: driver.id,
-          firstName: driver.firstName,
-          lastName: driver.lastName,
-          phoneNumber: driver.phoneNumber,
-          vehicleId: driver.vehicleId,
+          id: driverData.id,
+          firstName: driverData.firstName,
+          lastName: driverData.lastName,
+          phoneNumber: driverData.phone,
+          vehicleId: driverData.vehicleId,
+          vehicleName: driverData.vehicle?.registrationNumber || null,
           role: driverRole,
           assignedTrips: assignedTrips.map((trip) => ({
             id: trip.id,
