@@ -1,14 +1,25 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
-import { emergencyContacts } from "@/app/db/schema";
+import { emergencyContacts, users, drivers } from "@/app/db/schema";
 import { EmergencyContactPayload } from "@/app/types";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function postEmergencyContact(payload: EmergencyContactPayload) {
   const date = new Date();
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
     if (!payload.firstName) {
       return NextResponse.json(
-        { timestamp: date, message: "User ID is required" },
+        { timestamp: date, message: "First Name is required" },
         { status: 400 }
       );
     } else if (!payload.lastName) {
@@ -33,6 +44,40 @@ export async function postEmergencyContact(payload: EmergencyContactPayload) {
       );
     }
 
+    // Verify ownership
+    if (payload.userId) {
+      const user = await db.query.users.findFirst({
+        where: and(
+          eq(users.id, payload.userId),
+          eq(users.companyId, session.user.companyId)
+        ),
+      });
+      if (!user) {
+        return NextResponse.json(
+          { message: "User not found or access denied" },
+          { status: 404 }
+        );
+      }
+    } else if (payload.driverId) {
+      const driver = await db.query.drivers.findFirst({
+        where: and(
+          eq(drivers.id, payload.driverId),
+          eq(drivers.companyId, session.user.companyId)
+        ),
+      });
+      if (!driver) {
+        return NextResponse.json(
+          { message: "Driver not found or access denied" },
+          { status: 404 }
+        );
+      }
+    } else {
+      return NextResponse.json(
+        { message: "Either userId or driverId must be provided" },
+        { status: 400 }
+      );
+    }
+
     const emergencyContact = await db
       .insert(emergencyContacts)
       .values(payload)
@@ -51,7 +96,6 @@ export async function postEmergencyContact(payload: EmergencyContactPayload) {
       message: "Successful added an emergency contact",
       data: emergencyContact,
     });
-    
   } catch (error) {
     return NextResponse.json(
       { timestamp: date, message: (error as Error).message },
