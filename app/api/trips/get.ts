@@ -1,11 +1,23 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
+import { eq, desc, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function getTrips() {
   const date = new Date();
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
     const allTrips = await db.query.trips.findMany({
+      where: eq(trips.companyId, session.user.companyId),
       with: {
         vehicle: true,
         mainDriver: true,
