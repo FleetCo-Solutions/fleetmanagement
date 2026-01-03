@@ -1,7 +1,8 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
-import { emergencyContacts } from "@/app/db/schema";
+import { emergencyContacts, users, drivers } from "@/app/db/schema";
 import { EmergencyContactPayload } from "@/app/types";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function putEmergencyContact(
@@ -9,6 +10,50 @@ export async function putEmergencyContact(
   payload: EmergencyContactPayload
 ) {
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
+    // Get existing contact to check ownership
+    const existingContact = await db.query.emergencyContacts.findFirst({
+      where: eq(emergencyContacts.id, id),
+    });
+
+    if (!existingContact) {
+      return NextResponse.json(
+        { message: "Emergency contact not found" },
+        { status: 404 }
+      );
+    }
+
+    // Verify ownership via user or driver
+    if (existingContact.userId) {
+      const user = await db.query.users.findFirst({
+        where: and(
+          eq(users.id, existingContact.userId),
+          eq(users.companyId, session.user.companyId)
+        ),
+      });
+      if (!user) {
+        return NextResponse.json({ message: "Access denied" }, { status: 403 });
+      }
+    } else if (existingContact.driverId) {
+      const driver = await db.query.drivers.findFirst({
+        where: and(
+          eq(drivers.id, existingContact.driverId),
+          eq(drivers.companyId, session.user.companyId)
+        ),
+      });
+      if (!driver) {
+        return NextResponse.json({ message: "Access denied" }, { status: 403 });
+      }
+    }
+
     const updatedContact = await db
       .update(emergencyContacts)
       .set({
@@ -23,13 +68,6 @@ export async function putEmergencyContact(
       })
       .where(eq(emergencyContacts.id, id))
       .returning();
-
-    if (!updatedContact.length) {
-      return NextResponse.json(
-        { message: "Emergency contact not found" },
-        { status: 404 }
-      );
-    }
 
     return NextResponse.json(
       {
