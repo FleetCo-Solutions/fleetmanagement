@@ -89,7 +89,16 @@ export async function getTrips() {
   }
 }
 
-export async function getTripById(id: string) {
+export async function getTripById(id: string): Promise<{
+  timestamp: Date;
+  statusCode: string;
+  message: string;
+  dto: typeof trips.$inferSelect & {
+    vehicle: typeof vehicles.$inferSelect | null;
+    mainDriver: typeof drivers.$inferSelect | null;
+    substituteDriver: typeof drivers.$inferSelect | null;
+  };
+}> {
   try {
     const session = await auth();
     

@@ -36,9 +36,9 @@ export default function TripDetail() {
   const { data: tripData, isLoading, error } = useTripByIdQuery(tripId);
 
   const trip = useMemo(() => {
-    if (!tripData?.dto) return null;
+    if (!(tripData as any)?.dto) return null;
 
-    const t = tripData.dto;
+    const t = (tripData as any).dto;
 
     return {
       ...t,
@@ -72,14 +72,13 @@ export default function TripDetail() {
   const performanceData = {
     fuelEfficiency:
       trip.fuelUsed && trip.distance
-        ? (trip.distance / trip.fuelUsed).toFixed(2)
-        : "N/A",
+        ? parseFloat((trip.distance / trip.fuelUsed).toFixed(2))
+        : 0,
     avgSpeed:
       trip.distance && trip.duration
-        ? (trip.distance / (trip.duration / 60)).toFixed(1)
-        : "N/A",
+        ? parseFloat((trip.distance / (trip.duration / 60)).toFixed(1))
+        : 0,
     idleTime: 15,
-    harshBraking: 2,
     speedViolations: 0,
   };
 

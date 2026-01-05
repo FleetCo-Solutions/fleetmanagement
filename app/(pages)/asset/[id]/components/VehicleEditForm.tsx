@@ -140,7 +140,7 @@ export default function VehicleEditForm({
 
   // Filter available drivers (exclude currently assigned ones)
   const availableDrivers =
-    driversList?.dto.filter(
+    driversList?.dto?.filter(
       (d) => !vehicleData.dto.drivers?.some((assigned) => assigned.id === d.id)
     ) || [];
 
@@ -673,9 +673,9 @@ export default function VehicleEditForm({
       {activeTab === "trips" && (
         <div className="space-y-6">
           <h3 className="text-lg font-semibold text-gray-900">Trip History</h3>
-          {vehicleTrips?.dto && vehicleTrips.dto.length > 0 ? (
+          {vehicleTrips?.dto?.content && vehicleTrips.dto.content.length > 0 ? (
             <UniversalTable
-              data={vehicleTrips.dto}
+              data={vehicleTrips.dto.content}
               columns={tripColumns}
               showSearch={false}
               showPagination={true}

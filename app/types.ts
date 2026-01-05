@@ -214,8 +214,16 @@ export interface ProfilePayload {
 }
 
 export interface DriversList {
-  mesage: string;
-  data: DriverDetails[];
+  timestamp: Date;
+  statusCode: string;
+  message: string;
+  dto: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    status: string;
+  }[];
 }
 
 export interface DriverDetails {
@@ -523,7 +531,7 @@ export interface TripDetails {
   timestamp: Date;
   statusCode: string;
   message: string;
-  dto: TripDetailsDto;
+  dto: Trips;
 }
 
 export interface TripDetailsDto {

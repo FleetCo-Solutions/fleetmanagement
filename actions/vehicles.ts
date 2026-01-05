@@ -68,7 +68,7 @@ export async function getVehiclesList() {
         const assignedDriver = await db.query.drivers.findFirst({
           where: and(
             eq(drivers.vehicleId, vehicle.id),
-            eq(drivers.companyId, session.user.companyId)
+            session.user.companyId ? eq(drivers.companyId, session.user.companyId) : undefined
           ),
           columns: {
             id: true,
