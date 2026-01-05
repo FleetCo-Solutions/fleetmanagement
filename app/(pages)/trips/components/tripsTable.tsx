@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import UniversalTable from "@/app/components/universalTable";
 import { ColumnDef } from "@tanstack/react-table";
@@ -10,6 +10,7 @@ import Modal from "@/app/components/Modal";
 import AddTripForm, { AddTripFormValues } from "./AddTripForm";
 import { useAddTrip } from "../query";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const getStatusColor = (status: Trips["status"]) => {
   switch (status) {
@@ -36,10 +37,20 @@ const getViolationsColor = (violations: number) => {
 
 export default function TripsTable() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [filterValue, setFilterValue] = useState("all");
   const { data: tripsData, isLoading, isError, error } = useTripsQuery();
   const { mutateAsync: addTrip } = useAddTrip();
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Auto-refresh trips every 30 seconds for real-time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["Trips"] });
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [queryClient]);
 
   const columns: ColumnDef<Trips>[] = [
     {
@@ -58,10 +69,56 @@ export default function TripsTable() {
         </span>
       ),
     },
-    { header: "Start Location", accessorKey: "startLocation" },
-    { header: "End Location", accessorKey: "endLocation" },
     {
-      header: "Start Time",
+      header: "Start Location",
+      accessorKey: "startLocation",
+      cell: ({ row }) => {
+        const actualStartLoc = (row.original as any).actualStartLocation;
+        const scheduledLoc = row.original.startLocation;
+        
+        if (actualStartLoc) {
+          // If actualStartLocation is a JSON object, extract coordinates
+          const loc = typeof actualStartLoc === 'string' 
+            ? JSON.parse(actualStartLoc) 
+            : actualStartLoc;
+          return (
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-500">{scheduledLoc}</span>
+              <span className="text-blue-600 font-medium text-sm">
+                Actual: {loc.latitude?.toFixed(4)}, {loc.longitude?.toFixed(4)}
+              </span>
+            </div>
+          );
+        }
+        return <span>{scheduledLoc}</span>;
+      },
+    },
+    {
+      header: "End Location",
+      accessorKey: "endLocation",
+      cell: ({ row }) => {
+        const actualEndLoc = (row.original as any).actualEndLocation;
+        const scheduledLoc = row.original.endLocation;
+        
+        if (actualEndLoc) {
+          // If actualEndLocation is a JSON object, extract coordinates
+          const loc = typeof actualEndLoc === 'string' 
+            ? JSON.parse(actualEndLoc) 
+            : actualEndLoc;
+          return (
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-500">{scheduledLoc}</span>
+              <span className="text-green-600 font-medium text-sm">
+                Actual: {loc.latitude?.toFixed(4)}, {loc.longitude?.toFixed(4)}
+              </span>
+            </div>
+          );
+        }
+        return <span>{scheduledLoc}</span>;
+      },
+    },
+    {
+      header: "Scheduled Start",
       accessorKey: "startTime",
       cell: ({ row }) => (
         <span>
@@ -74,7 +131,23 @@ export default function TripsTable() {
       ),
     },
     {
-      header: "End Time",
+      header: "Actual Start",
+      accessorKey: "actualStartTime",
+      cell: ({ row }) => {
+        const actualStart = (row.original as any).actualStartTime;
+        return (
+          <span className={actualStart ? "text-blue-600 font-medium" : ""}>
+            {actualStart
+              ? new Date(actualStart).toLocaleString("en-GB", {
+                  hour12: false,
+                })
+              : "-"}
+          </span>
+        );
+      },
+    },
+    {
+      header: "Scheduled End",
       accessorKey: "endTime",
       cell: ({ row }) => (
         <span>
@@ -85,6 +158,22 @@ export default function TripsTable() {
             : "-"}
         </span>
       ),
+    },
+    {
+      header: "Actual End",
+      accessorKey: "actualEndTime",
+      cell: ({ row }) => {
+        const actualEnd = (row.original as any).actualEndTime;
+        return (
+          <span className={actualEnd ? "text-green-600 font-medium" : ""}>
+            {actualEnd
+              ? new Date(actualEnd).toLocaleString("en-GB", {
+                  hour12: false,
+                })
+              : "-"}
+          </span>
+        );
+      },
     },
     {
       header: "Status",
@@ -110,22 +199,28 @@ export default function TripsTable() {
     //   cell: ({ row }) => <span>{row.original.duration} min</span>,
     // },
     {
-      header: "Fuel Used (L)",
-      accessorKey: "fuelUsed",
-      cell: ({ row }) => <span>{row.original.fuelUsed}</span>,
+      header: "Distance (km)",
+      accessorKey: "distanceKm",
+      cell: ({ row }) => {
+        const distance = (row.original as any).distanceKm;
+        return <span>{distance ? parseFloat(distance).toFixed(1) : "-"}</span>;
+      },
     },
     {
-      header: "Violations",
-      accessorKey: "violations",
-      cell: ({ row }) => (
-        <span
-          className={`font-semibold ${getViolationsColor(
-            parseInt(row.original.fuelUsed)
-          )}`}
-        >
-          {row.original.fuelUsed}
-        </span>
-      ),
+      header: "Duration (min)",
+      accessorKey: "durationMinutes",
+      cell: ({ row }) => {
+        const duration = (row.original as any).durationMinutes;
+        return <span>{duration ? parseInt(duration) : "-"}</span>;
+      },
+    },
+    {
+      header: "Fuel Used (L)",
+      accessorKey: "fuelUsed",
+      cell: ({ row }) => {
+        const fuel = (row.original as any).fuelUsed;
+        return <span>{fuel ? parseFloat(fuel).toFixed(1) : "-"}</span>;
+      },
     },
   ];
 

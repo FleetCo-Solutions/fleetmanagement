@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchAllVehicles } from '@/lib/api/vehicle-tracking.routes';
-import { transformVehicleData } from '@/lib/api/transformers';
+import { transformVehicleData, transformTripData } from '@/lib/api/transformers';
+import { db } from '@/app/db';
+import { trips } from '@/app/db/schema';
 
 /**
  * API route handler for vehicle tracking
@@ -38,15 +40,37 @@ export async function GET(request: NextRequest) {
   }
 
   if (action === 'trips') {
-    // Trips are not yet implemented in IoT backend
-    // Return empty array instead of mock data
-    return NextResponse.json(
-      {
-        success: true,
-        data: [],
-      },
-      { status: 200 }
-    );
+    try {
+      // Fetch all trips from frontend database
+      const allTrips = await db.query.trips.findMany({
+        with: {
+          vehicle: true,
+          mainDriver: true,
+          substituteDriver: true,
+        },
+        orderBy: (trips, { desc }) => [desc(trips.startTime)],
+      });
+
+      // Transform database trips to frontend Trip format
+      const transformedTrips = allTrips.map(transformTripData);
+
+      return NextResponse.json(
+        {
+          success: true,
+          data: transformedTrips,
+        },
+        { status: 200 }
+      );
+    } catch (error) {
+      console.error('Error fetching trips from database:', error);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Failed to fetch trips: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        },
+        { status: 500 }
+      );
+    }
   }
 
   return NextResponse.json(

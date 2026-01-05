@@ -5,9 +5,11 @@ import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { Vehicle, Trip } from '@/app/types/vehicle'
 
-const getVehicleIcon = (vehicle: Vehicle) => {
+const getVehicleIcon = (vehicle: Vehicle, hasActiveTrip: boolean = false) => {
   const color = vehicle.color
   const size = 30
+  const borderColor = hasActiveTrip ? '#3B82F6' : 'white'
+  const borderWidth = hasActiveTrip ? 4 : 3
 
   return L.divIcon({
     html: `<div style="
@@ -20,10 +22,11 @@ const getVehicleIcon = (vehicle: Vehicle) => {
       align-items: center;
       justify-content: center;
       font-size: 16px;
-      border: 3px solid white;
+      border: ${borderWidth}px solid ${borderColor};
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
       transition: all 0.3s ease;
       cursor: pointer;
+      ${hasActiveTrip ? 'animation: pulse 2s infinite;' : ''}
     ">${vehicle.icon}</div>`,
     className: 'vehicle-marker',
     iconSize: [size, size],
@@ -35,9 +38,10 @@ interface VehicleMarkerProps {
   vehicle: Vehicle
   location: any
   selectedTrip?: Trip | null
+  activeTrip?: Trip | null
 }
 
-const VehicleMarker = memo(({ vehicle, location, selectedTrip }: VehicleMarkerProps) => {
+const VehicleMarker = memo(({ vehicle, location, selectedTrip, activeTrip }: VehicleMarkerProps) => {
   const markerRef = useRef<L.Marker | null>(null)
   const position: [number, number] = [location.latitude, location.longitude]
 
@@ -48,11 +52,13 @@ const VehicleMarker = memo(({ vehicle, location, selectedTrip }: VehicleMarkerPr
     }
   }, [position])
 
+  const hasActiveTrip = !!activeTrip
+
   return (
     <Marker
       ref={markerRef}
       position={position}
-      icon={getVehicleIcon(vehicle)}
+      icon={getVehicleIcon(vehicle, hasActiveTrip)}
       eventHandlers={{
         mouseover: (e) => {
           const marker = e.target;
@@ -112,47 +118,59 @@ const VehicleMarker = memo(({ vehicle, location, selectedTrip }: VehicleMarkerPr
             </div>
           </div>
 
-          {selectedTrip && (
+          {(activeTrip || selectedTrip) && (
             <div className="pt-2 border-t border-gray-200">
-              <p className="text-xs font-medium text-gray-500 mb-1">Current Trip</p>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">From:</span>
-                  <span className="text-gray-900 truncate ml-2">
-                    {selectedTrip.startLocation.address}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">To:</span>
-                  <span className="text-gray-900 truncate ml-2">
-                    {selectedTrip.endLocation.address}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">Distance:</span>
-                  <span className="text-gray-900">{selectedTrip.distance}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">Est. Time:</span>
-                  <span className="text-gray-900">{selectedTrip.estimatedDuration}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">Status:</span>
-                  <span
-                    className={`px-1 py-0.5 rounded text-xs ${
-                      selectedTrip.status === 'completed'
-                        ? 'bg-green-100 text-green-800'
-                        : selectedTrip.status === 'in_progress'
-                        ? 'bg-blue-100 text-blue-800'
-                        : selectedTrip.status === 'planned'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {selectedTrip.status.replace('_', ' ')}
-                  </span>
-                </div>
-              </div>
+              <p className="text-xs font-medium text-gray-500 mb-1">
+                {activeTrip ? 'Active Trip' : 'Selected Trip'}
+              </p>
+              {(() => {
+                const trip = activeTrip || selectedTrip;
+                if (!trip) return null;
+                return (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">From:</span>
+                      <span className="text-gray-900 truncate ml-2">
+                        {trip.startLocation.address}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">To:</span>
+                      <span className="text-gray-900 truncate ml-2">
+                        {trip.endLocation.address}
+                      </span>
+                    </div>
+                    {trip.distance && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">Distance:</span>
+                        <span className="text-gray-900">{trip.distance}</span>
+                      </div>
+                    )}
+                    {trip.estimatedDuration && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">Est. Time:</span>
+                        <span className="text-gray-900">{trip.estimatedDuration}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Status:</span>
+                      <span
+                        className={`px-1 py-0.5 rounded text-xs ${
+                          trip.status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : trip.status === 'in_progress'
+                            ? 'bg-blue-100 text-blue-800'
+                            : trip.status === 'planned'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {trip.status.replace('_', ' ')}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

@@ -34,16 +34,31 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ onClose, onSuccess }) => {
   const onSubmit = async (data: IPostVehicle) => {
       console.log("Submitting vehicle data:", data);
       try{
-        await toast.promise(submitVehicle(data), {
+        // Trim all string fields
+        const cleanedData: IPostVehicle = {
+          ...data,
+          vehicleRegNo: data.vehicleRegNo.trim(),
+          model: data.model.trim(),
+          manufacturer: data.manufacturer.trim(),
+          vin: data.vin.trim(),
+          color: data.color.trim(),
+        };
+        
+        await toast.promise(submitVehicle(cleanedData), {
             loading: "Adding Vehicle...",
-            success: (data) => {
+            success: (result) => {
               onSuccess();
-              return data.message || "Vehicle Added Successfully"
+              reset();
+              return result.message || "Vehicle Added Successfully"
             },
-            error: (err) => (err as Error).message || "An Error Occurred",
+            error: (err) => {
+              const errorMessage = err instanceof Error ? err.message : "An Error Occurred";
+              return errorMessage;
+            },
           });
       }catch(err){
-        throw new Error((err as Error).message);
+        const errorMessage = err instanceof Error ? err.message : "An Error Occurred";
+        toast.error(errorMessage);
       }
   };
 
@@ -122,49 +137,60 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ onClose, onSuccess }) => {
         {/* VIN */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
-            VIN
+            VIN *
           </label>
           <Controller
             name="vin"
             control={control}
             rules={{
-                maxLength: {
-                    value: 17,
-                    message: "VIN must be 17 characters",
-                  },
-                  minLength: {
-                    value: 17,
-                    message: "VIN must be 17 characters",
-                  },
+              required: "VIN is required",
+              validate: (value) => {
+                if (value && value.trim() !== "" && value.length !== 17) {
+                  return "VIN must be exactly 17 characters";
+                }
+                return true;
+              },
             }}
             render={({ field }) => (
               <input
                 {...field}
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent"
+                maxLength={17}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent ${
+                  errors.vin ? "border-red-300" : "border-gray-300"
+                }`}
                 placeholder="Vehicle Identification Number"
               />
             )}
           />
+          {errors.vin && (
+            <p className="text-red-500 text-sm">{errors.vin.message}</p>
+          )}
         </div>
 
         {/* Color */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
-            Color
+            Color *
           </label>
           <Controller
             name="color"
             control={control}
+            rules={{ required: "Color is required" }}
             render={({ field }) => (
               <input
                 {...field}
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent ${
+                  errors.color ? "border-red-300" : "border-gray-300"
+                }`}
                 placeholder="e.g., White"
               />
             )}
           />
+          {errors.color && (
+            <p className="text-red-500 text-sm">{errors.color.message}</p>
+          )}
         </div>
       </div>
 

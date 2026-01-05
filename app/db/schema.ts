@@ -7,6 +7,7 @@ import {
   pgEnum,
   index,
   boolean,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const userStatusEnum = pgEnum("user_status", [
@@ -277,6 +278,11 @@ export const trips = pgTable(
     fuelUsed: varchar("fuel_used", { length: 20 }),
     durationMinutes: varchar("duration_minutes", { length: 10 }),
     notes: varchar("notes", { length: 1000 }),
+    // Trip tracking fields for driver start/stop
+    actualStartTime: timestamp("actual_start_time", { withTimezone: true }),
+    actualEndTime: timestamp("actual_end_time", { withTimezone: true }),
+    actualStartLocation: jsonb("actual_start_location"),
+    actualEndLocation: jsonb("actual_end_location"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

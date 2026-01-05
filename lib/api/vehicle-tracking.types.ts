@@ -33,6 +33,7 @@ export interface VehicleLocationPayload {
   source: DataSource;
   timestamp: string;
   location: Location;
+  tripId?: string; // Optional - only present when trip is active
   mobile?: MobileData;
   iot?: IotData;
 }

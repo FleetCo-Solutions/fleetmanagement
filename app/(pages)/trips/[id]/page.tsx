@@ -1,18 +1,17 @@
 "use client";
+
+import React, { useMemo } from "react";
 import { useParams } from "next/navigation";
+import dynamic from "next/dynamic";
+
 import { useTripByIdQuery } from "../query";
 import TripDetailCards from "../components/tripDetailCards";
-import dynamic from "next/dynamic";
-import React from "react";
+import UniversalTableSkeleton from "@/app/components/universalTableSkeleton";
 
-const TripRouteMap = dynamic(() => import("../components/tripRouteMap"), {
-  ssr: false,
-  loading: () => (
-    <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm h-[400px] flex items-center justify-center">
-      <span className="text-black/60">Loading map...</span>
-    </div>
-  ),
-});
+const TripRouteMap = dynamic(
+  () => import("../components/tripRouteMap"),
+  { ssr: false }
+);
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -25,7 +24,6 @@ const getStatusColor = (status: string) => {
     case "cancelled":
       return "bg-red-100 text-red-800";
     case "scheduled":
-      return "bg-gray-100 text-gray-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -34,49 +32,57 @@ const getStatusColor = (status: string) => {
 export default function TripDetail() {
   const params = useParams();
   const tripId = params.id as string;
+
   const { data: tripData, isLoading, error } = useTripByIdQuery(tripId);
+
+  const trip = useMemo(() => {
+    if (!tripData?.dto) return null;
+
+    const t = tripData.dto;
+
+    return {
+      ...t,
+      driver: t.mainDriver
+        ? `${t.mainDriver.firstName} ${t.mainDriver.lastName}`
+        : "Unknown Driver",
+      distance: t.distanceKm ? parseFloat(t.distanceKm) : 0,
+      duration: t.durationMinutes ? parseInt(t.durationMinutes) : 0,
+      fuelUsed: t.fuelUsed ? parseFloat(t.fuelUsed) : 0,
+    };
+  }, [tripData]);
 
   if (isLoading) {
     return (
-      <div className="p-10 text-xl text-center text-black/60">
-        Loading trip details...
+      <div className="bg-white w-full h-full flex items-center justify-center">
+        <UniversalTableSkeleton />
       </div>
     );
   }
 
-  if (error || !tripData?.dto) {
+  if (error || !trip) {
     return (
-      <div className="p-10 text-xl text-red-600">
-        Trip not found or error loading trip details.
+      <div className="bg-white w-full h-full flex items-center justify-center">
+        <div className="p-10 text-xl text-red-600">
+          Trip not found or error loading trip details.
+        </div>
       </div>
     );
   }
 
-  const trip = tripData.dto;
-
-  // Mock real-time data
-  const realTimeData = {
-    currentLocation: "Morogoro, Tanzania",
-    currentSpeed: 65,
-    fuelLevel: 75,
-    engineTemp: 85,
-    lastUpdated: new Date().toLocaleString("en-GB"),
-  };
-
-  // Performance data from trip
   const performanceData = {
-    fuelEfficiency: trip.fuelUsed && trip.distanceKm 
-      ? (parseFloat(trip.distanceKm) / parseFloat(trip.fuelUsed)).toFixed(2)
-      : "N/A",
-    avgSpeed: trip.distanceKm && trip.durationMinutes
-      ? ((parseFloat(trip.distanceKm) / (parseInt(trip.durationMinutes) / 60))).toFixed(1)
-      : "N/A",
-    idleTime: 15, // Not available in current schema
-    harshBraking: 2, // Not available in current schema
-    speedViolations: 0, // Not available in current schema
+    fuelEfficiency:
+      trip.fuelUsed && trip.distance
+        ? (trip.distance / trip.fuelUsed).toFixed(2)
+        : "N/A",
+    avgSpeed:
+      trip.distance && trip.duration
+        ? (trip.distance / (trip.duration / 60)).toFixed(1)
+        : "N/A",
+    idleTime: 15,
+    harshBraking: 2,
+    speedViolations: 0,
   };
 
-  // Timeline data from trip
   const timelineData = [
     {
       time: trip.startTime,
@@ -84,12 +90,16 @@ export default function TripDetail() {
       location: trip.startLocation,
       status: "completed",
     },
-    ...(trip.endTime ? [{
-      time: trip.endTime,
-      event: "Trip Ended",
-      location: trip.endLocation,
-      status: "completed",
-    }] : []),
+    ...(trip.endTime
+      ? [
+          {
+            time: trip.endTime,
+            event: "Trip Ended",
+            location: trip.endLocation,
+            status: "completed",
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -109,35 +119,29 @@ export default function TripDetail() {
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-black">Trip #{trip.id.slice(0, 8)}</h1>
+              <h1 className="text-3xl font-bold text-black">
+                Trip #{trip.id.slice(0, 8)}
+              </h1>
               <p className="text-black/60">
                 {trip.startLocation} → {trip.endLocation}
               </p>
             </div>
           </div>
-          <div className="flex gap-3">
-            <span
-              className={`px-3 py-2 rounded-full text-sm font-semibold ${getStatusColor(
-                trip.status
-              )}`}
-            >
-              {trip.status.replace("_", " ").toUpperCase()}
-            </span>
-            <button className="bg-[#004953] text-white px-6 py-2 rounded-lg hover:bg-[#014852] transition-colors">
-              Edit Trip
-            </button>
-            <button className="border border-[#004953] text-[#004953] px-6 py-2 rounded-lg hover:bg-[#004953] hover:text-white transition-colors">
-              Export Report
-            </button>
-          </div>
+
+          <span
+            className={`px-3 py-2 rounded-full text-sm font-semibold ${getStatusColor(
+              trip.status
+            )}`}
+          >
+            {trip.status.replace("_", " ").toUpperCase()}
+          </span>
         </div>
 
-        {/* Performance Metrics Cards */}
+        {/* Performance Cards */}
         <TripDetailCards performanceData={performanceData} />
 
-        {/* Main Content Grid */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Route Map - 50% */}
           <div className="lg:col-span-2">
             <TripRouteMap
               startLocation={trip.startLocation}
@@ -146,71 +150,29 @@ export default function TripDetail() {
             />
           </div>
 
-          {/* Trip Details - 30% */}
           <div className="lg:col-span-1">
-            <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm h-full">
-              <h2 className="text-xl font-bold text-black mb-4">
-                Trip Details
-              </h2>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">Vehicle:</span>
-                  <span className="text-black/70">
-                    {trip.vehicle?.registrationNumber || "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">Main Driver:</span>
-                  <span className="text-black/70">
-                    {trip.mainDriver 
-                      ? `${trip.mainDriver.firstName} ${trip.mainDriver.lastName}`
-                      : "N/A"}
-                  </span>
-                </div>
+            <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
+              <h2 className="text-xl font-bold mb-4">Trip Details</h2>
+              <div className="space-y-3 text-black/70">
+                <div><strong>Vehicle:</strong> {trip.vehicle?.registrationNumber || "N/A"}</div>
+                <div><strong>Main Driver:</strong> {trip.driver}</div>
                 {trip.substituteDriver && (
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-black/70">Substitute Driver:</span>
-                    <span className="text-black/70">
-                      {`${trip.substituteDriver.firstName} ${trip.substituteDriver.lastName}`}
-                    </span>
+                  <div>
+                    <strong>Substitute Driver:</strong>{" "}
+                    {trip.substituteDriver.firstName} {trip.substituteDriver.lastName}
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">Distance:</span>
-                  <span className="text-black/70">
-                    {trip.distanceKm ? `${parseFloat(trip.distanceKm).toLocaleString()} km` : "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">Duration:</span>
-                  <span className="text-black/70">
-                    {trip.durationMinutes ? `${trip.durationMinutes} minutes` : "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">
-                    Fuel Used:
-                  </span>
-                  <span className="text-black/70">
-                    {trip.fuelUsed ? `${trip.fuelUsed} L` : "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">
-                    Start Time:
-                  </span>
-                  <span className="text-black/70">
-                    {new Date(trip.startTime).toLocaleString("en-GB")}
-                  </span>
+                <div><strong>Distance:</strong> {trip.distance} km</div>
+                <div><strong>Duration:</strong> {trip.duration} minutes</div>
+                <div><strong>Fuel Used:</strong> {trip.fuelUsed} L</div>
+                <div>
+                  <strong>Start Time:</strong>{" "}
+                  {new Date(trip.startTime).toLocaleString("en-GB")}
                 </div>
                 {trip.endTime && (
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-black/70">
-                      End Time:
-                    </span>
-                    <span className="text-black/70">
-                      {new Date(trip.endTime).toLocaleString("en-GB")}
-                    </span>
+                  <div>
+                    <strong>End Time:</strong>{" "}
+                    {new Date(trip.endTime).toLocaleString("en-GB")}
                   </div>
                 )}
               </div>
@@ -218,82 +180,22 @@ export default function TripDetail() {
           </div>
         </div>
 
-        {/* Real-Time Data & Timeline */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Real-Time Data */}
-          <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-black mb-4">
-              Real-Time Data
-            </h2>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="font-semibold text-black/70">
-                  Current Location:
-                </span>
-                <span className="text-black/70">
-                  {realTimeData.currentLocation}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-black/70">
-                  Current Speed:
-                </span>
-                <span className="text-black/70">
-                  {realTimeData.currentSpeed} km/h
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-black/70">Fuel Level:</span>
-                <span className="text-black/70">{realTimeData.fuelLevel}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-black/70">
-                  Engine Temp:
-                </span>
-                <span className="text-black/70">
-                  {realTimeData.engineTemp}°C
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-black/70">
-                  Last Updated:
-                </span>
-                <span className="text-sm text-black/70">
-                  {realTimeData.lastUpdated}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Trip Timeline */}
-          <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-black mb-4">Trip Timeline</h2>
-            <div className="space-y-4">
-              {timelineData.map((item, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <div
-                    className={`w-3 h-3 rounded-full mt-2 ${
-                      item.status === "completed"
-                        ? "bg-green-500"
-                        : item.status === "in_progress"
-                        ? "bg-blue-500"
-                        : "bg-gray-300"
-                    }`}
-                  ></div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-black/70">
-                      {item.event}
-                    </div>
-                    <div className="text-sm text-black/70">{item.location}</div>
-                    {item.time && (
-                      <div className="text-xs text-black/70">
-                        {new Date(item.time).toLocaleString("en-GB")}
-                      </div>
-                    )}
+        {/* Timeline */}
+        <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
+          <h2 className="text-xl font-bold mb-4">Trip Timeline</h2>
+          <div className="space-y-4">
+            {timelineData.map((item, index) => (
+              <div key={index} className="flex gap-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full mt-2" />
+                <div>
+                  <div className="font-semibold">{item.event}</div>
+                  <div className="text-sm">{item.location}</div>
+                  <div className="text-xs">
+                    {new Date(item.time).toLocaleString("en-GB")}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
