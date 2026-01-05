@@ -1,9 +1,18 @@
 "use client";
 import { useParams } from "next/navigation";
-import { trips } from "../components/tripsList";
+import { useTripByIdQuery } from "../query";
 import TripDetailCards from "../components/tripDetailCards";
-import TripRouteMap from "../components/tripRouteMap";
+import dynamic from "next/dynamic";
 import React from "react";
+
+const TripRouteMap = dynamic(() => import("../components/tripRouteMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm h-[400px] flex items-center justify-center">
+      <span className="text-black/60">Loading map...</span>
+    </div>
+  ),
+});
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -25,11 +34,25 @@ const getStatusColor = (status: string) => {
 export default function TripDetail() {
   const params = useParams();
   const tripId = params.id as string;
-  const trip = trips.find((t) => t.tripId === tripId);
+  const { data: tripData, isLoading, error } = useTripByIdQuery(tripId);
 
-  if (!trip) {
-    return <div className="p-10 text-xl text-red-600">Trip not found.</div>;
+  if (isLoading) {
+    return (
+      <div className="p-10 text-xl text-center text-black/60">
+        Loading trip details...
+      </div>
+    );
   }
+
+  if (error || !tripData?.dto) {
+    return (
+      <div className="p-10 text-xl text-red-600">
+        Trip not found or error loading trip details.
+      </div>
+    );
+  }
+
+  const trip = tripData.dto;
 
   // Mock real-time data
   const realTimeData = {
@@ -40,16 +63,20 @@ export default function TripDetail() {
     lastUpdated: new Date().toLocaleString("en-GB"),
   };
 
-  // Mock performance data
+  // Performance data from trip
   const performanceData = {
-    fuelEfficiency: 8.5,
-    avgSpeed: 72,
-    idleTime: 15,
-    harshBraking: 2,
-    speedViolations: trip.violations,
+    fuelEfficiency: trip.fuelUsed && trip.distanceKm 
+      ? (parseFloat(trip.distanceKm) / parseFloat(trip.fuelUsed)).toFixed(2)
+      : "N/A",
+    avgSpeed: trip.distanceKm && trip.durationMinutes
+      ? ((parseFloat(trip.distanceKm) / (parseInt(trip.durationMinutes) / 60))).toFixed(1)
+      : "N/A",
+    idleTime: 15, // Not available in current schema
+    harshBraking: 2, // Not available in current schema
+    speedViolations: 0, // Not available in current schema
   };
 
-  // Mock timeline data
+  // Timeline data from trip
   const timelineData = [
     {
       time: trip.startTime,
@@ -57,28 +84,12 @@ export default function TripDetail() {
       location: trip.startLocation,
       status: "completed",
     },
-    {
-      time: new Date(
-        new Date(trip.startTime).getTime() + 2 * 60 * 60 * 1000
-      ).toISOString(),
-      event: "Checkpoint 1",
-      location: "Dodoma",
-      status: "completed",
-    },
-    {
-      time: new Date(
-        new Date(trip.startTime).getTime() + 4 * 60 * 60 * 1000
-      ).toISOString(),
-      event: "Checkpoint 2",
-      location: "Morogoro",
-      status: trip.status === "in_progress" ? "in_progress" : "completed",
-    },
-    {
-      time: trip.endTime || "",
+    ...(trip.endTime ? [{
+      time: trip.endTime,
       event: "Trip Ended",
       location: trip.endLocation,
-      status: trip.status === "completed" ? "completed" : "pending",
-    },
+      status: "completed",
+    }] : []),
   ];
 
   return (
@@ -98,7 +109,7 @@ export default function TripDetail() {
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-black">{trip.tripId}</h1>
+              <h1 className="text-3xl font-bold text-black">Trip #{trip.id.slice(0, 8)}</h1>
               <p className="text-black/60">
                 {trip.startLocation} → {trip.endLocation}
               </p>
@@ -131,7 +142,7 @@ export default function TripDetail() {
             <TripRouteMap
               startLocation={trip.startLocation}
               endLocation={trip.endLocation}
-              tripId={trip.tripId}
+              tripId={trip.id}
             />
           </div>
 
@@ -144,27 +155,45 @@ export default function TripDetail() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Vehicle:</span>
-                  <span className="text-black/70">{trip.vehicleRegNo}</span>
+                  <span className="text-black/70">
+                    {trip.vehicle?.registrationNumber || "N/A"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">Driver:</span>
-                  <span className="text-black/70">{trip.driver}</span>
+                  <span className="font-semibold text-black/70">Main Driver:</span>
+                  <span className="text-black/70">
+                    {trip.mainDriver 
+                      ? `${trip.mainDriver.firstName} ${trip.mainDriver.lastName}`
+                      : "N/A"}
+                  </span>
                 </div>
+                {trip.substituteDriver && (
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-black/70">Substitute Driver:</span>
+                    <span className="text-black/70">
+                      {`${trip.substituteDriver.firstName} ${trip.substituteDriver.lastName}`}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Distance:</span>
                   <span className="text-black/70">
-                    {trip.distance.toLocaleString()} km
+                    {trip.distanceKm ? `${parseFloat(trip.distanceKm).toLocaleString()} km` : "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">Duration:</span>
-                  <span className="text-black/70">{trip.duration} minutes</span>
+                  <span className="text-black/70">
+                    {trip.durationMinutes ? `${trip.durationMinutes} minutes` : "N/A"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">
                     Fuel Used:
                   </span>
-                  <span className="text-black/70">{trip.fuelUsed} L</span>
+                  <span className="text-black/70">
+                    {trip.fuelUsed ? `${trip.fuelUsed} L` : "N/A"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-black/70">

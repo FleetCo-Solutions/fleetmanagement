@@ -1,51 +1,22 @@
-// import NextAuth, { DefaultSession } from "next-auth";
-// import "next-auth/jwt";
+import { DefaultSession } from "next-auth";
 
-// declare module "next-auth" {
-//   interface Session {
-//     userToken?: string;
-//     expiresAt?: number;
-//     user?: {
-//       name: string;
-//       email: string;
-//       roles: string[];
-//       phone: string;
-//       status: string;
-//       department: {
-//         id: number;
-//         name: string;
-//       };
-//     };
-//   }
+declare module "next-auth" {
+  interface Session {
+    user: {
+      companyId?: string;
+      status?: string;
+    } & DefaultSession["user"];
+  }
 
-//   interface User {
-//     name: string;
-//     email: string;
-//     roles: string[];
-//     phone: string;
-//     status: string;
-//     department: {
-//       id: number;
-//       name: string;
-//     };
-//     token: string;
-//   }
-// }
+  interface User {
+    companyId?: string;
+    status?: string;
+  }
+}
 
-// declare module "next-auth/jwt" {
-//   interface JWT {
-//     userToken?: string;
-//     expiresAt?: number;
-//     userInfo?: {
-//       name: string;
-//       email: string;
-//       roles: string[];
-//       phone: string;
-//       status: string;
-//       department: {
-//         id: number;
-//         name: string;
-//       };
-//     } & AdapterUser;
-//   }
-// }
+declare module "next-auth/jwt" {
+  interface JWT {
+    companyId?: string;
+    status?: string;
+  }
+}

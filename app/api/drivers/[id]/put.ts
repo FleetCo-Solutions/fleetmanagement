@@ -1,6 +1,7 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { drivers } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 interface UpdateDriverPayload {
@@ -14,7 +15,33 @@ interface UpdateDriverPayload {
 }
 
 export async function putDriver(id: string, payload: UpdateDriverPayload) {
+  // Get session for authentication and companyId
+  const session = await auth();
+  
+  if (!session?.user?.companyId) {
+    return NextResponse.json(
+      { message: "Unauthorized - No company assigned" },
+      { status: 401 }
+    );
+  }
+
   try {
+    // 1. Verify driver belongs to user's company before updating
+    const existing = await db.query.drivers.findFirst({
+      where: and(
+        eq(drivers.id, id),
+        eq(drivers.companyId, session.user.companyId)
+      )
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { message: "Driver not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    // 2. Update the driver
     const updatedDriver = await db
       .update(drivers)
       .set({

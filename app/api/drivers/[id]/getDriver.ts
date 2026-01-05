@@ -1,18 +1,35 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { drivers, emergencyContacts } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export default async function getDriverDetails(id: string) {
   const date = new Date();
+  
+  // Get session for authentication and companyId
+  const session = await auth();
+  
+  if (!session?.user?.companyId) {
+    return NextResponse.json(
+      { message: "Unauthorized - No company assigned" },
+      { status: 401 }
+    );
+  }
+
   try {
+    // Verify driver belongs to user's company
     const driverDetails = await db.query.drivers.findFirst({
-        where: eq(drivers.id, id),
-        with: {emergencyContacts: true}
-    })
+      where: and(
+        eq(drivers.id, id),
+        eq(drivers.companyId, session.user.companyId)
+      ),
+      with: { emergencyContacts: true }
+    });
+
     if (!driverDetails) {
       return NextResponse.json(
-        { timestamp: date, message: "Driver not found", dto: null },
+        { timestamp: date, message: "Driver not found or access denied", dto: null },
         { status: 404 }
       );
     }

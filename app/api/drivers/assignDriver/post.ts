@@ -1,6 +1,7 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
-import { drivers, vehicleAssignments } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { drivers, vehicles, vehicleAssignments } from "@/app/db/schema";
+import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export interface AssignDriverRequestBody {
@@ -10,6 +11,16 @@ export interface AssignDriverRequestBody {
 }
 
 export async function assignDriverToVehcle(request: NextRequest) {
+  // Get session for authentication and companyId
+  const session = await auth();
+  
+  if (!session?.user?.companyId) {
+    return NextResponse.json(
+      { message: "Unauthorized - No company assigned" },
+      { status: 401 }
+    );
+  }
+
   const { driverId, vehicleId, role } =
     (await request.json()) as AssignDriverRequestBody;
 
@@ -25,10 +36,46 @@ export async function assignDriverToVehcle(request: NextRequest) {
   }
 
   try {
+    // 1. Verify driver belongs to user's company
+    const driver = await db.query.drivers.findFirst({
+      where: and(
+        eq(drivers.id, driverId),
+        eq(drivers.companyId, session.user.companyId)
+      )
+    });
+
+    if (!driver) {
+      return NextResponse.json(
+        { message: "Driver not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    // 2. Verify vehicle belongs to user's company
+    const vehicle = await db.query.vehicles.findFirst({
+      where: and(
+        eq(vehicles.id, vehicleId),
+        eq(vehicles.companyId, session.user.companyId)
+      )
+    });
+
+    if (!vehicle) {
+      return NextResponse.json(
+        { message: "Vehicle not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    // 3. Check if vehicle already has 2 drivers assigned
     const assignedDrivers = await db
       .select()
       .from(drivers)
-      .where(eq(drivers.vehicleId, vehicleId));
+      .where(
+        and(
+          eq(drivers.vehicleId, vehicleId),
+          eq(drivers.companyId, session.user.companyId)
+        )
+      );
 
     if (assignedDrivers.length >= 2) {
       return NextResponse.json(
@@ -39,6 +86,7 @@ export async function assignDriverToVehcle(request: NextRequest) {
       );
     }
 
+    // 4. Check if role 'main' is already assigned
     if (role === "main") {
       const mainDriverAssigned = assignedDrivers.some(
         (driver) => driver.role === "main"
@@ -51,24 +99,15 @@ export async function assignDriverToVehcle(request: NextRequest) {
       }
     }
 
-    const driver = await db
-      .select()
-      .from(drivers)
-      .where(eq(drivers.id, driverId));
-    if (driver.length === 0) {
-      return NextResponse.json(
-        { message: "Driver not found" },
-        { status: 404 }
-      );
-    }
-
-    if (driver[0].vehicleId && driver[0].vehicleId !== vehicleId) {
+    // 5. Check if driver is already assigned to another vehicle
+    if (driver.vehicleId && driver.vehicleId !== vehicleId) {
       return NextResponse.json(
         { message: "Driver is already assigned to another vehicle" },
         { status: 400 }
       );
     }
 
+    // 6. Assign driver to vehicle
     await db
       .update(drivers)
       .set({ vehicleId: vehicleId, role: role, updatedAt: new Date() })

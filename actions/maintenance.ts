@@ -1,7 +1,9 @@
 "use server";
 
-import { MaintenanceRecord } from "@/app/types";
-export type { MaintenanceRecord };
+import { auth } from "@/app/auth";
+import { db } from "@/app/db";
+import { trips, vehicles, drivers } from "@/app/db/schema";
+import { eq, and } from "drizzle-orm";
 
 export interface CreateMaintenancePayload {
   vehicleId: string;
