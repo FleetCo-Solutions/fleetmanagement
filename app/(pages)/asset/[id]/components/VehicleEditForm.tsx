@@ -140,7 +140,7 @@ export default function VehicleEditForm({
 
   // Filter available drivers (exclude currently assigned ones)
   const availableDrivers =
-    driversList?.data.filter(
+    driversList?.dto.filter(
       (d) => !vehicleData.dto.drivers?.some((assigned) => assigned.id === d.id)
     ) || [];
 

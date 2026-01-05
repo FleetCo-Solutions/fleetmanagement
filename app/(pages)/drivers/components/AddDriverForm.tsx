@@ -4,7 +4,7 @@ import { useForm, Controller, useFieldArray } from "react-hook-form";
 import "react-phone-input-2/lib/style.css";
 import PhoneInput from "react-phone-input-2";
 import { toast } from "sonner";
-import { useAddDriver } from "../query";
+import { useAddDriver, useUpdateDriver } from "../query";
 import { Driver } from "@/app/types";
 
 export type AddDriverFormValues = {
@@ -14,6 +14,7 @@ export type AddDriverFormValues = {
   alternativePhone?: string;
   licenseNumber: string;
   licenseExpiry: string; // ISO date string
+  status?: "active" | "inactive" | "suspended";
 };
 
 export default function AddDriverForm({
@@ -24,6 +25,7 @@ export default function AddDriverForm({
   initialValues?: Driver;
 }) {
   const {mutateAsync: addDriver} = useAddDriver()
+  const {mutateAsync: updateDriverMutation} = useUpdateDriver()
   const { register, handleSubmit, control, formState: { errors, isSubmitting }, reset, } = useForm<AddDriverFormValues>({
     defaultValues:{
       firstName: initialValues ? initialValues.firstName : "",
@@ -32,6 +34,7 @@ export default function AddDriverForm({
       alternativePhone: initialValues ? initialValues.alternativePhone : "",
       licenseNumber: initialValues ? initialValues.licenseNumber : "",
       licenseExpiry: initialValues ? initialValues.licenseExpiry : "",
+      status: initialValues ? initialValues.status : "active",
     },
     mode: "onChange",
   });
@@ -47,15 +50,43 @@ export default function AddDriverForm({
   };
 
   const onSubmit = async (values: AddDriverFormValues) => {
-    console.log("Add driver payload:", values);
-    await toast.promise(addDriver(values), {
-      loading: "Adding driver...",
-      success: (data) => {
-        handleCancel();
-        return data.message || "Driver added successfully!";
-      },
-      error: (err) => err.message || "Failed to add driver.",
-    });
+    console.log(initialValues ? "Update driver payload:" : "Add driver payload:", values);
+    
+    if (initialValues?.id) {
+      // Update existing driver
+      await toast.promise(
+        updateDriverMutation({
+          id: initialValues.id,
+          data: {
+            firstName: values.firstName,
+            lastName: values.lastName,
+            phone: values.phone,
+            alternativePhone: values.alternativePhone,
+            licenseNumber: values.licenseNumber,
+            licenseExpiry: values.licenseExpiry,
+            status: values.status || initialValues.status || "active",
+          },
+        }),
+        {
+          loading: "Updating driver...",
+          success: (data) => {
+            handleCancel();
+            return data.message || "Driver updated successfully!";
+          },
+          error: (err) => err.message || "Failed to update driver.",
+        }
+      );
+    } else {
+      // Add new driver
+      await toast.promise(addDriver(values), {
+        loading: "Adding driver...",
+        success: (data) => {
+          handleCancel();
+          return data.message || "Driver added successfully!";
+        },
+        error: (err) => err.message || "Failed to add driver.",
+      });
+    }
   };
 
   return (
@@ -223,7 +254,7 @@ export default function AddDriverForm({
           disabled={isSubmitting}
           className="px-4 py-2 text-sm font-medium text-white bg-[#004953] rounded-lg hover:bg-[#014852] disabled:opacity-50"
         >
-          {isSubmitting ? "Saving..." : "Save Driver"}
+          {isSubmitting ? "Saving..." : initialValues ? "Update Driver" : "Save Driver"}
         </button>
       </div>
     </form>

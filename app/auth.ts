@@ -42,6 +42,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email: string;
             password?: string;
             status: "active" | "inactive" | "suspended";
+            companyId?: string;
           };
           message: string;
         };
@@ -57,33 +58,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             name: `${user.user.firstName} ${user.user.lastName}`,
             email: user.user.email,
             status: user.user.status,
+            companyId: user.user.companyId,
           };
         } else return null;
       },
     }),
   ],
 
-  // session: {
-  //   strategy: "jwt",
-  // },
+  session: {
+    strategy: "jwt",
+  },
 
-  // callbacks: {
-  //   // Keep user object on the token for session callback
-  //   jwt: async ({ token, user }) => {
-  //     if (user) {
-  //       // Attach the user object returned from `authorize` onto the token
-  //       (token as any).user = user;
-  //     }
-  //     return token;
-  //   },
-  //   session: async ({ session, token }) => {
-  //     // Expose the user object on the session for client usage
-  //     if ((token as any).user) {
-  //       (session as any).user = (token as any).user;
-  //     }
-  //     return session;
-  //   },
-  // },
+  callbacks: {
+    // Store user data in JWT token
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.companyId = user.companyId;
+        token.status = user.status;
+      }
+      return token;
+    },
+    // Add user data to session from token
+    session: async ({ session, token }) => {
+      if (session.user) {
+        (session.user as any).companyId = token.companyId;
+        (session.user as any).status = token.status;
+      }
+      return session;
+    },
+  },
 
   pages: {
     signIn: "/login",

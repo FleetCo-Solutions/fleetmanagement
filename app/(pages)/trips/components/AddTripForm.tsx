@@ -1,7 +1,8 @@
 "use client";
 import React, { useMemo, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { useVehiclesListQuery } from "@/app/(pages)/maintenance/query";
+import { useVehiclesListQuery } from "@/app/(pages)/asset/query";
+import { useDriversListQuery } from "@/app/(pages)/drivers/query";
 
 export type AddTripFormValues = {
   vehicleId: string;
@@ -27,6 +28,7 @@ export default function AddTripForm({
   onCancel: () => void;
 }) {
   const { data: vehiclesData } = useVehiclesListQuery();
+  const { data: driversData } = useDriversListQuery();
 
   const {
     register,
@@ -59,21 +61,18 @@ export default function AddTripForm({
   const endTime = watch("endTime");
   const selectedVehicleId = watch("vehicleId");
 
-  // Auto-populate driver fields when vehicle is selected
+  // Get the selected vehicle's assigned driver
+  const selectedVehicle = vehiclesData?.dto?.find(
+    (v: any) => v.id === selectedVehicleId
+  );
+  const assignedDriver = selectedVehicle?.assignedDriver;
+
+  // Auto-fill main driver when vehicle is selected
   useEffect(() => {
-    if (selectedVehicleId && vehiclesData?.data) {
-      const selectedVehicle = vehiclesData.data.find(
-        (v: any) => v.id === selectedVehicleId
-      );
-      if (selectedVehicle) {
-        setValue("mainDriverId", selectedVehicle.mainDriver?.id || "");
-        setValue(
-          "substituteDriverId",
-          selectedVehicle.substituteDriver?.id || ""
-        );
-      }
+    if (assignedDriver?.id) {
+      setValue("mainDriverId", assignedDriver.id);
     }
-  }, [selectedVehicleId, vehiclesData, setValue]);
+  }, [assignedDriver, setValue]);
 
   useMemo(() => {
     if (startTime && endTime) {
@@ -119,7 +118,7 @@ export default function AddTripForm({
               }`}
             >
               <option value="">Select a vehicle</option>
-              {vehiclesData?.data?.map((vehicle: any) => (
+              {vehiclesData?.dto?.map((vehicle: any) => (
                 <option key={vehicle.id} value={vehicle.id}>
                   {vehicle.registrationNumber} - {vehicle.model}
                 </option>
@@ -134,15 +133,27 @@ export default function AddTripForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Main Driver
+              Main Driver *
             </label>
-            <input
-              {...register("mainDriverId")}
-              type="text"
-              readOnly
-              className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-900 cursor-not-allowed border-gray-300"
-              placeholder="Auto-filled from vehicle"
-            />
+            <select
+              {...register("mainDriverId", { required: "Main driver is required" })}
+              className={`w-full px-3 py-2 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#004953] ${
+                errors.mainDriverId ? "border-red-300" : "border-gray-300"
+              }`}
+            >
+              <option value="">Select a driver</option>
+              {driversData?.dto?.map((driver: any) => (
+                <option key={driver.id} value={driver.id}>
+                  {driver.firstName} {driver.lastName}
+                  {assignedDriver?.id === driver.id ? " (Assigned to Vehicle)" : ""}
+                </option>
+              ))}
+            </select>
+            {errors.mainDriverId && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.mainDriverId.message as string}
+              </p>
+            )}
           </div>
 
           <div className="md:col-span-2">

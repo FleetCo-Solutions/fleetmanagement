@@ -30,6 +30,7 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id"), // Links to admin_companies table
     firstName: varchar("first_name", { length: 50 }).notNull(),
     lastName: varchar("last_name", { length: 50 }).notNull(),
     phone: varchar("phone", { length: 20 }).unique(),
@@ -48,6 +49,7 @@ export const users = pgTable(
   (user) => {
     return {
       emailIdx: index("email_idx").on(user.email),
+      companyIdx: index("company_idx").on(user.companyId),
     };
   }
 );
@@ -56,6 +58,7 @@ export const drivers = pgTable(
   "drivers",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id"), // Links to admin_companies table
     firstName: varchar("firstName", { length: 50 }).notNull(),
     lastName: varchar("lastName", { length: 50 }).notNull(),
     phone: varchar("phoneNumber", { length: 20 }).unique().notNull(),
@@ -78,25 +81,35 @@ export const drivers = pgTable(
   (driver) => {
     return {
       licenseNumberIdx: index("licenseNumberIdx").on(driver.licenseNumber),
+      companyIdx: index("drivers_company_idx").on(driver.companyId),
     };
   }
 );
 
-export const vehicles = pgTable("vehicles", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  registrationNumber: varchar("registrationNumber", { length: 15 })
-    .notNull()
-    .unique(),
-  model: varchar("model", { length: 30 }).notNull(),
-  manufacturer: varchar("manufacturer", { length: 30 }).notNull(),
-  vin: varchar("vin", { length: 20 }).unique().notNull(),
-  color: varchar("color", { length: 20 }).notNull(),
-  createdAt: timestamp("createdAt", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updatedAt", { withTimezone: true }),
-  deletedAt: timestamp("deletedAt", { withTimezone: true }),
-});
+export const vehicles = pgTable(
+  "vehicles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id"), // Links to admin_companies table
+    registrationNumber: varchar("registrationNumber", { length: 15 })
+      .notNull()
+      .unique(),
+    model: varchar("model", { length: 30 }).notNull(),
+    manufacturer: varchar("manufacturer", { length: 30 }).notNull(),
+    vin: varchar("vin", { length: 20 }).unique().notNull(),
+    color: varchar("color", { length: 20 }).notNull(),
+    createdAt: timestamp("createdAt", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updatedAt", { withTimezone: true }),
+    deletedAt: timestamp("deletedAt", { withTimezone: true }),
+  },
+  (vehicle) => {
+    return {
+      companyIdx: index("vehicles_company_idx").on(vehicle.companyId),
+    };
+  }
+);
 
 export const emergencyContacts = pgTable(
   "emergency_contacts",
@@ -196,6 +209,7 @@ export const maintenanceRecords = pgTable(
   "maintenance_records",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id"), // Links to admin_companies table
     vehicleId: uuid("vehicle_id")
       .references(() => vehicles.id, { onDelete: "cascade" })
       .notNull(),
@@ -227,6 +241,7 @@ export const maintenanceRecords = pgTable(
     return {
       vehicleIdx: index("maintenance_vehicle_idx").on(table.vehicleId),
       statusIdx: index("maintenance_status_idx").on(table.status),
+      companyIdx: index("maintenance_company_idx").on(table.companyId),
     };
   }
 );
@@ -244,6 +259,7 @@ export const trips = pgTable(
   "trips",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id"), // Links to admin_companies table
     vehicleId: uuid("vehicle_id")
       .references(() => vehicles.id, { onDelete: "cascade" })
       .notNull(),
@@ -278,6 +294,7 @@ export const trips = pgTable(
       mainDriverIdx: index("trip_main_driver_idx").on(table.mainDriverId),
       statusIdx: index("trip_status_idx").on(table.status),
       startTimeIdx: index("trip_start_time_idx").on(table.startTime),
+      companyIdx: index("trips_company_idx").on(table.companyId),
     };
   }
 );

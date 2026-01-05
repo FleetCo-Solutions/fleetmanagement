@@ -12,6 +12,7 @@ export async function loginUser(request: NextRequest){
     try {
         const [user] = await db.select({
             id: users.id,
+            companyId: users.companyId, // Add companyId to response
             firstName: users.firstName,
             lastName: users.lastName,
             email: users.email,

@@ -1,9 +1,11 @@
 "use client";
-import { useParams } from "next/navigation";
-import TripDetailCards from "../components/tripDetailCards";
-import dynamic from "next/dynamic";
+
 import React, { useMemo } from "react";
+import { useParams } from "next/navigation";
+import dynamic from "next/dynamic";
+
 import { useTripByIdQuery } from "../query";
+import TripDetailCards from "../components/tripDetailCards";
 import UniversalTableSkeleton from "@/app/components/universalTableSkeleton";
 
 const TripRouteMap = dynamic(
@@ -22,7 +24,6 @@ const getStatusColor = (status: string) => {
     case "cancelled":
       return "bg-red-100 text-red-800";
     case "scheduled":
-      return "bg-gray-100 text-gray-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -31,43 +32,22 @@ const getStatusColor = (status: string) => {
 export default function TripDetail() {
   const params = useParams();
   const tripId = params.id as string;
+
   const { data: tripData, isLoading, error } = useTripByIdQuery(tripId);
 
   const trip = useMemo(() => {
-    if (!tripData?.dto?.content) return null;
-    
-    const dbTrip = tripData.dto.content;
-    const driver = dbTrip.mainDriver 
-      ? `${dbTrip.mainDriver.firstName} ${dbTrip.mainDriver.lastName}`
-      : 'Unknown Driver';
-    
+    if (!tripData?.dto) return null;
+
+    const t = tripData.dto;
+
     return {
-      tripId: dbTrip.id,
-      vehicleRegNo: dbTrip.vehicle?.registrationNumber || 'N/A',
-      driver,
-      startLocation: typeof dbTrip.startLocation === 'string' 
-        ? dbTrip.startLocation 
-        : (dbTrip.startLocation as any)?.address || 'Unknown',
-      endLocation: typeof dbTrip.endLocation === 'string'
-        ? dbTrip.endLocation
-        : (dbTrip.endLocation as any)?.address || 'Unknown',
-      startTime: dbTrip.startTime instanceof Date 
-        ? dbTrip.startTime.toISOString() 
-        : typeof dbTrip.startTime === 'string'
-        ? dbTrip.startTime
-        : new Date(dbTrip.startTime).toISOString(),
-      endTime: dbTrip.endTime 
-        ? (dbTrip.endTime instanceof Date
-            ? dbTrip.endTime.toISOString()
-            : typeof dbTrip.endTime === 'string'
-            ? dbTrip.endTime
-            : new Date(dbTrip.endTime).toISOString())
-        : '',
-      status: dbTrip.status as "scheduled" | "in_progress" | "completed" | "delayed" | "cancelled",
-      distance: dbTrip.distanceKm ? parseFloat(dbTrip.distanceKm) : 0,
-      duration: dbTrip.durationMinutes ? parseInt(dbTrip.durationMinutes) : 0,
-      fuelUsed: dbTrip.fuelUsed ? parseFloat(dbTrip.fuelUsed) : 0,
-      violations: 0, // This field doesn't exist in the database schema, defaulting to 0
+      ...t,
+      driver: t.mainDriver
+        ? `${t.mainDriver.firstName} ${t.mainDriver.lastName}`
+        : "Unknown Driver",
+      distance: t.distanceKm ? parseFloat(t.distanceKm) : 0,
+      duration: t.durationMinutes ? parseInt(t.durationMinutes) : 0,
+      fuelUsed: t.fuelUsed ? parseFloat(t.fuelUsed) : 0,
     };
   }, [tripData]);
 
@@ -83,31 +63,26 @@ export default function TripDetail() {
     return (
       <div className="bg-white w-full h-full flex items-center justify-center">
         <div className="p-10 text-xl text-red-600">
-          {error ? `Error loading trip: ${error instanceof Error ? error.message : 'Unknown error'}` : 'Trip not found.'}
+          Trip not found or error loading trip details.
         </div>
       </div>
     );
   }
 
-  // Mock real-time data
-  const realTimeData = {
-    currentLocation: "Morogoro, Tanzania",
-    currentSpeed: 65,
-    fuelLevel: 75,
-    engineTemp: 85,
-    lastUpdated: new Date().toLocaleString("en-GB"),
-  };
-
-  // Mock performance data
   const performanceData = {
-    fuelEfficiency: 8.5,
-    avgSpeed: 72,
+    fuelEfficiency:
+      trip.fuelUsed && trip.distance
+        ? (trip.distance / trip.fuelUsed).toFixed(2)
+        : "N/A",
+    avgSpeed:
+      trip.distance && trip.duration
+        ? (trip.distance / (trip.duration / 60)).toFixed(1)
+        : "N/A",
     idleTime: 15,
     harshBraking: 2,
-    speedViolations: trip.violations,
+    speedViolations: 0,
   };
 
-  // Mock timeline data
   const timelineData = [
     {
       time: trip.startTime,
@@ -115,28 +90,16 @@ export default function TripDetail() {
       location: trip.startLocation,
       status: "completed",
     },
-    {
-      time: new Date(
-        new Date(trip.startTime).getTime() + 2 * 60 * 60 * 1000
-      ).toISOString(),
-      event: "Checkpoint 1",
-      location: "Dodoma",
-      status: "completed",
-    },
-    {
-      time: new Date(
-        new Date(trip.startTime).getTime() + 4 * 60 * 60 * 1000
-      ).toISOString(),
-      event: "Checkpoint 2",
-      location: "Morogoro",
-      status: trip.status === "in_progress" ? "in_progress" : "completed",
-    },
-    {
-      time: trip.endTime || "",
-      event: "Trip Ended",
-      location: trip.endLocation,
-      status: trip.status === "completed" ? "completed" : "pending",
-    },
+    ...(trip.endTime
+      ? [
+          {
+            time: trip.endTime,
+            event: "Trip Ended",
+            location: trip.endLocation,
+            status: "completed",
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -156,90 +119,60 @@ export default function TripDetail() {
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-black">{trip.tripId}</h1>
+              <h1 className="text-3xl font-bold text-black">
+                Trip #{trip.id.slice(0, 8)}
+              </h1>
               <p className="text-black/60">
                 {trip.startLocation} → {trip.endLocation}
               </p>
             </div>
           </div>
-          <div className="flex gap-3">
-            <span
-              className={`px-3 py-2 rounded-full text-sm font-semibold ${getStatusColor(
-                trip.status
-              )}`}
-            >
-              {trip.status.replace("_", " ").toUpperCase()}
-            </span>
-            <button className="bg-[#004953] text-white px-6 py-2 rounded-lg hover:bg-[#014852] transition-colors">
-              Edit Trip
-            </button>
-            <button className="border border-[#004953] text-[#004953] px-6 py-2 rounded-lg hover:bg-[#004953] hover:text-white transition-colors">
-              Export Report
-            </button>
-          </div>
+
+          <span
+            className={`px-3 py-2 rounded-full text-sm font-semibold ${getStatusColor(
+              trip.status
+            )}`}
+          >
+            {trip.status.replace("_", " ").toUpperCase()}
+          </span>
         </div>
 
-        {/* Performance Metrics Cards */}
+        {/* Performance Cards */}
         <TripDetailCards performanceData={performanceData} />
 
-        {/* Main Content Grid */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Route Map - 50% */}
           <div className="lg:col-span-2">
             <TripRouteMap
               startLocation={trip.startLocation}
               endLocation={trip.endLocation}
-              tripId={trip.tripId}
+              tripId={trip.id}
             />
           </div>
 
-          {/* Trip Details - 30% */}
           <div className="lg:col-span-1">
-            <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm h-full">
-              <h2 className="text-xl font-bold text-black mb-4">
-                Trip Details
-              </h2>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">Vehicle:</span>
-                  <span className="text-black/70">{trip.vehicleRegNo}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">Driver:</span>
-                  <span className="text-black/70">{trip.driver}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">Distance:</span>
-                  <span className="text-black/70">
-                    {trip.distance.toLocaleString()} km
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">Duration:</span>
-                  <span className="text-black/70">{trip.duration} minutes</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">
-                    Fuel Used:
-                  </span>
-                  <span className="text-black/70">{trip.fuelUsed} L</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-black/70">
-                    Start Time:
-                  </span>
-                  <span className="text-black/70">
-                    {new Date(trip.startTime).toLocaleString("en-GB")}
-                  </span>
+            <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
+              <h2 className="text-xl font-bold mb-4">Trip Details</h2>
+              <div className="space-y-3 text-black/70">
+                <div><strong>Vehicle:</strong> {trip.vehicle?.registrationNumber || "N/A"}</div>
+                <div><strong>Main Driver:</strong> {trip.driver}</div>
+                {trip.substituteDriver && (
+                  <div>
+                    <strong>Substitute Driver:</strong>{" "}
+                    {trip.substituteDriver.firstName} {trip.substituteDriver.lastName}
+                  </div>
+                )}
+                <div><strong>Distance:</strong> {trip.distance} km</div>
+                <div><strong>Duration:</strong> {trip.duration} minutes</div>
+                <div><strong>Fuel Used:</strong> {trip.fuelUsed} L</div>
+                <div>
+                  <strong>Start Time:</strong>{" "}
+                  {new Date(trip.startTime).toLocaleString("en-GB")}
                 </div>
                 {trip.endTime && (
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-black/70">
-                      End Time:
-                    </span>
-                    <span className="text-black/70">
-                      {new Date(trip.endTime).toLocaleString("en-GB")}
-                    </span>
+                  <div>
+                    <strong>End Time:</strong>{" "}
+                    {new Date(trip.endTime).toLocaleString("en-GB")}
                   </div>
                 )}
               </div>
@@ -247,82 +180,22 @@ export default function TripDetail() {
           </div>
         </div>
 
-        {/* Real-Time Data & Timeline */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Real-Time Data */}
-          <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-black mb-4">
-              Real-Time Data
-            </h2>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="font-semibold text-black/70">
-                  Current Location:
-                </span>
-                <span className="text-black/70">
-                  {realTimeData.currentLocation}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-black/70">
-                  Current Speed:
-                </span>
-                <span className="text-black/70">
-                  {realTimeData.currentSpeed} km/h
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-black/70">Fuel Level:</span>
-                <span className="text-black/70">{realTimeData.fuelLevel}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-black/70">
-                  Engine Temp:
-                </span>
-                <span className="text-black/70">
-                  {realTimeData.engineTemp}°C
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-black/70">
-                  Last Updated:
-                </span>
-                <span className="text-sm text-black/70">
-                  {realTimeData.lastUpdated}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Trip Timeline */}
-          <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-black mb-4">Trip Timeline</h2>
-            <div className="space-y-4">
-              {timelineData.map((item, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <div
-                    className={`w-3 h-3 rounded-full mt-2 ${
-                      item.status === "completed"
-                        ? "bg-green-500"
-                        : item.status === "in_progress"
-                        ? "bg-blue-500"
-                        : "bg-gray-300"
-                    }`}
-                  ></div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-black/70">
-                      {item.event}
-                    </div>
-                    <div className="text-sm text-black/70">{item.location}</div>
-                    {item.time && (
-                      <div className="text-xs text-black/70">
-                        {new Date(item.time).toLocaleString("en-GB")}
-                      </div>
-                    )}
+        {/* Timeline */}
+        <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
+          <h2 className="text-xl font-bold mb-4">Trip Timeline</h2>
+          <div className="space-y-4">
+            {timelineData.map((item, index) => (
+              <div key={index} className="flex gap-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full mt-2" />
+                <div>
+                  <div className="font-semibold">{item.event}</div>
+                  <div className="text-sm">{item.location}</div>
+                  <div className="text-xs">
+                    {new Date(item.time).toLocaleString("en-GB")}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
