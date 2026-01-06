@@ -49,7 +49,7 @@ export default async function postDriver(request: NextRequest){
         .returning()
         .onConflictDoNothing();
 
-        return NextResponse.json({message: "Driver Created Successfully", data: driver},{status: 201})
+        return NextResponse.json({message: "Driver Created Successfully moody", data: driver},{status: 201})
 
     }catch(error){
         return NextResponse.json({message: "Failed to create Driver: "+ (error as Error).message},{status: 500})
