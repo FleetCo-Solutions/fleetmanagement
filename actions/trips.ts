@@ -4,6 +4,7 @@ import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { trips, vehicles, drivers } from "@/app/db/schema";
 import { eq, and } from "drizzle-orm";
+import type { ITrips, TripDetails } from "@/app/types";
 
 export interface Trip {
   id: string;
@@ -56,7 +57,7 @@ export interface UpdateTripPayload {
   notes?: string;
 }
 
-export async function getTrips() {
+export async function getTrips(): Promise<ITrips> {
   try {
     const session = await auth();
     
@@ -82,6 +83,10 @@ export async function getTrips() {
         content: allTrips,
         totalPages: 1,
         totalElements: allTrips.length,
+        currentPage: 0,
+        pageSize: allTrips.length,
+        hasNext: false,
+        hasPrevious: false,
       },
     };
   } catch (error) {
@@ -89,16 +94,7 @@ export async function getTrips() {
   }
 }
 
-export async function getTripById(id: string): Promise<{
-  timestamp: Date;
-  statusCode: string;
-  message: string;
-  dto: typeof trips.$inferSelect & {
-    vehicle: typeof vehicles.$inferSelect | null;
-    mainDriver: typeof drivers.$inferSelect | null;
-    substituteDriver: typeof drivers.$inferSelect | null;
-  };
-}> {
+export async function getTripById(id: string): Promise<TripDetails> {
   try {
     const session = await auth();
     

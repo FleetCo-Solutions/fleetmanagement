@@ -21,6 +21,7 @@ import { useVehicleDetailsQuery, useUpdateVehicle } from "../query";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import type { VehicleDetailsResponse } from "@/app/types";
 
 export default function VehicleDetails() {
   const params = useParams();

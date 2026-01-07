@@ -8,12 +8,12 @@ import {
   UpdateTripPayload,
   Trip,
 } from "@/actions/trips";
-import { TripDetails, TripsList } from "@/app/types";
+import { TripDetails, ITrips } from "@/app/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 
 export const useTripsQuery = () => {
-  return useQuery<TripsList>({
+  return useQuery<ITrips>({
     queryKey: ["Trips"],
     queryFn: async () => await getTrips(),
     refetchInterval: 30000, // Auto-refresh every 30 seconds for real-time updates

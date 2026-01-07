@@ -56,16 +56,16 @@ export default function TripsTable() {
     {
       header: "Vehicle",
       accessorKey: "vehicleRegNo",
-      cell: ({ row }) => <span>{row.original.vehicle.registrationNumber}</span>,
+      cell: ({ row }) => <span>{row.original.vehicle?.registrationNumber || "N/A"}</span>,
     },
     {
       header: "Driver",
       accessorKey: "driver",
       cell: ({ row }) => (
         <span>
-          {row.original.mainDriver.firstName +
-            " " +
-            row.original.mainDriver.lastName}
+          {row.original.mainDriver
+            ? `${row.original.mainDriver.firstName} ${row.original.mainDriver.lastName}`
+            : "N/A"}
         </span>
       ),
     },

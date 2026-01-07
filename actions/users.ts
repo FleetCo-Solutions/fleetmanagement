@@ -1,12 +1,12 @@
 "use server";
 
-import { IAddUser, ProfilePayload } from "@/app/types";
+import { IAddUser, ProfilePayload, IUsers, UserDetails } from "@/app/types";
 import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { users } from "@/app/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 
-export async function getUsers() {
+export async function getUsers(): Promise<IUsers> {
   try {
     const session = await auth();
     
@@ -26,14 +26,18 @@ export async function getUsers() {
       timestamp: new Date(),
       statusCode: "200",
       message: "Users retrieved successfully",
-      dto: usersList,
+      dto: {
+        content: usersList,
+        totalPages: 1,
+        totalElements: usersList.length,
+      },
     };
   } catch (err) {
     throw new Error((err as Error).message);
   }
 }
 
-export async function getUserDetails(id: string) {
+export async function getUserDetails(id: string): Promise<UserDetails> {
   try {
     const session = await auth();
     
@@ -47,17 +51,41 @@ export async function getUserDetails(id: string) {
         eq(users.companyId, session.user.companyId),
         isNull(users.deletedAt)
       ),
+      with: {
+        emergencyContacts: true,
+      },
     });
 
     if (!user) {
       throw new Error("User not found or access denied");
     }
 
+    const date = new Date();
+    const accountAge = Math.floor(
+      (date.getTime() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     return {
       timestamp: new Date(),
       statusCode: "200",
       message: "User details retrieved successfully",
-      dto: user,
+      dto: {
+        profile: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone || "",
+          status: user.status,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt || user.createdAt,
+        },
+        activity: {
+          lastLogin: user.lastLogin || user.createdAt,
+          accountAge,
+        },
+        emergencyContacts: user.emergencyContacts || [],
+      },
     };
   } catch (err) {
     throw new Error((err as Error).message);

@@ -30,19 +30,19 @@ const DriversDashboard = () => {
           />
 
           <OverviewRealTime
-            title="Drivers on Leave"
-            quantity={data.dto.driversOnLeave}
-            description={`Suspended: ${data.dto.suspendedDrivers}`}
+            title="Assigned Drivers"
+            quantity={data.dto.assignedDrivers}
+            description={`Unassigned: ${data.dto.unassignedDrivers}`}
           />
           <OverviewRealTime
-            title="Expiring Licenses"
-            quantity={data.dto.expiringLicenses}
-            description="Within 30 days"
+            title="Unassigned Drivers"
+            quantity={data.dto.unassignedDrivers}
+            description="Available for assignment"
           />
           <OverviewRealTime
-            title="High-Risk Drivers"
-            quantity={data.dto.highRiskDrivers}
-            description="Safety score < 80%"
+            title="Total Drivers"
+            quantity={data.dto.totalDrivers}
+            description={`Active: ${data.dto.activeDrivers}`}
           />
         </div>
       )}

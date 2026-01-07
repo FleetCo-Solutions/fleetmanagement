@@ -5,6 +5,7 @@ import { db } from "@/app/db";
 import { vehicles, drivers, trips } from "@/app/db/schema";
 import { eq, and } from "drizzle-orm";
 import { IPostVehicle } from "@/app/api/vehicles/post";
+import type { VehicleDetailsResponse, IVehicles } from "@/app/types";
 
 export interface UpdateVehiclePayload {
   registrationNumber: string;
@@ -14,7 +15,7 @@ export interface UpdateVehiclePayload {
   color: string;
 }
 
-export async function getVehicles() {
+export async function getVehicles(): Promise<IVehicles> {
   try {
     const session = await auth();
     
@@ -35,6 +36,10 @@ export async function getVehicles() {
         content: allVehicles,
         totalPages: 1,
         totalElements: allVehicles.length,
+        currentPage: 0,
+        pageSize: allVehicles.length,
+        hasNext: false,
+        hasPrevious: false,
       },
     };
   } catch (error) {
@@ -96,7 +101,7 @@ export async function getVehiclesList() {
   }
 }
 
-export async function getVehicleDetails(id: string) {
+export async function getVehicleDetails(id: string): Promise<VehicleDetailsResponse> {
   try {
     const session = await auth();
     
@@ -109,6 +114,9 @@ export async function getVehicleDetails(id: string) {
         eq(vehicles.id, id),
         eq(vehicles.companyId, session.user.companyId)
       ),
+      with: {
+        drivers: true,
+      },
     });
 
     if (!vehicle) {
@@ -120,7 +128,7 @@ export async function getVehicleDetails(id: string) {
       statusCode: "200",
       message: "Vehicle details retrieved successfully",
       dto: vehicle,
-    };
+    } as VehicleDetailsResponse;
   } catch (error) {
     throw new Error((error as Error).message);
   }

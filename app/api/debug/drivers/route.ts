@@ -1,6 +1,7 @@
 import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { drivers } from "@/app/db/schema";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -11,7 +12,7 @@ export async function GET() {
   
   // Get drivers filtered by companyId
   const companyDrivers = session?.user?.companyId 
-    ? await db.select().from(drivers).where((driver) => driver.companyId === session.user.companyId)
+    ? await db.select().from(drivers).where(eq(drivers.companyId, session.user.companyId))
     : [];
 
   return NextResponse.json({

@@ -9,7 +9,7 @@ interface DriverFormData {
   phone: string;
   alternativePhone?: string;
   licenseNumber: string;
-  licenseExpiry: Date;
+  licenseExpiry: string;
   status: "active" | "inactive" | "suspended";
 }
 

@@ -71,7 +71,7 @@ export default function ScheduleServiceModal({
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#004953]"
           >
             <option value="">Select Vehicle</option>
-            {vehiclesData?.data?.map((vehicle) => (
+            {vehiclesData?.dto?.map((vehicle) => (
               <option key={vehicle.id} value={vehicle.id}>
                 {vehicle.registrationNumber} - {vehicle.model}
               </option>

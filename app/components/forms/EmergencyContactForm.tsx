@@ -29,9 +29,16 @@ export default function EmergencyContactForm({
   const { control, register, handleSubmit, getValues, formState: { errors, isSubmitting } } = useForm<FormValues>({
     defaultValues: {
       contacts: contacts.length > 0 ? contacts.map(c => ({
-        ...c,
+        id: c.id,
+        firstName: c.firstName,
+        lastName: c.lastName,
         relationship: c.relationship as "parent" | "spouse" | "sibling" | "friend" | "other",
-        userId: c.userId || undefined
+        address: c.address || undefined,
+        phone: c.phone,
+        email: c.email || undefined,
+        alternativeNo: c.alternativeNo || undefined,
+        userId: c.userId || undefined,
+        driverId: c.driverId || undefined,
       })) : [{
         firstName: '',
         lastName: '',
@@ -49,7 +56,7 @@ export default function EmergencyContactForm({
     name: "contacts"
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: FormValues): Promise<void> => {
     await onSave(data.contacts);
   };
 
@@ -136,7 +143,7 @@ export default function EmergencyContactForm({
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
         {fields.map((field, index) => (
           <div key={field.id} className={index === activeTab ? 'block' : 'hidden'}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

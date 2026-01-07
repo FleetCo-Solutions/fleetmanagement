@@ -237,10 +237,7 @@ export default function DriverProfile() {
                     // Let's ensure we format it correctly.
                     const payload = {
                       ...data,
-                      licenseExpiry:
-                        data.licenseExpiry instanceof Date
-                          ? data.licenseExpiry.toISOString().split("T")[0]
-                          : String(data.licenseExpiry),
+                      licenseExpiry: String(data.licenseExpiry),
                     };
 
                     toast.promise(updateDriver({ id: driverId, payload }), {

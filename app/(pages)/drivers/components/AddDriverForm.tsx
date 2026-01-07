@@ -31,17 +31,22 @@ export default function AddDriverForm({
       firstName: initialValues ? initialValues.firstName : "",
       lastName: initialValues ? initialValues.lastName : "",
       phone: initialValues ? initialValues.phone : "",
-      alternativePhone: initialValues ? initialValues.alternativePhone : "",
+      alternativePhone: initialValues ? (initialValues.alternativePhone || "") : "",
       licenseNumber: initialValues ? initialValues.licenseNumber : "",
       licenseExpiry: initialValues ? initialValues.licenseExpiry : "",
-      status: initialValues ? initialValues.status : "active",
+      status: (initialValues ? initialValues.status : "active") as "active" | "inactive" | "suspended",
     },
     mode: "onChange",
   });
 
   // Reset form when initialValues change (useful when editing different rows)
   React.useEffect(() => {
-    if (initialValues) reset(initialValues);
+    if (initialValues) {
+      reset({
+        ...initialValues,
+        alternativePhone: initialValues.alternativePhone || "",
+      });
+    }
   }, [initialValues, reset]);
 
   const handleCancel = () => {

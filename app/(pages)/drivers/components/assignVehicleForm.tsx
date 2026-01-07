@@ -66,7 +66,7 @@ const AssignVehicleForm: React.FC<{
             render={({ field }) => (
               <select {...field} className="w-full px-3 py-2 border rounded-lg">
                 <option value="">Select a vehicle</option>
-                {vehicles.data.map((v) => (
+                {vehicles.dto.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.registrationNumber}: {v.model}
                   </option>
@@ -92,7 +92,7 @@ const AssignVehicleForm: React.FC<{
             render={({ field }) => (
               <select {...field} className="w-full px-3 py-2 border rounded-lg">
                 <option value="">Select a driver</option>
-                {drivers.data.map((d) => (
+                {drivers.dto.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.firstName} {d.lastName}
                   </option>

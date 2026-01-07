@@ -4,6 +4,7 @@ import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { drivers, vehicles } from "@/app/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
+import type { IndividualDriver, IDriver } from "@/app/types";
 import { AssignDriverRequestBody } from "@/app/api/drivers/assignDriver/post";
 
 export interface AddDriverPayload {
@@ -16,7 +17,7 @@ export interface AddDriverPayload {
   status?: "active" | "inactive" | "suspended";
 }
 
-export async function getDrivers() {
+export async function getDrivers(): Promise<IDriver> {
   try {
     const session = await auth();
     
@@ -38,7 +39,15 @@ export async function getDrivers() {
       timestamp: new Date(),
       statusCode: "200",
       message: "Drivers fetched successful",
-      dto: { content: listDrivers, totalPages: 1, totalElements: listDrivers.length }
+      dto: { 
+        content: listDrivers, 
+        totalPages: 1, 
+        totalElements: listDrivers.length,
+        currentPage: 0,
+        pageSize: listDrivers.length,
+        hasNext: false,
+        hasPrevious: false,
+      }
     };
   } catch (err) {
     throw new Error((err as Error).message);
@@ -76,7 +85,7 @@ export async function getDriversList() {
   }
 }
 
-export async function getDriverDetails(id: string) {
+export async function getDriverDetails(id: string): Promise<IndividualDriver> {
   try {
     const session = await auth();
     
