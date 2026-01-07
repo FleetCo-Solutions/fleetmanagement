@@ -29,12 +29,12 @@ const Trips = () => {
   // Calculate distance and duration from actual trip data
   const totalDistance = trips.reduce((sum: number, t: any) => {
     const distance = t.distanceKm ? parseFloat(t.distanceKm) : 0;
-    return sum + distance;
+    return sum + (isNaN(distance) ? 0 : distance);
   }, 0);
   
   const totalDuration = trips.reduce((sum: number, t: any) => {
     const duration = t.durationMinutes ? parseInt(t.durationMinutes) : 0;
-    return sum + duration;
+    return sum + (isNaN(duration) ? 0 : duration);
   }, 0);
   
   const avgDuration = totalTrips > 0 ? Math.round(totalDuration / totalTrips) : 0;

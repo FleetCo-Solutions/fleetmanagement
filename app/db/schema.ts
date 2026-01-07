@@ -36,7 +36,6 @@ export const users = pgTable(
     phone: varchar("phone", { length: 20 }).unique(),
     email: varchar("email", { length: 100 }).unique().notNull(),
     passwordHash: varchar("password_hash", { length: 255 })
-      .default("Welcome@123")
       .notNull(),
     status: userStatusEnum("status").default("active").notNull(),
     lastLogin: timestamp("last_login", { withTimezone: true }),

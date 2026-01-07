@@ -111,7 +111,11 @@ const TripCharts = () => {
               outerRadius={90}
               fill="#8884d8"
               paddingAngle={3}
-              label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
+              label={({ name, percent }) => {
+                const percentValue = percent ?? 0;
+                const percentage = isNaN(percentValue) ? 0 : percentValue * 100;
+                return `${name} (${percentage.toFixed(0)}%)`;
+              }}
             >
               {statusData.map((entry, idx) => (
                 <Cell key={`cell-${idx}`} fill={STATUS_COLORS[entry.status as keyof typeof STATUS_COLORS] || '#8884d8'} />

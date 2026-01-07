@@ -22,7 +22,7 @@ const UsersTab = () => {
 
   useEffect(() => {
     if (data) {
-      setUsers(data.dto);
+      setUsers(data.dto.content);
     }
   }, [data]);
 

@@ -7,7 +7,7 @@ export interface UserFormData {
   passwordHash?: string;
   firstName: string;
   lastName: string;
-  phone: string;
+  phone: string | null;
   // departmentId: number;
   // roles: number[];
   // status: "active" | "inactive" | "suspended";
@@ -89,7 +89,8 @@ export interface IAddUser {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phone: string | null;
+  passwordHash?: string;
   // roles: number[];
   // departmentId: number;
 }

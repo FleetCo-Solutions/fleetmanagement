@@ -2,6 +2,7 @@ import { db } from "@/app/db";
 import {  users } from "@/app/db/schema";
 import { sendUserCredentialsEmail } from "@/app/lib/mail";
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 
 export interface IPostUser {
 firstName:         string;
@@ -36,6 +37,9 @@ export default async function postUser(request: Request) {
       );
     }
 
+    const plainPassword = body.password || 'Welcome@123';
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
     const [user] = await db
       .insert(users)
       .values({
@@ -43,7 +47,7 @@ export default async function postUser(request: Request) {
         lastName: body.lastName,
         phone: body.phone,
         email: body.email,
-        passwordHash: body.password || 'Welcome@123',
+        passwordHash: hashedPassword,
       })
       .returning()
       .onConflictDoNothing();
@@ -52,7 +56,7 @@ export default async function postUser(request: Request) {
       await sendUserCredentialsEmail({
         to: user.email,
         username: user.email,
-        password: body.password || 'Welcome@123'
+        password: plainPassword
       })
     }
     

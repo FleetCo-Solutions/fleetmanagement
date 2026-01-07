@@ -22,12 +22,16 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSave, onClose }) => {
         }
     })
 
-    const onSubmit = (data: UserFormData) => {
+    const onSubmit = async (data: UserFormData) => {
         console.log(data)
         try {
-            toast.promise(AddUser(data),{
+            await toast.promise(AddUser(data),{
                 loading: "Creating User...",
-                success: (data) => {reset(); return data.message || "User Created Successfully"},
+                success: (data) => {
+                    reset(); 
+                    onSave(data.dto);
+                    return data.message || "User Created Successfully"
+                },
                 error: (error) => error.message || "Error Occured When Creating User"
             })
         }catch (error) {
