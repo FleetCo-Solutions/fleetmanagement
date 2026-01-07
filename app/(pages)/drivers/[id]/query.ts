@@ -1,4 +1,4 @@
-import { getDriverDetails, UpdateDriverPayload } from "@/actions/drivers";
+import { getDriverDetails, getDriverVehicleHistory, UpdateDriverPayload } from "@/actions/drivers";
 import {
   addEmergencyContact,
   updateEmergencyContact as updateAction,
@@ -93,10 +93,7 @@ export const useUpdateDriver = (driverId?: string) => {
 export const useDriverVehicleHistory = (driverId: string) => {
   return useQuery({
     queryKey: ["driverVehicleHistory", driverId],
-    queryFn: async () => {
-      const { getDriverVehicleHistory } = await import("@/actions/drivers");
-      return await getDriverVehicleHistory(driverId);
-    },
+    queryFn: async () => await getDriverVehicleHistory(driverId),
     enabled: !!driverId,
   });
 };
