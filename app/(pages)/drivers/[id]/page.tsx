@@ -315,9 +315,9 @@ export default function DriverProfile() {
               <h2 className="text-2xl font-semibold text-black mb-5">
                 Trip History
               </h2>
-              {driverTrips?.dto && driverTrips.dto.length > 0 ? (
+              {driverTrips?.data && driverTrips.data.length > 0 ? (
                 <UniversalTable
-                  data={driverTrips.dto}
+                  data={driverTrips.data}
                   columns={tripColumns}
                   showSearch={false}
                   showPagination={true}
