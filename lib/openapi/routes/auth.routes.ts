@@ -13,6 +13,7 @@ import {
   ValidateResetTokenRequestSchema,
 } from "../schemas/auth.schemas";
 import { SuccessResponseSchema, ErrorResponseSchema, UnauthorizedResponseSchema } from "../schemas/shared.schemas";
+import { z } from "zod";
 
 export function registerAuthRoutes(registry: OpenAPIRegistry) {
   // User Login
@@ -258,25 +259,46 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
 
   // Validate Reset Token
   registry.registerPath({
-    method: "get",
+    method: "post",
     path: "/api/auth/validate-reset-token",
     tags: ["Authentication"],
     summary: "Validate reset token",
-    description: "Check if a password reset token is valid",
+    description: "Check if a password reset token is valid. Calls backend API to validate token.",
     request: {
-      query: ValidateResetTokenRequestSchema,
+      body: {
+        content: {
+          "application/json": {
+            schema: ValidateResetTokenRequestSchema,
+          },
+        },
+      },
     },
     responses: {
       200: {
-        description: "Token is valid",
+        description: "Token validation result",
         content: {
           "application/json": {
-            schema: SuccessResponseSchema,
+            schema: z.object({
+              valid: z.boolean().openapi({ description: "Whether the token is valid" }),
+              user: z.any().optional().openapi({ description: "User data if token is valid" }),
+              message: z.string().optional().openapi({ description: "Validation message" }),
+            }),
           },
         },
       },
       400: {
-        description: "Invalid or expired token",
+        description: "Bad request - token is required",
+        content: {
+          "application/json": {
+            schema: z.object({
+              valid: z.boolean(),
+              message: z.string(),
+            }),
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

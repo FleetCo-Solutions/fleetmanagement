@@ -55,7 +55,15 @@ export const CreateEmergencyContactRequestSchema = z.object({
 /**
  * Update emergency contact request schema
  */
-export const UpdateEmergencyContactRequestSchema = CreateEmergencyContactRequestSchema.partial();
+export const UpdateEmergencyContactRequestSchema = z.object({
+  firstName: z.string().min(1).openapi({ description: "Contact first name", example: "Jane" }),
+  lastName: z.string().min(1).openapi({ description: "Contact last name", example: "Doe" }),
+  relationship: RelationshipEnum.openapi({ description: "Relationship to user/driver" }),
+  address: z.string().min(1).openapi({ description: "Contact address", example: "123 Main St, City" }),
+  phone: z.string().min(1).max(20).openapi({ description: "Contact phone number", example: "+1234567890" }),
+  email: z.string().email().optional().openapi({ description: "Contact email address" }),
+  alternativeNo: z.string().max(20).optional().openapi({ description: "Alternative phone number" }),
+});
 
 /**
  * Emergency contacts list response schema
