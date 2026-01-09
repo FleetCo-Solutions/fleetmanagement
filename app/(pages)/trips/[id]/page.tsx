@@ -119,7 +119,7 @@ export default function TripDetail() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-black">
-                Trip #{trip.id.slice(0, 8)}
+                Trip #
               </h1>
               <p className="text-black/60">
                 {trip.startLocation} → {trip.endLocation}
@@ -132,7 +132,7 @@ export default function TripDetail() {
               trip.status
             )}`}
           >
-            {trip.status.replace("_", " ").toUpperCase()}
+            {trip.status}
           </span>
         </div>
 

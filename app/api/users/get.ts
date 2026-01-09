@@ -1,4 +1,4 @@
-import { auth } from "@/app/auth";
+import { getAuthenticatedUser } from "@/lib/auth/utils";
 import { db } from "@/app/db";
 import { users } from "@/app/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
@@ -7,8 +7,8 @@ import { NextResponse } from "next/server";
 export async function getUsers() {
   const date = new Date();
   try {
-    const session = await auth();
-    if (!session?.user?.companyId) {
+    const user = await getAuthenticatedUser();
+    if (!user?.companyId) {
       return NextResponse.json(
         { message: "Unauthorized - No company assigned" },
         { status: 401 }
@@ -16,10 +16,7 @@ export async function getUsers() {
     }
 
     const usersList = await db.query.users.findMany({
-      where: and(
-        eq(users.companyId, session.user.companyId),
-        isNull(users.deletedAt)
-      ),
+      where: and(eq(users.companyId, user.companyId), isNull(users.deletedAt)),
       orderBy: (users, { asc }) => [asc(users.firstName)],
     });
 
