@@ -3,8 +3,21 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
+// Suppress React 19 deprecation warnings from swagger-ui-react
+// This is a known issue: https://github.com/swagger-api/swagger-ui/issues/10243
+const originalError = console.error;
+console.error = (...args: any[]) => {
+  if (
+    typeof args[0] === "string" &&
+    args[0].includes("UNSAFE_componentWillReceiveProps")
+  ) {
+    return; // Suppress this specific warning
+  }
+  originalError.apply(console, args);
+};
+
 // Dynamically import SwaggerUI to avoid SSR issues
-// @ts-ignore - swagger-ui-react has React 19 compatibility issues
+// @ts-ignore - swagger-ui-react has React 19 compatibility issues (will be fixed in future version)
 const SwaggerUI = dynamic(() => import("swagger-ui-react"), { 
   ssr: false,
   loading: () => <div>Loading...</div>
