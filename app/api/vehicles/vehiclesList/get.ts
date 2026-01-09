@@ -1,31 +1,67 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
-import { vehicles } from "@/app/db/schema";
+import { vehicles, drivers } from "@/app/db/schema";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function getVehiclesList() {
   try {
-    const vehiclesList = await db.query.vehicles.findMany({
-      with: {
-        drivers: true,
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
+    // Get all vehicles for the company
+    const allVehicles = await db.query.vehicles.findMany({
+      where: eq(vehicles.companyId, session.user.companyId),
+      columns: {
+        id: true,
+        registrationNumber: true,
+        model: true,
+        manufacturer: true,
       },
+      orderBy: (vehicles, { asc }) => [asc(vehicles.registrationNumber)],
     });
 
-    const formattedVehicles = vehiclesList.map((vehicle) => ({
-      id: vehicle.id,
-      registrationNumber: vehicle.registrationNumber,
-      model: vehicle.model,
-      manufacturer: vehicle.manufacturer,
-      mainDriver: vehicle.drivers.find((d) => d.role === "main"),
-      substituteDriver: vehicle.drivers.find((d) => d.role === "substitute"),
-    }));
+    // For each vehicle, get the assigned driver
+    const vehiclesWithDrivers = await Promise.all(
+      allVehicles.map(async (vehicle) => {
+        const assignedDriver = await db.query.drivers.findFirst({
+          where: and(
+            eq(drivers.vehicleId, vehicle.id),
+            eq(drivers.companyId, session.user.companyId!)
+          ),
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        });
+
+        return {
+          ...vehicle,
+          assignedDriver: assignedDriver || null,
+        };
+      })
+    );
 
     return NextResponse.json(
-      { message: "Vehicles fetched successfully", data: formattedVehicles },
+      {
+        timestamp: new Date(),
+        statusCode: "200",
+        message: "Vehicles list retrieved successfully",
+        dto: vehiclesWithDrivers,
+      },
       { status: 200 }
     );
   } catch (error) {
     return NextResponse.json(
-      { message: "Failed to fetch vehicles" + (error as Error).message },
+      { message: "Failed to fetch vehicles: " + (error as Error).message },
       { status: 500 }
     );
   }
