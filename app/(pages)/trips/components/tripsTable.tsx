@@ -211,7 +211,7 @@ export default function TripsTable() {
       accessorKey: "durationMinutes",
       cell: ({ row }) => {
         const duration = (row.original as any).durationMinutes;
-        return <span>{duration ? parseInt(duration) : "-"}</span>;
+        return <span>{duration && !Number.isNaN(duration) ? parseInt(duration) : "-"}</span>;
       },
     },
     {

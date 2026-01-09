@@ -36,8 +36,8 @@ const cityCoords: Record<string, [number, number]> = {
 };
 
 const getCoords = (city: string): [number, number] => {
-  const cityName = city.split(',')[0].trim();
-  return cityCoords[cityName] || [-6.7924, 39.2083]; // Default to Dar es Salaam
+  // const cityName = city.split(',')[0].trim();
+  return  [-6.7924, 39.2083]; // Default to Dar es Salaam
 };
 
 // Create custom icons for start and end markers
