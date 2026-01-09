@@ -1,3 +1,4 @@
+import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
 import { NextRequest, NextResponse } from "next/server";
@@ -5,6 +6,15 @@ import { NextRequest, NextResponse } from "next/server";
 export async function postTrip(request: NextRequest) {
   const date = new Date();
   try {
+    const session = await auth();
+
+    if (!session?.user?.companyId) {
+      return NextResponse.json(
+        { message: "Unauthorized - No company assigned" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
 
     const newTrip = await db
@@ -22,6 +32,7 @@ export async function postTrip(request: NextRequest) {
         fuelUsed: body.fuelUsed?.toString() || null,
         durationMinutes: body.durationMinutes?.toString() || null,
         notes: body.notes || null,
+        companyId: session.user.companyId,
       })
       .returning();
 
