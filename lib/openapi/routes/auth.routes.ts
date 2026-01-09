@@ -1,4 +1,4 @@
-import { OpenAPIRegistry, OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
+import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import {
   LoginRequestSchema,
   LoginResponseSchema,
@@ -7,7 +7,9 @@ import {
   ResetPasswordRequestSchema,
   VerifyOtpRequestSchema,
   DriverLoginRequestSchema,
+  DriverLoginResponseSchema,
   DriverVerifyRequestSchema,
+  DriverVerifyResponseSchema,
   ValidateResetTokenRequestSchema,
 } from "../schemas/auth.schemas";
 import { SuccessResponseSchema, ErrorResponseSchema, UnauthorizedResponseSchema } from "../schemas/shared.schemas";
@@ -63,7 +65,7 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     path: "/api/auth/driver/login",
     tags: ["Authentication"],
     summary: "Driver login",
-    description: "Authenticate a driver with phone and password",
+    description: "Authenticate a driver with phone number and password. Returns JWT token and driver profile.",
     request: {
       body: {
         content: {
@@ -78,12 +80,28 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
         description: "Login successful",
         content: {
           "application/json": {
-            schema: SuccessResponseSchema,
+            schema: DriverLoginResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - missing required fields",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },
       401: {
         description: "Invalid credentials",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Driver account is not active",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -100,7 +118,7 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     tags: ["Authentication"],
     summary: "Change user password",
     description: "Change the password for the authenticated user",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       body: {
         content: {
@@ -200,7 +218,7 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     path: "/api/auth/resetPassword",
     tags: ["Authentication"],
     summary: "Reset password",
-    description: "Reset password using reset token",
+    description: "Reset password using verified OTP. OTP must be verified first via /api/auth/verifyOtp.",
     request: {
       body: {
         content: {
@@ -220,7 +238,15 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Invalid token",
+        description: "Bad request - missing fields or no verified OTP found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "User not found",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -265,8 +291,9 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/auth/driver/verify",
     tags: ["Authentication"],
-    summary: "Verify driver OTP",
-    description: "Verify OTP for driver authentication",
+    summary: "Verify driver JWT token",
+    description: "Verify a driver JWT token. Token can be provided in Authorization header as 'Bearer <token>' or in request body as { 'token': '...' }.",
+    security: [{ bearerAuth: [] }],
     request: {
       body: {
         content: {
@@ -278,15 +305,23 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     },
     responses: {
       200: {
-        description: "Driver verified successfully",
+        description: "Token verification result",
         content: {
           "application/json": {
-            schema: SuccessResponseSchema,
+            schema: DriverVerifyResponseSchema,
           },
         },
       },
       400: {
-        description: "Invalid OTP",
+        description: "Bad request - token is required",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -302,22 +337,38 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     path: "/api/auth/driver/me",
     tags: ["Authentication"],
     summary: "Get current driver",
-    description: "Get authenticated driver information",
+    description: "Get authenticated driver information using JWT token from Authorization header",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
-        description: "Driver information",
+        description: "Driver information retrieved successfully",
         content: {
           "application/json": {
-            schema: SuccessResponseSchema,
+            schema: DriverLoginResponseSchema,
           },
         },
       },
       401: {
-        description: "Unauthorized",
+        description: "Unauthorized - invalid or missing token",
         content: {
           "application/json": {
-            schema: UnauthorizedResponseSchema,
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Forbidden - driver account is not active",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Driver not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },

@@ -44,8 +44,16 @@ export const UpdateDriverRequestSchema = CreateDriverRequestSchema.partial();
  * Assign driver request schema
  */
 export const AssignDriverRequestSchema = z.object({
-  vehicleId: z.string().uuid().openapi({ description: "Vehicle ID to assign driver to" }),
   driverId: z.string().uuid().openapi({ description: "Driver ID to assign" }),
+  vehicleId: z.string().uuid().openapi({ description: "Vehicle ID to assign driver to" }),
+  role: z.enum(["main", "substitute"]).openapi({ description: "Driver role - must be 'main' or 'substitute'. Only one main driver per vehicle allowed." }),
+});
+
+/**
+ * Unassign driver request schema
+ */
+export const UnassignDriverRequestSchema = z.object({
+  driverId: z.string().uuid().openapi({ description: "Driver ID to unassign from vehicle" }),
 });
 
 /**

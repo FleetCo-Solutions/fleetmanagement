@@ -8,50 +8,14 @@ import {
 import { ErrorResponseSchema, UnauthorizedResponseSchema, IdParamSchema, SuccessResponseSchema } from "../schemas/shared.schemas";
 
 export function registerEmergencyContactRoutes(registry: OpenAPIRegistry) {
-  // Get All Emergency Contacts
-  registry.registerPath({
-    method: "get",
-    path: "/api/emergencyContact",
-    tags: ["Emergency Contacts"],
-    summary: "Get all emergency contacts",
-    description: "Retrieve a list of all emergency contacts",
-    security: [{ bearerAuth: [] }],
-    responses: {
-      200: {
-        description: "Emergency contacts retrieved successfully",
-        content: {
-          "application/json": {
-            schema: EmergencyContactsListResponseSchema,
-          },
-        },
-      },
-      401: {
-        description: "Unauthorized",
-        content: {
-          "application/json": {
-            schema: UnauthorizedResponseSchema,
-          },
-        },
-      },
-      500: {
-        description: "Internal server error",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-          },
-        },
-      },
-    },
-  });
-
-  // Create Emergency Contact
+  // Create Emergency Contact (no GET endpoint exists)
   registry.registerPath({
     method: "post",
     path: "/api/emergencyContact",
     tags: ["Emergency Contacts"],
     summary: "Create a new emergency contact",
     description: "Create a new emergency contact for a driver",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       body: {
         content: {
@@ -96,7 +60,7 @@ export function registerEmergencyContactRoutes(registry: OpenAPIRegistry) {
     tags: ["Emergency Contacts"],
     summary: "Update emergency contact",
     description: "Update an existing emergency contact",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
       body: {
@@ -132,6 +96,14 @@ export function registerEmergencyContactRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
+      403: {
+        description: "Forbidden - Access denied",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
       404: {
         description: "Emergency contact not found",
         content: {
@@ -150,13 +122,13 @@ export function registerEmergencyContactRoutes(registry: OpenAPIRegistry) {
     tags: ["Emergency Contacts"],
     summary: "Delete emergency contact",
     description: "Delete an emergency contact by its ID",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
     },
     responses: {
       200: {
-        description: "Emergency contact deleted successfully",
+        description: "Emergency contact deleted successfully (soft delete)",
         content: {
           "application/json": {
             schema: SuccessResponseSchema,
@@ -168,6 +140,14 @@ export function registerEmergencyContactRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: UnauthorizedResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Forbidden - Access denied",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },

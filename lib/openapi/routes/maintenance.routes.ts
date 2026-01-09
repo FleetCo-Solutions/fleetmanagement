@@ -15,7 +15,7 @@ export function registerMaintenanceRoutes(registry: OpenAPIRegistry) {
     tags: ["Maintenance"],
     summary: "Get all maintenance records",
     description: "Retrieve a list of all maintenance records",
-    security: [{ bearerAuth: [] }],
+    // No authentication required currently
     responses: {
       200: {
         description: "Maintenance records retrieved successfully",
@@ -51,7 +51,7 @@ export function registerMaintenanceRoutes(registry: OpenAPIRegistry) {
     tags: ["Maintenance"],
     summary: "Create a new maintenance record",
     description: "Create a new maintenance record for a vehicle",
-    security: [{ bearerAuth: [] }],
+    // No authentication required currently
     request: {
       body: {
         content: {
@@ -96,7 +96,7 @@ export function registerMaintenanceRoutes(registry: OpenAPIRegistry) {
     tags: ["Maintenance"],
     summary: "Get maintenance record by ID",
     description: "Retrieve a specific maintenance record by its ID",
-    security: [{ bearerAuth: [] }],
+    // No authentication required currently
     request: {
       params: IdParamSchema,
     },
@@ -135,7 +135,7 @@ export function registerMaintenanceRoutes(registry: OpenAPIRegistry) {
     tags: ["Maintenance"],
     summary: "Update maintenance record",
     description: "Update an existing maintenance record",
-    security: [{ bearerAuth: [] }],
+    // No authentication required currently
     request: {
       params: IdParamSchema,
       body: {
@@ -189,7 +189,7 @@ export function registerMaintenanceRoutes(registry: OpenAPIRegistry) {
     tags: ["Maintenance"],
     summary: "Delete maintenance record",
     description: "Delete a maintenance record by its ID",
-    security: [{ bearerAuth: [] }],
+    // No authentication required currently
     request: {
       params: IdParamSchema,
     },

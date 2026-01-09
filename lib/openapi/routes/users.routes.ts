@@ -15,7 +15,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Get all users",
     description: "Retrieve a list of all users for the authenticated company",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     responses: {
       200: {
         description: "Users retrieved successfully",
@@ -51,7 +51,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Create a new user",
     description: "Create a new user account for the authenticated company",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       body: {
         content: {
@@ -104,7 +104,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Get user by ID",
     description: "Retrieve a specific user by their ID",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
     },
@@ -143,7 +143,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Update user",
     description: "Update an existing user's information",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
       body: {

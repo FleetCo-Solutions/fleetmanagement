@@ -15,11 +15,20 @@ function createOpenAPIRegistry(): OpenAPIRegistry {
   const registry = new OpenAPIRegistry();
 
   // Register security schemes
+  // Bearer token authentication (for driver endpoints only)
   registry.registerComponent("securitySchemes", "bearerAuth", {
     type: "http",
     scheme: "bearer",
     bearerFormat: "JWT",
-    description: "JWT token authentication. Include the token in the Authorization header: 'Bearer {token}'",
+    description: "JWT token authentication for driver endpoints. Include the token in the Authorization header: 'Bearer {token}'. Obtain token via /api/auth/driver/login",
+  });
+
+  // Cookie-based authentication (NextAuth session - used by most endpoints)
+  registry.registerComponent("securitySchemes", "cookieAuth", {
+    type: "apiKey",
+    in: "cookie",
+    name: "next-auth.session-token",
+    description: "NextAuth session cookie authentication. Used by most endpoints. The cookie is automatically set after login via NextAuth (/api/auth/[...nextauth]). Browser-based clients should include cookies automatically.",
   });
 
   // Register all route groups
@@ -64,7 +73,8 @@ export function generateOpenAPISpec() {
         description: "Production server",
       },
     ],
-    security: [{ bearerAuth: [] }],
+    // Most endpoints use cookie-based auth (NextAuth), driver endpoints use bearer auth
+    // Individual routes can override this
     tags: [
       { name: "Authentication", description: "User and driver authentication endpoints" },
       { name: "Users", description: "User management endpoints" },

@@ -19,8 +19,8 @@ export function registerVehicleTrackingRoutes(registry: OpenAPIRegistry) {
     path: "/api/vehicle-tracking",
     tags: ["Vehicle Tracking"],
     summary: "Get vehicle tracking data",
-    description: "Retrieve vehicle tracking data (vehicles or trips) from IoT backend",
-    security: [{ bearerAuth: [] }],
+    description: "Retrieve vehicle tracking data (vehicles or trips) from IoT backend. Requires action query parameter: 'vehicles' or 'trips'.",
+    // No authentication required currently
     request: {
       query: VehicleTrackingQuerySchema,
     },

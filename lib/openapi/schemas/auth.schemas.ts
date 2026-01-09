@@ -30,11 +30,53 @@ export const LoginResponseSchema = SingleItemResponseSchema(
 );
 
 /**
+ * Driver login response schema
+ */
+export const DriverLoginResponseSchema = z.object({
+  success: z.boolean().openapi({ description: "Success flag" }),
+  token: z.string().optional().openapi({ description: "JWT token for authenticated driver (only in login response)" }),
+  driver: z.object({
+    id: z.string().uuid(),
+    firstName: z.string(),
+    lastName: z.string(),
+    phoneNumber: z.string(),
+    vehicleId: z.string().uuid().nullable(),
+    vehicleName: z.string().nullable(),
+    role: z.enum(["main", "substitute"]),
+    assignedTrips: z.array(z.object({
+      id: z.string().uuid(),
+      vehicleId: z.string().uuid().nullable(),
+      startLocation: z.string().nullable(),
+      endLocation: z.string().nullable(),
+      startTime: z.string().datetime(),
+      status: z.string(),
+    })),
+  }).optional(),
+  message: z.string().optional().openapi({ description: "Error message if operation failed" }),
+});
+
+/**
+ * Driver verify response schema
+ */
+export const DriverVerifyResponseSchema = z.object({
+  success: z.boolean().openapi({ description: "Success flag" }),
+  valid: z.boolean().openapi({ description: "Whether the token is valid" }),
+  payload: z.object({
+    driverId: z.string().uuid(),
+    vehicleId: z.string().uuid().nullable(),
+    role: z.enum(["main", "substitute"]),
+    phoneNumber: z.string(),
+  }).optional(),
+  message: z.string().optional().openapi({ description: "Error message if verification failed" }),
+});
+
+/**
  * Change password request schema
  */
 export const ChangePasswordRequestSchema = z.object({
-  currentPassword: z.string().min(1).openapi({ description: "Current password" }),
-  newPassword: z.string().min(8).openapi({ description: "New password (min 8 characters)" }),
+  userId: z.string().uuid().openapi({ description: "User ID" }),
+  oldPassword: z.string().min(1).openapi({ description: "Current password" }),
+  password: z.string().min(8).openapi({ description: "New password (min 8 characters)" }),
 });
 
 /**
@@ -48,8 +90,8 @@ export const ForgetPasswordRequestSchema = z.object({
  * Reset password request schema
  */
 export const ResetPasswordRequestSchema = z.object({
-  token: z.string().openapi({ description: "Reset token" }),
-  password: z.string().min(8).openapi({ description: "New password (min 8 characters)" }),
+  email: z.string().email().openapi({ description: "User email address" }),
+  newPassword: z.string().min(8).openapi({ description: "New password (min 8 characters)" }),
 });
 
 /**
@@ -64,17 +106,19 @@ export const VerifyOtpRequestSchema = z.object({
  * Driver login request schema
  */
 export const DriverLoginRequestSchema = z.object({
-  phone: z.string().min(1).openapi({ description: "Driver phone number" }),
-  password: z.string().min(1).openapi({ description: "Driver password" }),
+  phoneNumber: z.string().min(1).openapi({ description: "Driver phone number", example: "255783845395" }),
+  password: z.string().min(1).openapi({ description: "Driver password", example: "Welcome@123" }),
 });
 
 /**
- * Driver verify request schema
+ * Driver verify request schema (verifies JWT token)
  */
 export const DriverVerifyRequestSchema = z.object({
-  phone: z.string().min(1),
-  otp: z.string().length(6),
-});
+  token: z.string().optional().openapi({ 
+    description: "JWT token to verify. Can also be provided in Authorization header as 'Bearer <token>'", 
+    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+  }),
+}).openapi({ description: "Token can be provided in request body or Authorization header" });
 
 /**
  * Validate reset token request schema

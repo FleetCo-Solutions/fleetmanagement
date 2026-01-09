@@ -15,7 +15,7 @@ export function registerTripsRoutes(registry: OpenAPIRegistry) {
     tags: ["Trips"],
     summary: "Get all trips",
     description: "Retrieve a list of all trips for the authenticated company",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     responses: {
       200: {
         description: "Trips retrieved successfully",
@@ -51,7 +51,7 @@ export function registerTripsRoutes(registry: OpenAPIRegistry) {
     tags: ["Trips"],
     summary: "Create a new trip",
     description: "Create a new trip for the authenticated company",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       body: {
         content: {
@@ -96,7 +96,7 @@ export function registerTripsRoutes(registry: OpenAPIRegistry) {
     tags: ["Trips"],
     summary: "Get trip by ID",
     description: "Retrieve a specific trip by its ID",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
     },
@@ -135,7 +135,7 @@ export function registerTripsRoutes(registry: OpenAPIRegistry) {
     tags: ["Trips"],
     summary: "Update trip",
     description: "Update an existing trip's information",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
       body: {
@@ -189,7 +189,7 @@ export function registerTripsRoutes(registry: OpenAPIRegistry) {
     tags: ["Trips"],
     summary: "Delete trip",
     description: "Delete a trip by its ID",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
     },

@@ -6,6 +6,7 @@ import {
   VehicleResponseSchema,
 } from "../schemas/vehicles.schemas";
 import { ErrorResponseSchema, UnauthorizedResponseSchema, IdParamSchema } from "../schemas/shared.schemas";
+import { z } from "zod";
 
 export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
   // Get All Vehicles
@@ -15,7 +16,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Get all vehicles",
     description: "Retrieve a list of all vehicles for the authenticated company",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     responses: {
       200: {
         description: "Vehicles retrieved successfully",
@@ -51,7 +52,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Create a new vehicle",
     description: "Add a new vehicle to the authenticated company's fleet",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       body: {
         content: {
@@ -104,7 +105,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Get vehicle by ID",
     description: "Retrieve a specific vehicle by its ID",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
     },
@@ -143,7 +144,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Update vehicle",
     description: "Update an existing vehicle's information",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
       body: {
@@ -197,7 +198,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Get vehicle trips",
     description: "Retrieve all trips for a specific vehicle",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
     },
@@ -206,7 +207,14 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
         description: "Trips retrieved successfully",
         content: {
           "application/json": {
-            schema: VehiclesListResponseSchema,
+            schema: z.object({
+              message: z.string(),
+              dto: z.object({
+                content: z.array(z.any()),
+                totalPages: z.number(),
+                totalElements: z.number(),
+              }),
+            }),
           },
         },
       },
@@ -215,6 +223,14 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: UnauthorizedResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Vehicle not found or access denied",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },
@@ -228,7 +244,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Get vehicle driver history",
     description: "Retrieve driver assignment history for a vehicle",
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
     },
@@ -237,7 +253,62 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
         description: "Driver history retrieved successfully",
         content: {
           "application/json": {
-            schema: VehicleResponseSchema,
+            schema: z.object({
+              message: z.string(),
+              dto: z.array(z.any()),
+            }),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: UnauthorizedResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Vehicle not found or access denied",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  // Vehicles List (Simplified)
+  registry.registerPath({
+    method: "get",
+    path: "/api/vehicles/vehiclesList",
+    tags: ["Vehicles"],
+    summary: "Get vehicles list (simplified)",
+    description: "Retrieve a simplified list of vehicles with assigned drivers for the authenticated company",
+    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    responses: {
+      200: {
+        description: "Vehicles list retrieved successfully",
+        content: {
+          "application/json": {
+            schema: z.object({
+              timestamp: z.string().datetime(),
+              statusCode: z.string(),
+              message: z.string(),
+              dto: z.array(z.object({
+                id: z.string().uuid(),
+                registrationNumber: z.string(),
+                model: z.string(),
+                manufacturer: z.string(),
+                assignedDriver: z.object({
+                  id: z.string().uuid(),
+                  firstName: z.string(),
+                  lastName: z.string(),
+                  role: z.string().nullable(),
+                }).nullable(),
+              })),
+            }),
           },
         },
       },
