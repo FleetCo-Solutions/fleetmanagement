@@ -1,8 +1,8 @@
-import { db } from '@/app/db';
-import { drivers, trips } from '@/app/db/schema';
-import { eq, or } from 'drizzle-orm';
-import { NextRequest, NextResponse } from 'next/server';
-import { generateDriverToken } from '@/lib/auth/jwt';
+import { db } from "@/app/db";
+import { drivers, trips } from "@/app/db/schema";
+import { eq, or } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import { generateDriverToken } from "@/lib/auth/jwt";
 
 /**
  * Driver login request body
@@ -25,7 +25,7 @@ interface DriverLoginResponse {
     phoneNumber: string;
     vehicleId: string | null;
     vehicleName: string | null;
-    role: 'main' | 'substitute';
+    role: "main" | "substitute";
     assignedTrips: Array<{
       id: string;
       vehicleId: string | null;
@@ -44,7 +44,9 @@ interface DriverLoginResponse {
  * @param request - Next.js request object
  * @returns JSON response with JWT token and driver profile
  */
-export async function loginDriver(request: NextRequest): Promise<NextResponse<DriverLoginResponse>> {
+export async function loginDriver(
+  request: NextRequest
+): Promise<NextResponse<DriverLoginResponse>> {
   try {
     const body = (await request.json()) as DriverLoginRequest;
 
@@ -53,7 +55,7 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
       return NextResponse.json(
         {
           success: false,
-          message: 'Phone number and password are required',
+          message: "Phone number and password are required",
         },
         { status: 400 }
       );
@@ -72,14 +74,14 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
       return NextResponse.json(
         {
           success: false,
-          message: 'Invalid phone number or password',
+          message: "Invalid phone number or password",
         },
         { status: 401 }
       );
     }
 
     // Check driver status
-    if (driverData.status !== 'active') {
+    if (driverData.status !== "active") {
       return NextResponse.json(
         {
           success: false,
@@ -96,7 +98,7 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
       return NextResponse.json(
         {
           success: false,
-          message: 'Invalid phone number or password',
+          message: "Invalid phone number or password",
         },
         { status: 401 }
       );
@@ -120,7 +122,7 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
 
     // Filter by status (scheduled or in_progress)
     const assignedTrips = assignedTripsData.filter(
-      (trip) => trip.status === 'scheduled' || trip.status === 'in_progress'
+      (trip) => trip.status === "scheduled" || trip.status === "in_progress"
     );
 
     // Update last login timestamp
@@ -131,12 +133,13 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
 
     // Generate JWT token
     // Ensure role is not null (default to 'substitute' if null)
-    const driverRole: 'main' | 'substitute' = driverData.role || 'substitute';
+    const driverRole: "main" | "substitute" = driverData.role || "substitute";
     const token = generateDriverToken({
       driverId: driverData.id,
       vehicleId: driverData.vehicleId,
       role: driverRole,
       phoneNumber: driverData.phone,
+      companyId: driverData.companyId || "", // Ensure companyId is passed
     });
 
     // Return success response with token and driver profile
@@ -165,14 +168,13 @@ export async function loginDriver(request: NextRequest): Promise<NextResponse<Dr
       { status: 200 }
     );
   } catch (error) {
-    console.error('Driver login error:', error);
+    console.error("Driver login error:", error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Internal server error',
+        message: "Internal server error",
       },
       { status: 500 }
     );
   }
 }
-
