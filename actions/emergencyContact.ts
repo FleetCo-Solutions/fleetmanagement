@@ -1,17 +1,20 @@
 "use server";
 
 import { EmergencyContactPayload } from "@/app/types";
+import { headers } from "next/headers";
 
 export async function addEmergencyContact(payload: EmergencyContactPayload) {
   try {
+    const headersList = await headers();
     const response = await fetch(
       `${process.env.LOCAL_BACKENDBASE_URL}/emergencyContact`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Cookie: headersList.get("cookie") || "",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       }
     );
 
@@ -27,16 +30,21 @@ export async function addEmergencyContact(payload: EmergencyContactPayload) {
   }
 }
 
-export async function updateEmergencyContact(id: string, payload: EmergencyContactPayload) {
+export async function updateEmergencyContact(
+  id: string,
+  payload: EmergencyContactPayload
+) {
   try {
+    const headersList = await headers();
     const response = await fetch(
       `${process.env.LOCAL_BACKENDBASE_URL}/emergencyContact/${id}`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Cookie: headersList.get("cookie") || "",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       }
     );
 
@@ -54,13 +62,15 @@ export async function updateEmergencyContact(id: string, payload: EmergencyConta
 
 export async function deleteEmergencyContact(id: string) {
   try {
+    const headersList = await headers();
     const response = await fetch(
       `${process.env.LOCAL_BACKENDBASE_URL}/emergencyContact/${id}`,
       {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-        }
+          Cookie: headersList.get("cookie") || "",
+        },
       }
     );
 

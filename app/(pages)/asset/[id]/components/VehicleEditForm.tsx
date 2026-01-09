@@ -91,7 +91,10 @@ export default function VehicleEditForm({
     try {
       // If there's a current driver in this role, unassign them first
       if (currentDriver) {
-        await unassignDriverMutation(currentDriver.id);
+        await unassignDriverMutation({
+          vehicleId: vehicleData.dto.id,
+          driverId: currentDriver.id,
+        });
       }
 
       // Assign new driver
@@ -124,12 +127,18 @@ export default function VehicleEditForm({
 
   const handleConfirmUnassign = async () => {
     if (!selectedDriverId) return;
-    
-    toast.promise(unassignDriverMutation(selectedDriverId), {
-      loading: "Unassigning driver...",
-      success: (result) => result.message || "Driver unassigned successfully",
-      error: (error) => error.message || "Failed to unassign driver",
-    });
+
+    toast.promise(
+      unassignDriverMutation({
+        vehicleId: vehicleData.dto.id,
+        driverId: selectedDriverId,
+      }),
+      {
+        loading: "Unassigning driver...",
+        success: (result) => result.message || "Driver unassigned successfully",
+        error: (error) => error.message || "Failed to unassign driver",
+      }
+    );
     setUnassignModalOpen(false);
   };
 
