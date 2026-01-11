@@ -4,11 +4,11 @@ import { putTrip } from "./put";
 import { deleteTrip } from "./delete";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return getTripById(id);
+  return getTripById(request, id);
 }
 
 export async function PUT(

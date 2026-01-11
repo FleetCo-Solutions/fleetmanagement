@@ -1,8 +1,9 @@
 import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { extractTokenFromHeader, verifyDriverToken } from "@/lib/auth/jwt";
 
 /**
  * Trip update request body
@@ -57,9 +58,42 @@ const VALID_STATUS_TRANSITIONS: Record<
 export async function putTrip(request: NextRequest, id: string) {
   const date = new Date();
   try {
-    const session = await auth();
+    let companyId: string | null = null;
+    let driverId: string | null = null;
 
-    if (!session?.user?.companyId) {
+    // Check for Bearer token first (mobile app authentication)
+    const authHeader = request.headers.get("Authorization");
+    const token = extractTokenFromHeader(authHeader);
+
+    if (token) {
+      try {
+        // Verify driver token and extract companyId and driverId
+        const payload = verifyDriverToken(token);
+        companyId = payload.companyId || null;
+        driverId = payload.driverId || null;
+      } catch (error) {
+        // Token verification failed
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid or expired token",
+          },
+          { status: 401 }
+        );
+      }
+    } else {
+      // Fall back to NextAuth session (web app authentication)
+      const session = await auth();
+      if (!session?.user?.companyId) {
+        return NextResponse.json(
+          { message: "Unauthorized - No company assigned" },
+          { status: 401 }
+        );
+      }
+      companyId = session.user.companyId;
+    }
+
+    if (!companyId) {
       return NextResponse.json(
         { message: "Unauthorized - No company assigned" },
         { status: 401 }
@@ -68,9 +102,25 @@ export async function putTrip(request: NextRequest, id: string) {
 
     const body = (await request.json()) as TripUpdateRequest;
 
+    // Build where clause: trip must belong to company
+    // If driverId is present, also check that trip is assigned to this driver
+    let whereClause = and(eq(trips.id, id), eq(trips.companyId, companyId));
+
+    // If authenticated as driver, verify trip is assigned to them
+    if (driverId) {
+      whereClause = and(
+        eq(trips.id, id),
+        eq(trips.companyId, companyId),
+        or(
+          eq(trips.mainDriverId, driverId),
+          eq(trips.substituteDriverId, driverId)
+        )
+      );
+    }
+
     // Get current trip to validate status transitions and ownership
     const currentTrip = await db.query.trips.findFirst({
-      where: and(eq(trips.id, id), eq(trips.companyId, session.user.companyId)),
+      where: whereClause,
     });
 
     if (!currentTrip) {
