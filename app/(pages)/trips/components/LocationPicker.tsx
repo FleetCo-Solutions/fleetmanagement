@@ -69,6 +69,7 @@ export default function LocationPicker({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
@@ -77,17 +78,67 @@ export default function LocationPicker({
   // Initialize from value prop
   useEffect(() => {
     if (value) {
+      setIsSelecting(true);
       if (typeof value === "string") {
         setSearchQuery(value);
       } else {
         setSearchQuery(value.address);
         setSelectedLocation(value);
       }
+      setShowSuggestions(false);
+      setSuggestions([]);
+      // Reset selecting flag after initialization
+      setTimeout(() => {
+        setIsSelecting(false);
+      }, 100);
     }
   }, [value]);
 
   // Search locations using Nominatim API
   useEffect(() => {
+    // Don't search if user just selected a location
+    if (isSelecting) {
+      return;
+    }
+
+    // Don't search if we have a selected location and the current searchQuery matches it
+    // This prevents re-searching after a selection
+    if (selectedLocation && searchQuery === selectedLocation.address) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Don't search if we have a selected location and the debounced query is part of it
+    // This handles the case where debouncedQuery hasn't updated yet after selection
+    if (selectedLocation) {
+      const selectedAddressLower = selectedLocation.address.toLowerCase().replace(/[^\w\s]/g, ' ');
+      const queryLower = debouncedQuery.toLowerCase().replace(/[^\w\s]/g, ' ');
+      
+      // Check if query exactly matches or is contained in selected location
+      if (selectedAddressLower === queryLower || selectedAddressLower.includes(queryLower)) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+      
+      // Check if all significant words in query are in selected location
+      // This prevents searching when debounced query is still the old search term
+      const queryWords = queryLower.split(/\s+/).filter(w => w.length >= 2);
+      if (queryWords.length > 0) {
+        const selectedWords = selectedAddressLower.split(/\s+/).filter(w => w.length >= 2);
+        const allWordsInSelected = queryWords.every(qw => 
+          selectedWords.some(sw => sw === qw || sw.includes(qw) || qw.includes(sw))
+        );
+        
+        if (allWordsInSelected) {
+          setSuggestions([]);
+          setShowSuggestions(false);
+          return;
+        }
+      }
+    }
+
     if (debouncedQuery.length < 3) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -121,7 +172,7 @@ export default function LocationPicker({
     };
 
     searchLocations();
-  }, [debouncedQuery]);
+  }, [debouncedQuery, isSelecting, selectedLocation, searchQuery]);
 
   // Handle click outside to close suggestions
   useEffect(() => {
@@ -149,10 +200,35 @@ export default function LocationPicker({
       address: suggestion.display_name,
     };
 
+    // Prevent any further searches
+    setIsSelecting(true);
     setSelectedLocation(location);
+    
+    // Set the search query to match exactly what was selected
+    // This prevents the debounced query from triggering a new search
     setSearchQuery(suggestion.display_name);
     setShowSuggestions(false);
+    setSuggestions([]);
+    
+    // Blur the input to remove focus and prevent dropdown from showing
+    if (inputRef.current) {
+      inputRef.current.blur();
+    }
+    
     onChange(location);
+    
+    // Reset selecting flag after a delay that's longer than debounce (300ms) + buffer
+    // This ensures the debounced query has updated to match the selected location
+    setTimeout(() => {
+      setIsSelecting(false);
+      // After resetting, make sure searchQuery matches selectedLocation to prevent re-search
+      if (inputRef.current) {
+        const currentValue = inputRef.current.value;
+        if (currentValue !== location.address) {
+          setSearchQuery(location.address);
+        }
+      }
+    }, 2000);
   };
 
   const handleMapConfirm = useCallback((location: Location) => {
@@ -179,11 +255,28 @@ export default function LocationPicker({
               type="text"
               value={searchQuery}
               onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowSuggestions(true);
+                const newValue = e.target.value;
+                setSearchQuery(newValue);
+                
+                // If user is typing (not selecting), show suggestions
+                if (!isSelecting) {
+                  // Only show suggestions if query is different from selected location
+                  if (!selectedLocation || newValue !== selectedLocation.address) {
+                    if (newValue.length >= 3) {
+                      setShowSuggestions(true);
+                    } else {
+                      setShowSuggestions(false);
+                      setSuggestions([]);
+                    }
+                  } else {
+                    // Query matches selected location, don't show suggestions
+                    setShowSuggestions(false);
+                    setSuggestions([]);
+                  }
+                }
               }}
               onFocus={() => {
-                if (suggestions.length > 0) {
+                if (suggestions.length > 0 && !isSelecting) {
                   setShowSuggestions(true);
                 }
               }}

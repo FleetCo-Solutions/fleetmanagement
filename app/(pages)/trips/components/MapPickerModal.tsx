@@ -53,6 +53,7 @@ export default function MapPickerModal({
     initialLocation || null
   );
   const [isMounted, setIsMounted] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -69,10 +70,21 @@ export default function MapPickerModal({
     }
   }, [isOpen]);
 
+  // Reset state when modal closes or update initial location when it changes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedAddress(null);
+      setMapLocation(null);
+    } else if (initialLocation) {
+      // Set initial location when modal opens
+      setMapLocation(initialLocation);
+    }
+  }, [isOpen, initialLocation]);
+
   const handleMapClick = useCallback(
     async (lat: number, lng: number) => {
       setMapLocation([lat, lng]);
-      // Reverse geocode to get address
+      // Reverse geocode to get address (but don't confirm yet)
       try {
         const response = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
@@ -85,27 +97,29 @@ export default function MapPickerModal({
 
         if (response.ok) {
           const data = await response.json();
-          const location: Location = {
-            latitude: lat,
-            longitude: lng,
-            address: data.display_name || `${lat}, ${lng}`,
-          };
-          onConfirm(location);
-          onClose();
+          setSelectedAddress(data.display_name || `${lat}, ${lng}`);
+        } else {
+          setSelectedAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
         }
       } catch (error) {
         // Fallback to coordinates
-        const location: Location = {
-          latitude: lat,
-          longitude: lng,
-          address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-        };
-        onConfirm(location);
-        onClose();
+        setSelectedAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
       }
     },
-    [onConfirm, onClose]
+    []
   );
+
+  const handleConfirmClick = useCallback(() => {
+    if (mapLocation) {
+      const location: Location = {
+        latitude: mapLocation[0],
+        longitude: mapLocation[1],
+        address: selectedAddress || `${mapLocation[0]}, ${mapLocation[1]}`,
+      };
+      onConfirm(location);
+      onClose();
+    }
+  }, [mapLocation, selectedAddress, onConfirm, onClose]);
 
   const center: [number, number] = mapLocation || initialLocation || [-6.7924, 39.2083];
 
@@ -213,11 +227,7 @@ export default function MapPickerModal({
           </button>
           <button
             type="button"
-            onClick={() => {
-              if (mapLocation) {
-                handleMapClick(mapLocation[0], mapLocation[1]);
-              }
-            }}
+            onClick={handleConfirmClick}
             disabled={!mapLocation}
             className="px-4 py-2 text-sm font-medium text-white bg-[#004953] rounded-lg hover:bg-[#014852] disabled:opacity-50 disabled:cursor-not-allowed"
           >
