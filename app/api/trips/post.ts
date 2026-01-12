@@ -32,6 +32,9 @@ export async function postTrip(request: NextRequest) {
         fuelUsed: body.fuelUsed?.toString() || null,
         durationMinutes: body.durationMinutes?.toString() || null,
         notes: body.notes || null,
+        // Store coordinates for scheduled trips (will be used by mobile app for map display)
+        actualStartLocation: body.actualStartLocation || null,
+        actualEndLocation: body.actualEndLocation || null,
         companyId: session.user.companyId,
       })
       .returning();

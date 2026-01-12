@@ -3,13 +3,20 @@ import React, { useMemo, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useVehiclesListQuery } from "@/app/(pages)/asset/query";
 import { useDriversListQuery } from "@/app/(pages)/drivers/query";
+import LocationPicker from "./LocationPicker";
+
+interface Location {
+  latitude: number;
+  longitude: number;
+  address: string;
+}
 
 export type AddTripFormValues = {
   vehicleId: string;
   mainDriverId: string;
   substituteDriverId?: string;
-  startLocation: string;
-  endLocation: string;
+  startLocation: string | Location;
+  endLocation: string | Location;
   startTime: string;
   endTime?: string;
   endTimeAfterStartTime: boolean;
@@ -84,8 +91,35 @@ export default function AddTripForm({
   }, [startTime, endTime, setValue]);
 
   const submitHandler = async (values: AddTripFormValues) => {
-    const payload: AddTripFormValues = {
+    // Prepare payload with location coordinates
+    const payload: any = {
       ...values,
+      // Store address string for display
+      startLocation:
+        typeof values.startLocation === "object"
+          ? values.startLocation.address
+          : values.startLocation,
+      endLocation:
+        typeof values.endLocation === "object"
+          ? values.endLocation.address
+          : values.endLocation,
+      // Store coordinates in actualStartLocation/actualEndLocation for scheduled trips
+      actualStartLocation:
+        typeof values.startLocation === "object"
+          ? {
+              latitude: values.startLocation.latitude,
+              longitude: values.startLocation.longitude,
+              address: values.startLocation.address,
+            }
+          : undefined,
+      actualEndLocation:
+        typeof values.endLocation === "object"
+          ? {
+              latitude: values.endLocation.latitude,
+              longitude: values.endLocation.longitude,
+              address: values.endLocation.address,
+            }
+          : undefined,
       endTimeAfterStartTime:
         !!values.startTime && !!values.endTime
           ? new Date(values.endTime!).getTime() >
@@ -178,45 +212,43 @@ export default function AddTripForm({
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Start Location *
-            </label>
-            <input
-              {...register("startLocation", {
-                required: "Start location is required",
-              })}
-              type="text"
-              className={`w-full px-3 py-2 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#004953] ${
-                errors.startLocation ? "border-red-300" : "border-gray-300"
-              }`}
-              placeholder="Enter start location"
+            <Controller
+              name="startLocation"
+              control={control}
+              rules={{ required: "Start location is required" }}
+              render={({ field }) => (
+                <LocationPicker
+                  value={field.value}
+                  onChange={(location) => {
+                    field.onChange(location);
+                  }}
+                  label="Start Location"
+                  placeholder="Search for start location..."
+                  error={errors.startLocation?.message as string}
+                  required
+                />
+              )}
             />
-            {errors.startLocation && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.startLocation.message as string}
-              </p>
-            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              End Location *
-            </label>
-            <input
-              {...register("endLocation", {
-                required: "End location is required",
-              })}
-              type="text"
-              className={`w-full px-3 py-2 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#004953] ${
-                errors.endLocation ? "border-red-300" : "border-gray-300"
-              }`}
-              placeholder="Enter end location"
+            <Controller
+              name="endLocation"
+              control={control}
+              rules={{ required: "End location is required" }}
+              render={({ field }) => (
+                <LocationPicker
+                  value={field.value}
+                  onChange={(location) => {
+                    field.onChange(location);
+                  }}
+                  label="End Location"
+                  placeholder="Search for end location..."
+                  error={errors.endLocation?.message as string}
+                  required
+                />
+              )}
             />
-            {errors.endLocation && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.endLocation.message as string}
-              </p>
-            )}
           </div>
 
           <div>
