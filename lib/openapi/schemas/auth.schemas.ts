@@ -56,16 +56,34 @@ export const DriverLoginResponseSchema = z.object({
 });
 
 /**
+ * Admin login response schema
+ */
+export const AdminLoginResponseSchema = z.object({
+  success: z.boolean().openapi({ description: "Success flag" }),
+  token: z.string().optional().openapi({ description: "JWT token for authenticated admin" }),
+  user: z.object({
+    id: z.string().uuid(),
+    firstName: z.string(),
+    lastName: z.string(),
+    email: z.string().email(),
+    role: z.string(),
+    department: z.string().nullable(),
+  }).optional(),
+  message: z.string().optional().openapi({ description: "Error message if operation failed" }),
+});
+
+/**
  * Driver verify response schema
  */
 export const DriverVerifyResponseSchema = z.object({
   success: z.boolean().openapi({ description: "Success flag" }),
   valid: z.boolean().openapi({ description: "Whether the token is valid" }),
   payload: z.object({
-    driverId: z.string().uuid(),
+    id: z.string().uuid().openapi({ description: "User or Driver ID" }),
     vehicleId: z.string().uuid().nullable(),
-    role: z.enum(["main", "substitute"]),
-    phoneNumber: z.string(),
+    role: z.string().nullable(),
+    phoneNumber: z.string().nullable(),
+    type: z.enum(["driver", "systemUser"]).openapi({ description: "Token type" }),
   }).optional(),
   message: z.string().optional().openapi({ description: "Error message if verification failed" }),
 });
@@ -108,6 +126,14 @@ export const VerifyOtpRequestSchema = z.object({
 export const DriverLoginRequestSchema = z.object({
   phoneNumber: z.string().min(1).openapi({ description: "Driver phone number", example: "255783845395" }),
   password: z.string().min(1).openapi({ description: "Driver password", example: "Welcome@123" }),
+});
+
+/**
+ * Admin login request schema
+ */
+export const AdminLoginRequestSchema = z.object({
+  email: z.string().email().openapi({ description: "Admin email address", example: "admin@fleetco.com" }),
+  password: z.string().min(1).openapi({ description: "Admin password", example: "password123" }),
 });
 
 /**
