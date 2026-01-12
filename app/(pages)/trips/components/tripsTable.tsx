@@ -11,6 +11,7 @@ import AddTripForm, { AddTripFormValues } from "./AddTripForm";
 import { useAddTrip } from "../query";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { CreateTripPayload } from "@/actions/trips";
 
 const getStatusColor = (status: Trips["status"]) => {
   switch (status) {
@@ -324,7 +325,27 @@ export default function TripsTable() {
       >
         <AddTripForm
           onSubmit={async (values: AddTripFormValues) => {
-            toast.promise(addTrip(values), {
+            // Transform the form values to match CreateTripPayload
+            // The form already converts Location objects to strings in submitHandler
+            const payload: CreateTripPayload = {
+              vehicleId: values.vehicleId,
+              mainDriverId: values.mainDriverId,
+              substituteDriverId: values.substituteDriverId,
+              startLocation: typeof values.startLocation === "string" 
+                ? values.startLocation 
+                : values.startLocation.address,
+              endLocation: typeof values.endLocation === "string" 
+                ? values.endLocation 
+                : values.endLocation.address,
+              startTime: values.startTime,
+              endTime: values.endTime,
+              status: values.status,
+              distanceKm: values.distanceKm,
+              fuelUsed: values.fuelUsed,
+              durationMinutes: values.durationMinutes,
+              notes: values.notes,
+            };
+            toast.promise(addTrip(payload), {
               loading: "Adding trip...",
               success: (res) => res?.message || "Trip added successfully!",
               error: (err) => err?.message || "Failed to add trip",
