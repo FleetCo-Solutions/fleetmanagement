@@ -296,7 +296,8 @@ export default function LocationPicker({
                 onClick={() => {
                   setSearchQuery("");
                   setSelectedLocation(null);
-                  onChange({ latitude: 0, longitude: 0, address: "" });
+                  // Pass empty string to indicate cleared field
+                  onChange("" as any);
                 }}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >

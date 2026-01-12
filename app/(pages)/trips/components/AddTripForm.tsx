@@ -126,6 +126,7 @@ export default function AddTripForm({
             new Date(values.startTime).getTime()
           : true,
     };
+
     await onSubmit(payload);
     reset();
   };

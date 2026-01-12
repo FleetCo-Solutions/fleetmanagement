@@ -102,6 +102,55 @@ export async function putTrip(request: NextRequest, id: string) {
 
     const body = (await request.json()) as TripUpdateRequest;
 
+    // Validate location coordinates if provided
+    const validateCoordinates = (loc: any, locName: string) => {
+      if (!loc) return null;
+      
+      const lat = loc.latitude;
+      const lon = loc.longitude;
+      
+      if (typeof lat !== 'number' || typeof lon !== 'number') {
+        console.warn(`${locName}: Invalid coordinate types - latitude: ${typeof lat}, longitude: ${typeof lon}`);
+        return null;
+      }
+      
+      // Validate coordinate ranges
+      if (lat < -90 || lat > 90) {
+        console.warn(`${locName}: Latitude ${lat} out of range [-90, 90]`);
+        return null;
+      }
+      
+      if (lon < -180 || lon > 180) {
+        console.warn(`${locName}: Longitude ${lon} out of range [-180, 180]`);
+        return null;
+      }
+      
+      return {
+        latitude: lat,
+        longitude: lon,
+        address: loc.address || `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+      };
+    };
+
+    // Validate and normalize coordinates if present
+    if (body.actualStartLocation) {
+      const validated = validateCoordinates(body.actualStartLocation, 'actualStartLocation');
+      if (validated) {
+        body.actualStartLocation = validated;
+      } else {
+        body.actualStartLocation = undefined;
+      }
+    }
+    
+    if (body.actualEndLocation) {
+      const validated = validateCoordinates(body.actualEndLocation, 'actualEndLocation');
+      if (validated) {
+        body.actualEndLocation = validated;
+      } else {
+        body.actualEndLocation = undefined;
+      }
+    }
+
     // Build where clause: trip must belong to company
     // If driverId is present, also check that trip is assigned to this driver
     let whereClause = and(eq(trips.id, id), eq(trips.companyId, companyId));

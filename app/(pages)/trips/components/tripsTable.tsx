@@ -325,9 +325,7 @@ export default function TripsTable() {
       >
         <AddTripForm
           onSubmit={async (values: AddTripFormValues) => {
-            // Transform the form values to match CreateTripPayload
-            // The form already converts Location objects to strings in submitHandler
-            const payload: CreateTripPayload = {
+            const payload: any = {
               vehicleId: values.vehicleId,
               mainDriverId: values.mainDriverId,
               substituteDriverId: values.substituteDriverId,
@@ -344,6 +342,9 @@ export default function TripsTable() {
               fuelUsed: values.fuelUsed,
               durationMinutes: values.durationMinutes,
               notes: values.notes,
+              // Pass through the coordinate data prepared by the form
+              actualStartLocation: (values as any).actualStartLocation,
+              actualEndLocation: (values as any).actualEndLocation,
             };
             toast.promise(addTrip(payload), {
               loading: "Adding trip...",
