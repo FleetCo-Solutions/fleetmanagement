@@ -1,8 +1,8 @@
-import { db } from '@/app/db';
-import { drivers, trips } from '@/app/db/schema';
-import { eq, or } from 'drizzle-orm';
-import { NextRequest, NextResponse } from 'next/server';
-import { extractTokenFromHeader, verifyDriverToken } from '@/lib/auth/jwt';
+import { db } from "@/app/db";
+import { drivers, trips } from "@/app/db/schema";
+import { eq, or } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import { extractTokenFromHeader, verifyToken } from "@/lib/auth/jwt";
 
 /**
  * Driver profile response
@@ -16,7 +16,7 @@ interface DriverProfileResponse {
     phoneNumber: string;
     vehicleId: string | null;
     vehicleName: string | null;
-    role: 'main' | 'substitute';
+    role: "main" | "substitute";
     assignedTrips: Array<{
       id: string;
       vehicleId: string | null;
@@ -40,14 +40,14 @@ export async function getCurrentDriver(
 ): Promise<NextResponse<DriverProfileResponse>> {
   try {
     // Extract token from Authorization header
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get("Authorization");
     const token = extractTokenFromHeader(authHeader);
 
     if (!token) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Authorization token is required',
+          message: "Authorization token is required",
         },
         { status: 401 }
       );
@@ -56,9 +56,10 @@ export async function getCurrentDriver(
     // Verify token and get driver ID
     let payload;
     try {
-      payload = verifyDriverToken(token);
+      payload = verifyToken(token);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Token verification failed';
+      const errorMessage =
+        error instanceof Error ? error.message : "Token verification failed";
       return NextResponse.json(
         {
           success: false,
@@ -70,7 +71,7 @@ export async function getCurrentDriver(
 
     // Query driver by ID with vehicle relation
     const driverData = await db.query.drivers.findFirst({
-      where: eq(drivers.id, payload.driverId),
+      where: eq(drivers.id, payload.id),
       with: {
         vehicle: true,
       },
@@ -80,18 +81,20 @@ export async function getCurrentDriver(
       return NextResponse.json(
         {
           success: false,
-          message: 'Driver not found',
+          message: "Driver not found",
         },
         { status: 404 }
       );
     }
 
     // Check driver status
-    if (driverData.status !== 'active') {
+    if (driverData.status !== "active") {
       return NextResponse.json(
         {
           success: false,
-          message: `Driver account is ${driverData.status || 'inactive'}. Please contact administrator.`,
+          message: `Driver account is ${
+            driverData.status || "inactive"
+          }. Please contact administrator.`,
         },
         { status: 403 }
       );
@@ -115,7 +118,9 @@ export async function getCurrentDriver(
 
     // Filter by status (scheduled or in_progress)
     const assignedTrips = assignedTripsData
-      .filter((trip) => trip.status === 'scheduled' || trip.status === 'in_progress')
+      .filter(
+        (trip) => trip.status === "scheduled" || trip.status === "in_progress"
+      )
       .map((trip) => ({
         id: trip.id,
         vehicleId: trip.vehicleId,
@@ -126,7 +131,7 @@ export async function getCurrentDriver(
       }));
 
     // Ensure role is not null (default to 'substitute' if null)
-    const driverRole: 'main' | 'substitute' = driverData.role || 'substitute';
+    const driverRole: "main" | "substitute" = driverData.role || "substitute";
 
     // Return driver profile
     return NextResponse.json(
@@ -146,14 +151,13 @@ export async function getCurrentDriver(
       { status: 200 }
     );
   } catch (error) {
-    console.error('Get current driver error:', error);
+    console.error("Get current driver error:", error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Internal server error',
+        message: "Internal server error",
       },
       { status: 500 }
     );
   }
 }
-

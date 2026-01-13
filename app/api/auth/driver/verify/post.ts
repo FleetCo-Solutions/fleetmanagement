@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyDriverToken, extractTokenFromHeader } from '@/lib/auth/jwt';
+import { NextRequest, NextResponse } from "next/server";
+import { verifyToken, extractTokenFromHeader } from "@/lib/auth/jwt";
 
 interface TokenVerifyResponse {
   success: boolean;
@@ -7,7 +7,7 @@ interface TokenVerifyResponse {
   payload?: {
     driverId: string;
     vehicleId: string | null;
-    role: 'main' | 'substitute';
+    role: "main" | "substitute";
     phoneNumber: string;
   };
   message?: string;
@@ -42,7 +42,7 @@ export async function verifyDriverTokenEndpoint(
 ): Promise<NextResponse<TokenVerifyResponse>> {
   try {
     // Try to get token from Authorization header first
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get("Authorization");
     let token = extractTokenFromHeader(authHeader);
 
     // If not in header, try request body
@@ -60,7 +60,8 @@ export async function verifyDriverTokenEndpoint(
         {
           success: false,
           valid: false,
-          message: 'Token is required. Provide it in Authorization header (Bearer <token>) or request body ({ "token": "..." })',
+          message:
+            'Token is required. Provide it in Authorization header (Bearer <token>) or request body ({ "token": "..." })',
         },
         { status: 400 }
       );
@@ -68,24 +69,25 @@ export async function verifyDriverTokenEndpoint(
 
     // Verify token
     try {
-      const payload = verifyDriverToken(token);
+      const payload = verifyToken(token);
 
       return NextResponse.json(
         {
           success: true,
           valid: true,
           payload: {
-            driverId: payload.driverId,
-            vehicleId: payload.vehicleId,
-            role: payload.role,
-            phoneNumber: payload.phoneNumber,
+            driverId: payload.id,
+            vehicleId: payload.vehicleId || null,
+            role: (payload.role as "main" | "substitute") || "substitute",
+            phoneNumber: payload.phoneNumber || "",
           },
         },
         { status: 200 }
       );
     } catch (error) {
       // Token verification failed (invalid, expired, etc.)
-      const errorMessage = error instanceof Error ? error.message : 'Token verification failed';
+      const errorMessage =
+        error instanceof Error ? error.message : "Token verification failed";
 
       return NextResponse.json(
         {
@@ -97,15 +99,14 @@ export async function verifyDriverTokenEndpoint(
       );
     }
   } catch (error) {
-    console.error('Token verification endpoint error:', error);
+    console.error("Token verification endpoint error:", error);
     return NextResponse.json(
       {
         success: false,
         valid: false,
-        message: 'Internal server error',
+        message: "Internal server error",
       },
       { status: 500 }
     );
   }
 }
-

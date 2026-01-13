@@ -2,7 +2,7 @@ import { db } from "@/app/db";
 import { drivers, trips } from "@/app/db/schema";
 import { eq, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { generateDriverToken } from "@/lib/auth/jwt";
+import { generateToken } from "@/lib/auth/jwt";
 
 /**
  * Driver login request body
@@ -134,12 +134,13 @@ export async function loginDriver(
     // Generate JWT token
     // Ensure role is not null (default to 'substitute' if null)
     const driverRole: "main" | "substitute" = driverData.role || "substitute";
-    const token = generateDriverToken({
-      driverId: driverData.id,
+    const token = generateToken({
+      id: driverData.id,
+      type: "driver",
+      companyId: driverData.companyId || "",
       vehicleId: driverData.vehicleId,
       role: driverRole,
       phoneNumber: driverData.phone,
-      companyId: driverData.companyId || "", // Ensure companyId is passed
     });
 
     // Return success response with token and driver profile

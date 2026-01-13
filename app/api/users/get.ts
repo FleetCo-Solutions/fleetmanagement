@@ -1,43 +1,36 @@
-import { getAuthenticatedUser } from "@/lib/auth/utils";
 import { db } from "@/app/db";
 import { users } from "@/app/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function getUsers() {
-  const date = new Date();
   try {
-    const user = await getAuthenticatedUser();
-    if (!user?.companyId) {
+    const date = new Date();
+    const usersList = await db.select().from(users);
+    if (usersList.length === 0) {
       return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
+        {
+          timestamp: date,
+          success: true,
+          message: "No users found",
+        },
+        { status: 200 }
       );
     }
-
-    const usersList = await db.query.users.findMany({
-      where: and(eq(users.companyId, user.companyId), isNull(users.deletedAt)),
-      orderBy: (users, { asc }) => [asc(users.firstName)],
-    });
-
-    return NextResponse.json(
-      {
-        timestamp: date,
-        statusCode: "200",
-        message: "Users retrieved successfully",
-        dto: {
-          content: usersList,
-          totalPages: 1,
-          totalElements: usersList.length,
+    if (usersList.length > 0) {
+      return NextResponse.json(
+        {
+          timestamp: date,
+          success: true,
+          data: usersList,
         },
-      },
-      { status: 200 }
-    );
+        { status: 200 }
+      );
+    }
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch users:" + (error as Error).message,
+        message: "Internal server error: " + (error as Error).message,
       },
       { status: 500 }
     );
