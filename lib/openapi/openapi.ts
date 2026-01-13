@@ -77,7 +77,7 @@ export function generateOpenAPISpec() {
         description: "Development server",
       },
       {
-        url: "https://api.fleetmanagement.com",
+        url: "https://solutions.fleetcotelematics.com",
         description: "Production server",
       },
     ],
