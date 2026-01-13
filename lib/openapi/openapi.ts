@@ -1,4 +1,7 @@
-import { OpenAPIRegistry, OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
+import {
+  OpenAPIRegistry,
+  OpenApiGeneratorV3,
+} from "@asteasolutions/zod-to-openapi";
 import { registerAuthRoutes } from "./routes/auth.routes";
 import { registerUsersRoutes } from "./routes/users.routes";
 import { registerVehiclesRoutes } from "./routes/vehicles.routes";
@@ -7,6 +10,7 @@ import { registerTripsRoutes } from "./routes/trips.routes";
 import { registerMaintenanceRoutes } from "./routes/maintenance.routes";
 import { registerVehicleTrackingRoutes } from "./routes/vehicle-tracking.routes";
 import { registerEmergencyContactRoutes } from "./routes/emergency-contact.routes";
+import { registerCompanyRoutes } from "./routes/company.routes";
 
 /**
  * Create and configure the OpenAPI registry
@@ -20,7 +24,8 @@ function createOpenAPIRegistry(): OpenAPIRegistry {
     type: "http",
     scheme: "bearer",
     bearerFormat: "JWT",
-    description: "JWT token authentication for driver endpoints. Include the token in the Authorization header: 'Bearer {token}'. Obtain token via /api/auth/driver/login",
+    description:
+      "JWT token authentication for driver endpoints. Include the token in the Authorization header: 'Bearer {token}'. Obtain token via /api/auth/driver/login",
   });
 
   // Cookie-based authentication (NextAuth session - used by most endpoints)
@@ -28,7 +33,8 @@ function createOpenAPIRegistry(): OpenAPIRegistry {
     type: "apiKey",
     in: "cookie",
     name: "next-auth.session-token",
-    description: "NextAuth session cookie authentication. Used by most endpoints. The cookie is automatically set after login via NextAuth (/api/auth/[...nextauth]). Browser-based clients should include cookies automatically.",
+    description:
+      "NextAuth session cookie authentication. Used by most endpoints. The cookie is automatically set after login via NextAuth (/api/auth/[...nextauth]). Browser-based clients should include cookies automatically.",
   });
 
   // Register all route groups
@@ -40,6 +46,7 @@ function createOpenAPIRegistry(): OpenAPIRegistry {
   registerMaintenanceRoutes(registry);
   registerVehicleTrackingRoutes(registry);
   registerEmergencyContactRoutes(registry);
+  registerCompanyRoutes(registry);
 
   return registry;
 }
@@ -57,7 +64,8 @@ export function generateOpenAPISpec() {
     info: {
       version: "1.0.0",
       title: "Fleet Management API",
-      description: "Comprehensive API documentation for the Fleet Management System. This API provides endpoints for managing vehicles, drivers, trips, maintenance records, users, and authentication.",
+      description:
+        "Comprehensive API documentation for the Fleet Management System. This API provides endpoints for managing vehicles, drivers, trips, maintenance records, users, and authentication.",
       contact: {
         name: "API Support",
         email: "support@fleetmanagement.com",
@@ -76,14 +84,27 @@ export function generateOpenAPISpec() {
     // Most endpoints use cookie-based auth (NextAuth), driver endpoints use bearer auth
     // Individual routes can override this
     tags: [
-      { name: "Authentication", description: "User and driver authentication endpoints" },
+      {
+        name: "Authentication",
+        description: "User and driver authentication endpoints",
+      },
       { name: "Users", description: "User management endpoints" },
       { name: "Vehicles", description: "Vehicle management endpoints" },
       { name: "Drivers", description: "Driver management endpoints" },
       { name: "Trips", description: "Trip management endpoints" },
-      { name: "Maintenance", description: "Maintenance record management endpoints" },
-      { name: "Vehicle Tracking", description: "Real-time vehicle tracking endpoints" },
-      { name: "Emergency Contacts", description: "Emergency contact management endpoints" },
+      {
+        name: "Maintenance",
+        description: "Maintenance record management endpoints",
+      },
+      {
+        name: "Vehicle Tracking",
+        description: "Real-time vehicle tracking endpoints",
+      },
+      {
+        name: "Emergency Contacts",
+        description: "Emergency contact management endpoints",
+      },
+      { name: "Companies", description: "Company management endpoints" },
     ],
   });
 }

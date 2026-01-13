@@ -4,8 +4,17 @@ import {
   UpdateUserRequestSchema,
   UsersListResponseSchema,
   UserResponseSchema,
+  SystemUsersListResponseSchema,
+  CreateAdminUserRequestSchema,
+  AdminUserResponseSchema,
+  PaginatedUsersListResponseSchema,
+  UserDetailResponseSchema,
 } from "../schemas/users.schemas";
-import { ErrorResponseSchema, UnauthorizedResponseSchema, IdParamSchema } from "../schemas/shared.schemas";
+import {
+  ErrorResponseSchema,
+  UnauthorizedResponseSchema,
+  IdParamSchema,
+} from "../schemas/shared.schemas";
 
 export function registerUsersRoutes(registry: OpenAPIRegistry) {
   // Get All Users
@@ -15,7 +24,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Get all users",
     description: "Retrieve a list of all users for the authenticated company",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] }],
     responses: {
       200: {
         description: "Users retrieved successfully",
@@ -51,7 +60,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Create a new user",
     description: "Create a new user account for the authenticated company",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] }],
     request: {
       body: {
         content: {
@@ -86,11 +95,94 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
-      409: {
-        description: "Conflict - email or phone already in use",
+    },
+  });
+
+  // Create Admin User
+  registry.registerPath({
+    method: "post",
+    path: "/api/adminusers",
+    tags: ["Users"],
+    summary: "Create a new admin user",
+    description: "Create a new system user (admin/staff)",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: CreateAdminUserRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: "Admin user created successfully",
+        content: {
+          "application/json": {
+            schema: AdminUserResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  // Get System Users
+  registry.registerPath({
+    method: "get",
+    path: "/api/users/systemUsers",
+    tags: ["Users"],
+    summary: "Get all system users",
+    description: "Retrieve a list of all system users (admins/staff)",
+    responses: {
+      200: {
+        description: "System users retrieved successfully",
+        content: {
+          "application/json": {
+            schema: SystemUsersListResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  // Get Users by Company ID
+  registry.registerPath({
+    method: "get",
+    path: "/api/users/usersByCompanyId",
+    tags: ["Users"],
+    summary: "Get users by company ID",
+    description: "Retrieve a list of users for the authenticated company",
+    security: [{ cookieAuth: [] }],
+    responses: {
+      200: {
+        description: "Users retrieved successfully",
+        content: {
+          "application/json": {
+            schema: PaginatedUsersListResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: UnauthorizedResponseSchema,
           },
         },
       },
@@ -104,7 +196,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Get user by ID",
     description: "Retrieve a specific user by their ID",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] }],
     request: {
       params: IdParamSchema,
     },
@@ -113,7 +205,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
         description: "User retrieved successfully",
         content: {
           "application/json": {
-            schema: UserResponseSchema,
+            schema: UserDetailResponseSchema,
           },
         },
       },
@@ -143,7 +235,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Update user",
     description: "Update an existing user's information",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] }],
     request: {
       params: IdParamSchema,
       body: {

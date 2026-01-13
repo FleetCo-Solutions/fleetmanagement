@@ -11,8 +11,14 @@ import {
   DriverVerifyRequestSchema,
   DriverVerifyResponseSchema,
   ValidateResetTokenRequestSchema,
+  AdminLoginRequestSchema,
+  AdminLoginResponseSchema,
 } from "../schemas/auth.schemas";
-import { SuccessResponseSchema, ErrorResponseSchema, UnauthorizedResponseSchema } from "../schemas/shared.schemas";
+import {
+  SuccessResponseSchema,
+  ErrorResponseSchema,
+  UnauthorizedResponseSchema,
+} from "../schemas/shared.schemas";
 import { z } from "zod";
 
 export function registerAuthRoutes(registry: OpenAPIRegistry) {
@@ -66,7 +72,8 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     path: "/api/auth/driver/login",
     tags: ["Authentication"],
     summary: "Driver login",
-    description: "Authenticate a driver with phone number and password. Returns JWT token and driver profile.",
+    description:
+      "Authenticate a driver with phone number and password. Returns JWT token and driver profile.",
     request: {
       body: {
         content: {
@@ -103,6 +110,58 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
       },
       403: {
         description: "Driver account is not active",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  // Admin Login
+  registry.registerPath({
+    method: "post",
+    path: "/api/adminusers/login",
+    tags: ["Authentication"],
+    summary: "Admin login",
+    description: "Authenticate a system user (admin/staff) with email and password. Returns JWT token and user profile.",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: AdminLoginRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Login successful",
+        content: {
+          "application/json": {
+            schema: AdminLoginResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - missing required fields",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Invalid credentials",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Account is not active",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -219,7 +278,8 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     path: "/api/auth/resetPassword",
     tags: ["Authentication"],
     summary: "Reset password",
-    description: "Reset password using verified OTP. OTP must be verified first via /api/auth/verifyOtp.",
+    description:
+      "Reset password using verified OTP. OTP must be verified first via /api/auth/verifyOtp.",
     request: {
       body: {
         content: {
@@ -263,7 +323,8 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     path: "/api/auth/validate-reset-token",
     tags: ["Authentication"],
     summary: "Validate reset token",
-    description: "Check if a password reset token is valid. Calls backend API to validate token.",
+    description:
+      "Check if a password reset token is valid. Calls backend API to validate token.",
     request: {
       body: {
         content: {
@@ -279,9 +340,17 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: z.object({
-              valid: z.boolean().openapi({ description: "Whether the token is valid" }),
-              user: z.any().optional().openapi({ description: "User data if token is valid" }),
-              message: z.string().optional().openapi({ description: "Validation message" }),
+              valid: z
+                .boolean()
+                .openapi({ description: "Whether the token is valid" }),
+              user: z
+                .any()
+                .optional()
+                .openapi({ description: "User data if token is valid" }),
+              message: z
+                .string()
+                .optional()
+                .openapi({ description: "Validation message" }),
             }),
           },
         },
@@ -314,7 +383,8 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     path: "/api/auth/driver/verify",
     tags: ["Authentication"],
     summary: "Verify driver JWT token",
-    description: "Verify a driver JWT token. Token can be provided in Authorization header as 'Bearer <token>' or in request body as { 'token': '...' }.",
+    description:
+      "Verify a driver JWT token. Token can be provided in Authorization header as 'Bearer <token>' or in request body as { 'token': '...' }.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -359,7 +429,8 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     path: "/api/auth/driver/me",
     tags: ["Authentication"],
     summary: "Get current driver",
-    description: "Get authenticated driver information using JWT token from Authorization header",
+    description:
+      "Get authenticated driver information using JWT token from Authorization header",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
