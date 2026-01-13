@@ -1,5 +1,6 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDriverTrips } from "./get";
+import { AuthenticatedError, getAuthenticatedUser } from "@/lib/auth/utils";
 
 /**
  * Get trips assigned to a driver
@@ -14,5 +15,18 @@ export async function GET(
   props: { params: Promise<{ id: string }> }
 ) {
   const params = await props.params;
-  return getDriverTrips(params.id, request);
+  const user = await getAuthenticatedUser(request);
+  if (!user) {
+    return NextResponse.json(
+      { message: "Unauthorized Please login" },
+      { status: 401 }
+    );
+  }
+  if ((user as AuthenticatedError).message) {
+    return NextResponse.json(
+      { message: (user as AuthenticatedError).message },
+      { status: 400 }
+    );
+  }
+  return getDriverTrips(params.id);
 }

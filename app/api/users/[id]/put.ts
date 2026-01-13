@@ -5,21 +5,12 @@ import { ProfilePayload } from "@/app/types";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function editUser(id: string, userData: ProfilePayload) {
+export async function editUser(companyId: string, id: string, userData: ProfilePayload) {
   const date = new Date();
   try {
-    const session = await auth();
-
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
-
     // Verify user belongs to company
     const existing = await db.query.users.findFirst({
-      where: and(eq(users.id, id), eq(users.companyId, session.user.companyId)),
+      where: and(eq(users.id, id), eq(users.companyId, companyId)),
     });
 
     if (!existing) {

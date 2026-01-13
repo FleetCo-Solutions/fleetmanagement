@@ -4,19 +4,10 @@ import { drivers } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function getDriversList() {
+export async function getDriversList(companyId: string) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
-
     const driversList = await db.query.drivers.findMany({
-      where: eq(drivers.companyId, session.user.companyId),
+      where: eq(drivers.companyId, companyId),
       columns: {
         id: true,
         firstName: true,

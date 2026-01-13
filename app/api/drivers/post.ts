@@ -12,17 +12,7 @@ interface IPostDriver {
     licenseExpiry: string
 }
 
-export default async function postDriver(request: NextRequest){
-    // Get session for authentication and companyId
-    const session = await auth();
-    
-    if (!session?.user?.companyId) {
-        return NextResponse.json(
-            { message: "Unauthorized - No company assigned" },
-            { status: 401 }
-        );
-    }
-
+export default async function postDriver(request: NextRequest, companyId: string){
     try {
         const body = (await request.json()) as IPostDriver
 
@@ -44,7 +34,7 @@ export default async function postDriver(request: NextRequest){
             alternativePhone: body.alternativePhone,
             licenseNumber: body.licenseNumber,
             licenseExpiry: body.licenseExpiry,
-            companyId: session.user.companyId, // Auto-assign companyId from session
+            companyId: companyId, // Auto-assign companyId from session
         })
         .returning()
         .onConflictDoNothing();

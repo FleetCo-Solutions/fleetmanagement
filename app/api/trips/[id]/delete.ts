@@ -1,24 +1,14 @@
-import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function deleteTrip(id: string) {
+export async function deleteTrip(id: string, companyId: string) {
   const date = new Date();
   try {
-    const session = await auth();
-
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
-
     // Verify trip belongs to company
     const existing = await db.query.trips.findFirst({
-      where: and(eq(trips.id, id), eq(trips.companyId, session.user.companyId)),
+      where: and(eq(trips.id, id), eq(trips.companyId, companyId)),
     });
 
     if (!existing) {

@@ -29,7 +29,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     tags: ["Drivers"],
     summary: "Get all drivers",
     description: "Retrieve a list of all drivers for the authenticated company",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     responses: {
       200: {
         description: "Drivers retrieved successfully",
@@ -65,7 +65,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     tags: ["Drivers"],
     summary: "Create a new driver",
     description: "Add a new driver to the authenticated company",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     request: {
       body: {
         content: {
@@ -110,7 +110,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     tags: ["Drivers"],
     summary: "Get driver by ID",
     description: "Retrieve a specific driver by their ID",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     request: {
       params: IdParamSchema,
     },
@@ -149,7 +149,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     tags: ["Drivers"],
     summary: "Update driver",
     description: "Update an existing driver's information",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     request: {
       params: IdParamSchema,
       body: {
@@ -203,7 +203,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     tags: ["Drivers"],
     summary: "Assign driver to vehicle",
     description: "Assign a driver to a vehicle",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     request: {
       body: {
         content: {
@@ -248,7 +248,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     tags: ["Drivers"],
     summary: "Unassign driver from vehicle",
     description: "Unassign a driver from their current vehicle",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     request: {
       body: {
         content: {
@@ -293,7 +293,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     tags: ["Drivers"],
     summary: "Get drivers list (simplified)",
     description: "Retrieve a simplified list of drivers for dropdowns",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     responses: {
       200: {
         description: "Drivers list retrieved successfully",
@@ -321,7 +321,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     tags: ["Drivers"],
     summary: "Get driver dashboard data",
     description: "Retrieve dashboard statistics and driver list",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     responses: {
       200: {
         description: "Dashboard data retrieved successfully",
@@ -360,7 +360,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     tags: ["Drivers"],
     summary: "Get driver trips",
     description: "Retrieve all trips assigned to a specific driver",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     request: {
       params: IdParamSchema,
     },
@@ -384,7 +384,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     summary: "Get driver vehicle history",
     description:
       "Retrieve the history of vehicles assigned to a specific driver",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     request: {
       params: IdParamSchema,
     },
@@ -408,7 +408,7 @@ export function registerDriversRoutes(registry: OpenAPIRegistry) {
     summary: "Get driver analytics",
     description:
       "Retrieve driving analytics and violations for a specific driver",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{bearerAuth: []}],
     request: {
       params: IdParamSchema,
     },

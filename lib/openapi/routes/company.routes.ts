@@ -14,12 +14,21 @@ export function registerCompanyRoutes(registry: OpenAPIRegistry) {
     tags: ["Companies"],
     summary: "Get all companies",
     description: "Retrieve a list of all companies in the system",
+    security: [{ bearerAuth: [] }, { cookieAuth: [] }],
     responses: {
       200: {
         description: "Companies retrieved successfully",
         content: {
           "application/json": {
             schema: CompaniesListResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },
@@ -41,6 +50,7 @@ export function registerCompanyRoutes(registry: OpenAPIRegistry) {
     tags: ["Companies"],
     summary: "Create a new company",
     description: "Create a new company in the system",
+    security: [{ bearerAuth: [] }, { cookieAuth: [] }],
     request: {
       body: {
         content: {
@@ -56,6 +66,14 @@ export function registerCompanyRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: CompanyResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },

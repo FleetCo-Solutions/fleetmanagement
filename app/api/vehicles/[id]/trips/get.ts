@@ -4,22 +4,13 @@ import { trips, vehicles } from "@/app/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function getVehicleTrips(vehicleId: string) {
+export async function getVehicleTrips(vehicleId: string, companyId: string) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
-
     // Verify vehicle belongs to company
     const vehicle = await db.query.vehicles.findFirst({
       where: and(
         eq(vehicles.id, vehicleId),
-        eq(vehicles.companyId, session.user.companyId)
+        eq(vehicles.companyId, companyId)
       ),
     });
 
@@ -33,7 +24,7 @@ export async function getVehicleTrips(vehicleId: string) {
     const vehicleTrips = await db.query.trips.findMany({
       where: and(
         eq(trips.vehicleId, vehicleId),
-        eq(trips.companyId, session.user.companyId)
+        eq(trips.companyId, companyId)
       ),
       with: {
         mainDriver: true,

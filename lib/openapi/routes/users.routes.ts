@@ -24,7 +24,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Get all users",
     description: "Retrieve a list of all users for the authenticated company",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{BearerAuth: []}],
     responses: {
       200: {
         description: "Users retrieved successfully",
@@ -60,7 +60,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Create a new user",
     description: "Create a new user account for the authenticated company",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] },{BearerAuth: []}],
     request: {
       body: {
         content: {
@@ -105,6 +105,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Create a new admin user",
     description: "Create a new system user (admin/staff)",
+    security: [{ cookieAuth: [] }, {bearerAuth: []}],
     request: {
       body: {
         content: {
@@ -120,6 +121,14 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: AdminUserResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: UnauthorizedResponseSchema,
           },
         },
       },
@@ -141,12 +150,21 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Get all system users",
     description: "Retrieve a list of all system users (admins/staff)",
+    security: [{ cookieAuth: [] }, {bearerAuth: []}],
     responses: {
       200: {
         description: "System users retrieved successfully",
         content: {
           "application/json": {
             schema: SystemUsersListResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: UnauthorizedResponseSchema,
           },
         },
       },
@@ -168,7 +186,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Get users by company ID",
     description: "Retrieve a list of users for the authenticated company",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] }, {bearerAuth: []}],
     responses: {
       200: {
         description: "Users retrieved successfully",
@@ -196,7 +214,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Get user by ID",
     description: "Retrieve a specific user by their ID",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] }, {bearerAuth: []}],
     request: {
       params: IdParamSchema,
     },
@@ -235,7 +253,7 @@ export function registerUsersRoutes(registry: OpenAPIRegistry) {
     tags: ["Users"],
     summary: "Update user",
     description: "Update an existing user's information",
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] }, {bearerAuth: []}],
     request: {
       params: IdParamSchema,
       body: {

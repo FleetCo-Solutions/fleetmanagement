@@ -16,7 +16,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Get all vehicles",
     description: "Retrieve a list of all vehicles for the authenticated company",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] },{bearerAuth: []}], // Uses NextAuth session cookie
     responses: {
       200: {
         description: "Vehicles retrieved successfully",
@@ -52,7 +52,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Create a new vehicle",
     description: "Add a new vehicle to the authenticated company's fleet",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] },{bearerAuth: []}], // Uses NextAuth session cookie
     request: {
       body: {
         content: {
@@ -105,7 +105,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Get vehicle by ID",
     description: "Retrieve a specific vehicle by its ID",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] },{bearerAuth: []}], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
     },
@@ -144,7 +144,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Update vehicle",
     description: "Update an existing vehicle's information",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] },{bearerAuth: []}], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
       body: {
@@ -198,7 +198,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Get vehicle trips",
     description: "Retrieve all trips for a specific vehicle",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] },{bearerAuth: []}], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
     },
@@ -244,7 +244,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Get vehicle driver history",
     description: "Retrieve driver assignment history for a vehicle",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] },{bearerAuth: []}], // Uses NextAuth session cookie
     request: {
       params: IdParamSchema,
     },
@@ -286,7 +286,7 @@ export function registerVehiclesRoutes(registry: OpenAPIRegistry) {
     tags: ["Vehicles"],
     summary: "Get vehicles list (simplified)",
     description: "Retrieve a simplified list of vehicles with assigned drivers for the authenticated company",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
+    security: [{ cookieAuth: [] },{bearerAuth: []}], // Uses NextAuth session cookie
     responses: {
       200: {
         description: "Vehicles list retrieved successfully",

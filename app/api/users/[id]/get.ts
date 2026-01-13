@@ -1,25 +1,15 @@
-import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { users } from "@/app/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function getUserDetails(id: string) {
+export async function getUserDetails(companyId: string, id: string) {
   const date = new Date();
   try {
-    const session = await auth();
-
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
-
     const user = await db.query.users.findFirst({
       where: and(
         eq(users.id, id),
-        eq(users.companyId, session.user.companyId),
+        eq(users.companyId, companyId),
         isNull(users.deletedAt)
       ),
       with: {

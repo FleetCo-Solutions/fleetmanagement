@@ -14,23 +14,13 @@ interface UpdateDriverPayload {
   status: "active" | "inactive" | "suspended";
 }
 
-export async function putDriver(id: string, payload: UpdateDriverPayload) {
-  // Get session for authentication and companyId
-  const session = await auth();
-  
-  if (!session?.user?.companyId) {
-    return NextResponse.json(
-      { message: "Unauthorized - No company assigned" },
-      { status: 401 }
-    );
-  }
-
+export async function putDriver(id: string, payload: UpdateDriverPayload, companyId: string) {
   try {
     // 1. Verify driver belongs to user's company before updating
     const existing = await db.query.drivers.findFirst({
       where: and(
         eq(drivers.id, id),
-        eq(drivers.companyId, session.user.companyId)
+        eq(drivers.companyId, companyId)
       )
     });
 

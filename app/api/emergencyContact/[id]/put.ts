@@ -1,4 +1,3 @@
-import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { emergencyContacts, users, drivers } from "@/app/db/schema";
 import { EmergencyContactPayload } from "@/app/types";
@@ -7,18 +6,10 @@ import { NextResponse } from "next/server";
 
 export async function putEmergencyContact(
   id: string,
+  companyId: string,
   payload: EmergencyContactPayload
 ) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
-
     // Get existing contact to check ownership
     const existingContact = await db.query.emergencyContacts.findFirst({
       where: eq(emergencyContacts.id, id),
@@ -36,7 +27,7 @@ export async function putEmergencyContact(
       const user = await db.query.users.findFirst({
         where: and(
           eq(users.id, existingContact.userId),
-          eq(users.companyId, session.user.companyId)
+          eq(users.companyId, companyId)
         ),
       });
       if (!user) {
@@ -46,7 +37,7 @@ export async function putEmergencyContact(
       const driver = await db.query.drivers.findFirst({
         where: and(
           eq(drivers.id, existingContact.driverId),
-          eq(drivers.companyId, session.user.companyId)
+          eq(drivers.companyId, companyId)
         ),
       });
       if (!driver) {

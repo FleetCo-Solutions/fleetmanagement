@@ -14,16 +14,9 @@ export interface IPostUser {
   status?: "active" | "inactive" | "suspended";
 }
 
-export default async function postUser(request: Request) {
+export default async function postUser(companyId: string, request: Request) {
   try {
-    const session = await auth();
 
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
 
     const body = (await request.json()) as IPostUser;
 
@@ -54,7 +47,7 @@ export default async function postUser(request: Request) {
         phone: body.phone,
         email: body.email,
         passwordHash: passwordToStore,
-        companyId: session.user.companyId,
+        companyId: companyId,
         status: body.status || "active",
       })
       .returning();

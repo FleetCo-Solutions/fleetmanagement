@@ -5,17 +5,9 @@ import { EmergencyContactPayload } from "@/app/types";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function postEmergencyContact(payload: EmergencyContactPayload) {
+export async function postEmergencyContact(payload: EmergencyContactPayload, companyId: string) {
   const date = new Date();
   try {
-    const session = await auth();
-
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
 
     if (!payload.firstName) {
       return NextResponse.json(
@@ -49,7 +41,7 @@ export async function postEmergencyContact(payload: EmergencyContactPayload) {
       const user = await db.query.users.findFirst({
         where: and(
           eq(users.id, payload.userId),
-          eq(users.companyId, session.user.companyId)
+          eq(users.companyId, companyId)
         ),
       });
       if (!user) {
@@ -62,7 +54,7 @@ export async function postEmergencyContact(payload: EmergencyContactPayload) {
       const driver = await db.query.drivers.findFirst({
         where: and(
           eq(drivers.id, payload.driverId),
-          eq(drivers.companyId, session.user.companyId)
+          eq(drivers.companyId, companyId)
         ),
       });
       if (!driver) {

@@ -11,16 +11,8 @@ export interface IPostVehicle {
   manufacturer: string;
 }
 
-export async function postVehicle(request: NextRequest) {
+export async function postVehicle(request: NextRequest, companyId: string) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
 
     const body = (await request.json()) as IPostVehicle;
     // Check required fields
@@ -58,7 +50,7 @@ export async function postVehicle(request: NextRequest) {
         model: body.model.trim(),
         manufacturer: body.manufacturer.trim(),
         vin: body.vin.trim(),
-        companyId: session.user.companyId,
+        companyId: companyId,
       })
       .returning()
       .onConflictDoNothing();

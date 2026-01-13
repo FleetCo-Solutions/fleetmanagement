@@ -10,17 +10,7 @@ export interface AssignDriverRequestBody {
   role: "main" | "substitute";
 }
 
-export async function assignDriverToVehcle(request: NextRequest) {
-  // Get session for authentication and companyId
-  const session = await auth();
-  
-  if (!session?.user?.companyId) {
-    return NextResponse.json(
-      { message: "Unauthorized - No company assigned" },
-      { status: 401 }
-    );
-  }
-
+export async function assignDriverToVehcle(request: NextRequest, companyId: string) {
   const { driverId, vehicleId, role } =
     (await request.json()) as AssignDriverRequestBody;
 
@@ -40,7 +30,7 @@ export async function assignDriverToVehcle(request: NextRequest) {
     const driver = await db.query.drivers.findFirst({
       where: and(
         eq(drivers.id, driverId),
-        eq(drivers.companyId, session.user.companyId)
+        eq(drivers.companyId, companyId)
       )
     });
 
@@ -55,7 +45,7 @@ export async function assignDriverToVehcle(request: NextRequest) {
     const vehicle = await db.query.vehicles.findFirst({
       where: and(
         eq(vehicles.id, vehicleId),
-        eq(vehicles.companyId, session.user.companyId)
+        eq(vehicles.companyId, companyId)
       )
     });
 
@@ -73,7 +63,7 @@ export async function assignDriverToVehcle(request: NextRequest) {
       .where(
         and(
           eq(drivers.vehicleId, vehicleId),
-          eq(drivers.companyId, session.user.companyId)
+          eq(drivers.companyId, companyId)
         )
       );
 

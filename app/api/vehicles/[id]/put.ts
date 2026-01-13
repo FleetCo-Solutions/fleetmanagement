@@ -1,20 +1,10 @@
-import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { vehicles } from "@/app/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-export default async function putVehicle(id: string, request: NextRequest) {
+export default async function putVehicle(id: string, request: NextRequest, companyId: string) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
     const { registrationNumber, model, manufacturer, vin, color } = body;
 
@@ -30,7 +20,7 @@ export default async function putVehicle(id: string, request: NextRequest) {
     const existing = await db.query.vehicles.findFirst({
       where: and(
         eq(vehicles.id, id),
-        eq(vehicles.companyId, session.user.companyId)
+        eq(vehicles.companyId, companyId)
       ),
     });
 

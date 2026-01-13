@@ -1,6 +1,6 @@
 import { auth } from "@/app/auth";
-import { headers } from "next/headers";
 import { verifyToken, extractTokenFromHeader } from "./jwt";
+import { NextRequest } from "next/server";
 
 export interface AuthenticatedUser {
   id: string;
@@ -9,25 +9,30 @@ export interface AuthenticatedUser {
   type: "user" | "driver" | "systemUser";
 }
 
+export interface AuthenticatedError {
+  timestamp: Date;
+  message: string;
+}
+
 /**
  * Get the authenticated user from either session (Web) or JWT (Mobile/Admin)
  */
-export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+export async function getAuthenticatedUser(request: NextRequest): Promise<AuthenticatedUser | AuthenticatedError | null> {
   // 1. Check for Web Session (Cookies)
   const session = await auth();
-  if (session?.user?.companyId) {
+  if (session?.user?.companyId && session.user.id) {
     return {
-      id: session.user.id || "",
+      id: session.user.id,
       companyId: session.user.companyId,
       type: "user",
     };
   }
 
   // 2. Check for Mobile/Admin Token (Bearer JWT)
-  const headersList = await headers();
-  const authHeader = headersList.get("Authorization");
-  const token = extractTokenFromHeader(authHeader);
+  const authHeader = request.headers.get("Authorization");
 
+  const token = extractTokenFromHeader(authHeader);
+ 
   if (token) {
     try {
       const payload = verifyToken(token);
@@ -51,10 +56,10 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
       }
     } catch (error) {
       // Token verification failed
-      console.error(
-        "Token verification failed in getAuthenticatedUser:",
-        error
-      );
+      return {
+        timestamp: new Date(),
+        message: "Token verification failed:" + (error as Error).message,
+      };
     }
   }
 

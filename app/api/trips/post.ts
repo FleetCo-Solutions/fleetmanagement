@@ -3,18 +3,9 @@ import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function postTrip(request: NextRequest) {
+export async function postTrip(request: NextRequest, companyId: string) {
   const date = new Date();
   try {
-    const session = await auth();
-
-    if (!session?.user?.companyId) {
-      return NextResponse.json(
-        { message: "Unauthorized - No company assigned" },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
 
     // Validate location coordinates if provided
@@ -68,7 +59,7 @@ export async function postTrip(request: NextRequest) {
         // Store coordinates for scheduled trips (will be used by mobile app for map display)
         actualStartLocation: actualStartLoc,
         actualEndLocation: actualEndLoc,
-        companyId: session.user.companyId,
+        companyId: companyId,
       })
       .returning();
 

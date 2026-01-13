@@ -4,31 +4,14 @@ import { drivers } from "@/app/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function getDrivers() {
+export async function getDrivers(companyId: string) {
   const date = new Date();
-
-  // Get authenticated user (session or token)
-  const user = await getAuthenticatedUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { message: "Unauthorized - Please login" },
-      { status: 401 }
-    );
-  }
-
-  if (!user.companyId) {
-    return NextResponse.json(
-      { message: "No company assigned to user" },
-      { status: 403 }
-    );
-  }
 
   try {
     // Filter drivers by companyId
     const listDrivers = await db.query.drivers.findMany({
       where: and(
-        eq(drivers.companyId, user.companyId),
+        eq(drivers.companyId, companyId),
         isNull(drivers.deletedAt)
       ),
       with: {

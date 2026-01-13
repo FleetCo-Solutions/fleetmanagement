@@ -1,13 +1,30 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import getDriverDetails from "./getDriver";
 import { putDriver } from "./put";
+import { AuthenticatedError, AuthenticatedUser, getAuthenticatedUser } from "@/lib/auth/utils";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return getDriverDetails(id);
+  const user = await getAuthenticatedUser(request);
+  if (!user) {
+    return NextResponse.json(
+      { message: "Unauthorized Please login" },
+      { status: 401 }
+    );
+  }
+  if ((user as AuthenticatedError).message) {
+    return NextResponse.json(
+      { message: (user as AuthenticatedError).message },
+      { status: 400 }
+    );
+  }
+  if ((user as AuthenticatedUser).companyId) {
+    return getDriverDetails(id, (user as AuthenticatedUser).companyId);
+  }
+  return NextResponse.json({ message: "Bad Request" }, { status: 400 });
 }
 
 export async function PUT(
@@ -16,5 +33,21 @@ export async function PUT(
 ) {
   const { id } = await params;
   const payload = await request.json();
-  return putDriver(id, payload);
+  const user = await getAuthenticatedUser(request);
+  if (!user) {
+    return NextResponse.json(
+      { message: "Unauthorized Please login" },
+      { status: 401 }
+    );
+  }
+  if ((user as AuthenticatedError).message) {
+    return NextResponse.json(
+      { message: (user as AuthenticatedError).message },
+      { status: 400 }
+    );
+  }
+  if ((user as AuthenticatedUser).companyId) {
+    return putDriver(id, payload, (user as AuthenticatedUser).companyId);
+  }
+  return NextResponse.json({ message: "Bad Request" }, { status: 400 });
 }
