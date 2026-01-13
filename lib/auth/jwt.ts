@@ -1,14 +1,15 @@
 import jwt from "jsonwebtoken";
 
 /**
- * JWT token payload structure for driver authentication
+ * JWT token payload structure for authentication
  */
-export interface DriverTokenPayload {
-  driverId: string;
-  vehicleId: string | null;
-  role: "main" | "substitute";
-  phoneNumber: string;
-  companyId: string;
+export interface AuthTokenPayload {
+  id: string;
+  type: "systemUser" | "driver";
+  companyId?: string;
+  vehicleId?: string | null;
+  role?: string;
+  phoneNumber?: string;
 }
 
 /**
@@ -20,27 +21,17 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 const JWT_ISSUER = "fleet-management";
 
 /**
- * Generate JWT token for driver
+ * Generate JWT token
  *
- * @param payload - Driver token payload containing driverId, vehicleId, role, phoneNumber, and companyId
+ * @param payload - Token payload
  * @returns JWT token string
  */
-export function generateDriverToken(payload: DriverTokenPayload): string {
-  return jwt.sign(
-    {
-      driverId: payload.driverId,
-      vehicleId: payload.vehicleId,
-      role: payload.role,
-      phoneNumber: payload.phoneNumber,
-      companyId: payload.companyId,
-    },
-    JWT_SECRET,
-    {
-      expiresIn: JWT_EXPIRES_IN,
-      issuer: JWT_ISSUER,
-      audience: "fleet-management-mobile",
-    } as jwt.SignOptions
-  );
+export function generateToken(payload: AuthTokenPayload): string {
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
+    issuer: JWT_ISSUER,
+    audience: "fleet-management",
+  } as jwt.SignOptions);
 }
 
 /**
@@ -50,12 +41,12 @@ export function generateDriverToken(payload: DriverTokenPayload): string {
  * @returns Decoded token payload
  * @throws Error if token is invalid or expired
  */
-export function verifyDriverToken(token: string): DriverTokenPayload {
+export function verifyToken(token: string): AuthTokenPayload {
   try {
     const decoded = jwt.verify(token, JWT_SECRET, {
       issuer: JWT_ISSUER,
-      audience: "fleet-management-mobile",
-    }) as DriverTokenPayload;
+      audience: "fleet-management",
+    }) as AuthTokenPayload;
 
     return decoded;
   } catch (error) {
