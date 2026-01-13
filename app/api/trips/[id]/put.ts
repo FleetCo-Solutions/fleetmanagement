@@ -3,7 +3,7 @@ import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
 import { eq, and, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { extractTokenFromHeader, verifyDriverToken } from "@/lib/auth/jwt";
+import { extractTokenFromHeader, verifyToken } from "@/lib/auth/jwt";
 
 /**
  * Trip update request body
@@ -68,9 +68,9 @@ export async function putTrip(request: NextRequest, id: string) {
     if (token) {
       try {
         // Verify driver token and extract companyId and driverId
-        const payload = verifyDriverToken(token);
+        const payload = verifyToken(token);
         companyId = payload.companyId || null;
-        driverId = payload.driverId || null;
+        driverId = payload.id || null;
       } catch (error) {
         // Token verification failed
         return NextResponse.json(
@@ -105,45 +105,53 @@ export async function putTrip(request: NextRequest, id: string) {
     // Validate location coordinates if provided
     const validateCoordinates = (loc: any, locName: string) => {
       if (!loc) return null;
-      
+
       const lat = loc.latitude;
       const lon = loc.longitude;
-      
-      if (typeof lat !== 'number' || typeof lon !== 'number') {
-        console.warn(`${locName}: Invalid coordinate types - latitude: ${typeof lat}, longitude: ${typeof lon}`);
+
+      if (typeof lat !== "number" || typeof lon !== "number") {
+        console.warn(
+          `${locName}: Invalid coordinate types - latitude: ${typeof lat}, longitude: ${typeof lon}`
+        );
         return null;
       }
-      
+
       // Validate coordinate ranges
       if (lat < -90 || lat > 90) {
         console.warn(`${locName}: Latitude ${lat} out of range [-90, 90]`);
         return null;
       }
-      
+
       if (lon < -180 || lon > 180) {
         console.warn(`${locName}: Longitude ${lon} out of range [-180, 180]`);
         return null;
       }
-      
+
       return {
         latitude: lat,
         longitude: lon,
-        address: loc.address || `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+        address: loc.address || `${lat.toFixed(6)}, ${lon.toFixed(6)}`,
       };
     };
 
     // Validate and normalize coordinates if present
     if (body.actualStartLocation) {
-      const validated = validateCoordinates(body.actualStartLocation, 'actualStartLocation');
+      const validated = validateCoordinates(
+        body.actualStartLocation,
+        "actualStartLocation"
+      );
       if (validated) {
         body.actualStartLocation = validated;
       } else {
         body.actualStartLocation = undefined;
       }
     }
-    
+
     if (body.actualEndLocation) {
-      const validated = validateCoordinates(body.actualEndLocation, 'actualEndLocation');
+      const validated = validateCoordinates(
+        body.actualEndLocation,
+        "actualEndLocation"
+      );
       if (validated) {
         body.actualEndLocation = validated;
       } else {

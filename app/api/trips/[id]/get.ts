@@ -3,7 +3,7 @@ import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
 import { eq, and, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { extractTokenFromHeader, verifyDriverToken } from "@/lib/auth/jwt";
+import { extractTokenFromHeader, verifyToken } from "@/lib/auth/jwt";
 
 export async function getTripById(request: NextRequest, id: string) {
   const date = new Date();
@@ -18,9 +18,9 @@ export async function getTripById(request: NextRequest, id: string) {
     if (token) {
       try {
         // Verify driver token and extract companyId and driverId
-        const payload = verifyDriverToken(token);
+        const payload = verifyToken(token);
         companyId = payload.companyId || null;
-        driverId = payload.driverId || null;
+        driverId = payload.id || null;
       } catch (error) {
         // Token verification failed
         return NextResponse.json(
