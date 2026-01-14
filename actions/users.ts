@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 export async function getUsers(): Promise<IUsers> {
   try {
     const headersList = await headers();
-    const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/users`, {
+    const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/users/usersByCompanyId`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

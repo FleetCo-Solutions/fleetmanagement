@@ -3,7 +3,7 @@ import { verifyToken, extractTokenFromHeader } from "./jwt";
 import { NextRequest } from "next/server";
 
 export interface AuthenticatedUser {
-  id: string;
+  id?: string;
   companyId: string;
   role?: string;
   type: "user" | "driver" | "systemUser";
@@ -20,9 +20,8 @@ export interface AuthenticatedError {
 export async function getAuthenticatedUser(request: NextRequest): Promise<AuthenticatedUser | AuthenticatedError | null> {
   // 1. Check for Web Session (Cookies)
   const session = await auth();
-  if (session?.user?.companyId && session.user.id) {
+  if (session?.user?.companyId ) {
     return {
-      id: session.user.id,
       companyId: session.user.companyId,
       type: "user",
     };
