@@ -87,6 +87,11 @@ export const CreateCompanyRequestSchema = z.object({
 });
 
 /**
+ * Update company request schema
+ */
+export const UpdateCompanyRequestSchema = CreateCompanyRequestSchema.partial();
+
+/**
  * Company response schema
  */
 export const CompanyResponseSchema = z.object({

@@ -118,7 +118,8 @@ export const CreateUserRequestSchema = z.object({
     .optional()
     .openapi({ description: "Password (optional, defaults to Welcome@123)" }),
   status: UserStatusEnum.optional().openapi({
-    description: "User status (defaults to active)",
+    description:
+      "User status (currently ignored by backend, defaults to active)",
   }),
 });
 
@@ -137,6 +138,17 @@ export const CreateAdminUserRequestSchema = z.object({
  * Update user request schema
  */
 export const UpdateUserRequestSchema = CreateUserRequestSchema.partial();
+
+/**
+ * Update system user request schema
+ */
+export const UpdateSystemUserRequestSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  status: z.enum(["active", "inactive", "suspended"]).optional(),
+});
 
 /**
  * Users list response schema

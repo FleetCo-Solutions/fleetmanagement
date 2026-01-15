@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     const user = await getAuthenticatedUser(request);
+    const body = await request.json();
     if (!user) {
         return NextResponse.json(
             { timestamp: new Date(), message: "Unauthorized Please Login" },
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
         );
     }
     if ((user as AuthenticatedUser).companyId) {
-        return postUser((user as AuthenticatedUser).companyId, request);
+        return postUser((user as AuthenticatedUser).companyId, body);
     }
     return NextResponse.json(
         { timestamp: new Date(), message: `Bad Request` },

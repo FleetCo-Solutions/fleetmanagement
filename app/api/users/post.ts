@@ -1,4 +1,3 @@
-import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { users } from "@/app/db/schema";
 import { sendUserCredentialsEmail } from "@/app/lib/mail";
@@ -14,12 +13,8 @@ export interface IPostUser {
   status?: "active" | "inactive" | "suspended";
 }
 
-export default async function postUser(companyId: string, request: Request) {
+export default async function postUser(companyId: string, body: IPostUser) {
   try {
-
-
-    const body = (await request.json()) as IPostUser;
-
     if (!body.firstName || !body.lastName || !body.email || !body.phone) {
       return NextResponse.json(
         {
@@ -48,7 +43,7 @@ export default async function postUser(companyId: string, request: Request) {
         email: body.email,
         passwordHash: passwordToStore,
         companyId: companyId,
-        status: body.status || "active",
+        status: "active",
       })
       .returning();
 

@@ -19,6 +19,15 @@ export async function deleteCompany(id: string){
                 { status: 200 }
             );
         }
+        if(existing.length === 0){
+            return NextResponse.json(
+                {
+                    timestamp: date,
+                    message: "Company Not Found",
+                },
+                { status: 404 }
+            );
+        }
         return NextResponse.json(
             {
                 timestamp: date,
