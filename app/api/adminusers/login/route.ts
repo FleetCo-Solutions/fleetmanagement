@@ -1,3 +1,6 @@
+import { NextRequest } from "next/server";
 import { loginAdmin } from "./post";
 
-export const POST = loginAdmin;
+export async function POST(request: NextRequest) {
+  return loginAdmin(request);
+}

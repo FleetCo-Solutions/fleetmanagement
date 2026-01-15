@@ -1,49 +1,26 @@
 import { db } from "@/app/db";
 import { drivers, trips } from "@/app/db/schema";
-import { eq, or } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateToken } from "@/lib/auth/jwt";
 
-/**
- * Driver login request body
- */
 interface DriverLoginRequest {
   phoneNumber: string;
   password: string;
 }
-
-/**
- * Driver login response
- */
 interface DriverLoginResponse {
   success: boolean;
   token?: string;
   driver?: {
     id: string;
-    firstName: string;
-    lastName: string;
+    name: string;
     phoneNumber: string;
-    vehicleId: string | null;
-    vehicleName: string | null;
+    companyId: string
     role: "main" | "substitute";
-    assignedTrips: Array<{
-      id: string;
-      vehicleId: string | null;
-      startLocation: string | null;
-      endLocation: string | null;
-      startTime: string;
-      status: string;
-    }>;
   };
   message?: string;
 }
 
-/**
- * Handle driver login with phone number and password
- *
- * @param request - Next.js request object
- * @returns JSON response with JWT token and driver profile
- */
 export async function loginDriver(
   request: NextRequest
 ): Promise<NextResponse<DriverLoginResponse>> {
@@ -61,16 +38,15 @@ export async function loginDriver(
       );
     }
 
-    // Query driver by phone number with vehicle relation
-    const driverData = await db.query.drivers.findFirst({
-      where: eq(drivers.phone, body.phoneNumber),
-      with: {
-        vehicle: true,
-      },
-    });
+    const [driver] = await db
+      .select()
+      .from(drivers)
+      .where(
+        and(eq(drivers.phone, body.phoneNumber), isNull(drivers.deletedAt))
+      )
+      .limit(1);
 
-    // Check if driver exists
-    if (!driverData) {
+    if (!driver) {
       return NextResponse.json(
         {
           success: false,
@@ -80,100 +56,60 @@ export async function loginDriver(
       );
     }
 
-    // Check driver status
-    if (driverData.status !== "active") {
+    if (driver.status !== "active") {
       return NextResponse.json(
         {
           success: false,
-          message: `Driver account is ${driverData.status}. Please contact administrator.`,
-        },
-        { status: 403 }
-      );
-    }
-
-    // Verify password
-    // TODO: Implement proper password hashing (bcrypt) in future
-    // Currently passwords are stored as plain text for development
-    if (driverData.passwordHash !== body.password) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid phone number or password",
+          message: `Driver account is ${driver.status}. Please contact administrator.`,
         },
         { status: 401 }
       );
     }
 
-    // Get assigned trips (scheduled or in_progress)
-    const assignedTripsData = await db.query.trips.findMany({
-      where: or(
-        eq(trips.mainDriverId, driverData.id),
-        eq(trips.substituteDriverId, driverData.id)
-      ),
-      columns: {
-        id: true,
-        vehicleId: true,
-        startLocation: true,
-        endLocation: true,
-        startTime: true,
-        status: true,
-      },
-    });
-
-    // Filter by status (scheduled or in_progress)
-    const assignedTrips = assignedTripsData.filter(
-      (trip) => trip.status === "scheduled" || trip.status === "in_progress"
-    );
+    if (driver.passwordHash !== body.password) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid phone number or password",
+        },
+        { status: 400 }
+      );
+    }
 
     // Update last login timestamp
     await db
       .update(drivers)
       .set({ lastLogin: new Date() })
-      .where(eq(drivers.id, driverData.id));
+      .where(eq(drivers.id, driver.id));
 
     // Generate JWT token
-    // Ensure role is not null (default to 'substitute' if null)
-    const driverRole: "main" | "substitute" = driverData.role || "substitute";
     const token = generateToken({
-      id: driverData.id,
+      id: driver.id,
       type: "driver",
-      companyId: driverData.companyId || "",
-      vehicleId: driverData.vehicleId,
-      role: driverRole,
-      phoneNumber: driverData.phone,
+      companyId: driver.companyId!,
+      phoneNumber: driver.phone,
     });
 
-    // Return success response with token and driver profile
     return NextResponse.json(
       {
+        timestamp: new Date(),
         success: true,
         token,
         driver: {
-          id: driverData.id,
-          firstName: driverData.firstName,
-          lastName: driverData.lastName,
-          phoneNumber: driverData.phone,
-          vehicleId: driverData.vehicleId,
-          vehicleName: driverData.vehicle?.registrationNumber || null,
-          role: driverRole,
-          assignedTrips: assignedTrips.map((trip) => ({
-            id: trip.id,
-            vehicleId: trip.vehicleId,
-            startLocation: trip.startLocation,
-            endLocation: trip.endLocation,
-            startTime: trip.startTime.toISOString(),
-            status: trip.status,
-          })),
+          id: driver.id,
+          name: driver.firstName + " " + driver.lastName,
+          phoneNumber: driver.phone,
+          role: driver.role!,
+          companyId: driver.companyId!,
         },
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Driver login error:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Internal server error",
+        message: "Internal server error: " + (error as Error).message,
       },
       { status: 500 }
     );

@@ -7,9 +7,11 @@ export async function deleteTrip(id: string, companyId: string) {
   const date = new Date();
   try {
     // Verify trip belongs to company
-    const existing = await db.query.trips.findFirst({
-      where: and(eq(trips.id, id), eq(trips.companyId, companyId)),
-    });
+    const [existing] = await db
+      .update(trips)
+      .set({ deletedAt: date })
+      .where(and(eq(trips.id, id), eq(trips.companyId, companyId)))
+      .returning();
 
     if (!existing) {
       return NextResponse.json(
@@ -21,16 +23,11 @@ export async function deleteTrip(id: string, companyId: string) {
       );
     }
 
-    const deletedTrip = await db
-      .delete(trips)
-      .where(eq(trips.id, id))
-      .returning();
-
     return NextResponse.json(
       {
         timestamp: date,
         message: "Trip deleted successfully",
-        dto: { content: deletedTrip[0] },
+        dto: existing,
       },
       { status: 200 }
     );

@@ -1,14 +1,14 @@
 import { getAuthenticatedUser } from "@/lib/auth/utils";
 import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function getTrips(companyId: string) {
   const date = new Date();
   try {
     const allTrips = await db.query.trips.findMany({
-      where: eq(trips.companyId, companyId),
+      where: and(eq(trips.companyId, companyId), isNull(trips.deletedAt)),
       with: {
         vehicle: true,
         mainDriver: true,

@@ -1,28 +1,21 @@
 import { db } from "@/app/db";
 import { systemUsers } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateToken } from "@/lib/auth/jwt";
 import bcrypt from "bcryptjs";
 
-/**
- * Admin login request body
- */
 interface AdminLoginRequest {
   email: string;
   password: string;
 }
 
-/**
- * Admin login response
- */
 interface AdminLoginResponse {
   success: boolean;
   token?: string;
   user?: {
     id: string;
-    firstName: string;
-    lastName: string;
+    name: string;
     email: string;
     role: string;
     department: string | null;
@@ -30,12 +23,6 @@ interface AdminLoginResponse {
   message?: string;
 }
 
-/**
- * Handle admin login with email and password
- *
- * @param request - Next.js request object
- * @returns JSON response with JWT token and admin profile
- */
 export async function loginAdmin(
   request: NextRequest
 ): Promise<NextResponse<AdminLoginResponse>> {
@@ -54,11 +41,14 @@ export async function loginAdmin(
     }
 
     // Query system user by email
-    const userData = await db.query.systemUsers.findFirst({
-      where: eq(systemUsers.email, body.email),
-    });
+    const [userData] = await db
+      .select()
+      .from(systemUsers)
+      .where(
+        and(eq(systemUsers.email, body.email), isNull(systemUsers.deletedAt))
+      )
+      .limit(1);
 
-    // Check if user exists
     if (!userData) {
       return NextResponse.json(
         {
@@ -69,7 +59,6 @@ export async function loginAdmin(
       );
     }
 
-    // Check user status
     if (userData.status !== "active") {
       return NextResponse.json(
         {
@@ -80,9 +69,11 @@ export async function loginAdmin(
       );
     }
 
-    // Verify password
-    // TODO: Implement proper password hashing (bcrypt) in future
-    const isValidPassword = await bcrypt.compare(body.password, userData.passwordHash);
+    const isValidPassword = await bcrypt.compare(
+      body.password,
+      userData.passwordHash
+    );
+
     if (!isValidPassword) {
       return NextResponse.json(
         {
@@ -93,28 +84,24 @@ export async function loginAdmin(
       );
     }
 
-    // Update last login timestamp
     await db
       .update(systemUsers)
       .set({ lastLogin: new Date() })
       .where(eq(systemUsers.id, userData.id));
 
-    // Generate JWT token
     const token = generateToken({
       id: userData.id,
       type: "systemUser",
       role: userData.role,
     });
 
-    // Return success response with token and user profile
     return NextResponse.json(
       {
         success: true,
         token,
         user: {
           id: userData.id,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
+          name: userData.firstName + " " + userData.lastName,
           email: userData.email,
           role: userData.role,
           department: userData.department,
@@ -123,11 +110,10 @@ export async function loginAdmin(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Admin login error:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Internal server error",
+        message: "Internal server error:" + (error as Error).message,
       },
       { status: 500 }
     );

@@ -1,11 +1,12 @@
 import { db } from "@/app/db";
 import { systemUsers } from "@/app/db/schema";
+import { isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function getSystemUsers() {
   try {
     const date = new Date();
-    const allSystemUsers = await db.select().from(systemUsers);
+    const allSystemUsers = await db.select().from(systemUsers).where(isNull(systemUsers.deletedAt));
     return NextResponse.json(
       {
         timestamp: date,
