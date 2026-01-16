@@ -1,7 +1,7 @@
 import { db } from "@/app/db";
-import { companies } from "@/app/db/schema";
+import { companies, users } from "@/app/db/schema";
 import { NextRequest, NextResponse } from "next/server";
-import postUser from "../users/post";
+import { sendUserCredentialsEmail } from "@/app/lib/mail";
 
 export async function postCompany(request: NextRequest) {
   try {
@@ -20,12 +20,25 @@ export async function postCompany(request: NextRequest) {
         })
         .returning();
 
-      await postUser(company.id, {
-        firstName: body.contactPerson,
-        lastName: "",
-        phone: body.contactPhone,
-        email: body.contactEmail,
-      });
+      const [adminuser] = await tx
+        .insert(users)
+        .values({
+          firstName: body.contactPerson,
+          lastName: "",
+          phone: body.contactPhone,
+          email: body.contactEmail,
+          passwordHash: "Welcome@123",
+          companyId: company.id,
+        })
+        .returning();
+
+      if (adminuser) {
+        await sendUserCredentialsEmail({
+          to: adminuser.email,
+          username: adminuser.email,
+          password: "Welcome@123",
+        });
+      }
       return company;
     });
     return NextResponse.json(
