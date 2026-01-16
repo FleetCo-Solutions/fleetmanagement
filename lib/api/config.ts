@@ -14,9 +14,28 @@ export const IOT_BACKEND_URL =
 /**
  * IoT Backend WebSocket URL
  * Can be overridden via NEXT_PUBLIC_IOT_WEBSOCKET_URL environment variable
+ * For production, uses wss:// (secure WebSocket) matching the HTTPS backend URL
+ * 
+ * Defaults to production secure WebSocket, falls back to localhost for development
  */
-export const IOT_WEBSOCKET_URL =
-  process.env.NEXT_PUBLIC_IOT_WEBSOCKET_URL || 'ws://localhost:3002/ws';
+function getWebSocketUrl(): string {
+  // Use environment variable if provided
+  if (process.env.NEXT_PUBLIC_IOT_WEBSOCKET_URL) {
+    return process.env.NEXT_PUBLIC_IOT_WEBSOCKET_URL;
+  }
+  
+  // In browser, detect if we're on HTTPS and use secure WebSocket
+  if (typeof window !== 'undefined') {
+    return window.location.protocol === 'https:'
+      ? 'wss://coordinates.fleetcotelematics.com/ws'
+      : 'ws://localhost:3002/ws';
+  }
+  
+  // Server-side: default to production
+  return 'wss://coordinates.fleetcotelematics.com/ws';
+}
+
+export const IOT_WEBSOCKET_URL = getWebSocketUrl();
 
 /**
  * API request timeout in milliseconds
