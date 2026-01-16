@@ -66,10 +66,22 @@ const VehicleTracker = forwardRef<VehicleTrackerRef, VehicleTrackerProps>(
   // State to hold vehicles with real-time updates
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles)
 
-  // Update vehicles when initial data loads 
+  // Update vehicles when initial data loads or when new vehicles are added
+  // Only update if initialVehicles actually changed to prevent unnecessary re-renders
   useEffect(() => {
-    if (initialVehicles.length > 0 || vehicles.length === 0) {
+    // Only update if:
+    // 1. Initial load (vehicles.length === 0) OR
+    // 2. Initial vehicles changed (different vehicle IDs or new vehicles added)
+    const hasChanged = vehicles.length === 0 || 
+      initialVehicles.length !== vehicles.length ||
+      initialVehicles.some((v, idx) => !vehicles[idx] || vehicles[idx].id !== v.id)
+
+    if (hasChanged && initialVehicles.length > 0) {
       setVehicles(initialVehicles)
+    } else if (initialVehicles.length === 0 && vehicles.length > 0) {
+      // If initialVehicles becomes empty, keep current vehicles (might be from WebSocket)
+      // Only clear if we're sure we want to reset
+      // setVehicles([])
     }
   }, [initialVehicles])
 

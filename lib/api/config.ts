@@ -8,7 +8,8 @@
  * Can be overridden via NEXT_PUBLIC_IOT_BACKEND_URL environment variable
  */
 export const IOT_BACKEND_URL =
-  process.env.NEXT_PUBLIC_IOT_BACKEND_URL || 'http://localhost:3001';
+  process.env.NEXT_PUBLIC_IOT_BACKEND_URL ||
+  'https://coordinates.fleetcotelematics.com';
 
 /**
  * IoT Backend WebSocket URL

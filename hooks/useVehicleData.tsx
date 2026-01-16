@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Vehicle, Trip } from '@/app/types/vehicle';
 
 interface UseVehicleDataReturn {
@@ -14,11 +14,15 @@ export function useVehicleData(): UseVehicleDataReturn {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isInitialLoadRef = useRef(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async (isInitial = false) => {
       try {
-        setIsLoading(true);
+        // Only set loading state on initial load to prevent map reload
+        if (isInitial) {
+          setIsLoading(true);
+        }
         setError(null);
 
         const vehiclesResponse = await fetch('/api/vehicle-tracking?action=vehicles');
@@ -61,15 +65,23 @@ export function useVehicleData(): UseVehicleDataReturn {
         setVehicles([]);
         setTrips([]);
       } finally {
-        setIsLoading(false);
+        // Only set loading to false on initial load
+        if (isInitial) {
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchData();
+    // Initial load
+    const isInitial = isInitialLoadRef.current;
+    if (isInitial) {
+      isInitialLoadRef.current = false;
+    }
+    fetchData(isInitial);
     
-    // Auto-refresh every 30 seconds for real-time updates
+    // Auto-refresh every 30 seconds for real-time updates (without showing loading state)
     const interval = setInterval(() => {
-      fetchData();
+      fetchData(false);
     }, 30000);
 
     return () => clearInterval(interval);
