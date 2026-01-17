@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
-import { SingleItemResponseSchema, SuccessResponseSchema, ErrorResponseSchema, UnauthorizedResponseSchema } from "./shared.schemas";
+import {
+  SingleItemResponseSchema,
+  SuccessResponseSchema,
+  ErrorResponseSchema,
+  UnauthorizedResponseSchema,
+} from "./shared.schemas";
 
 extendZodWithOpenApi(z);
 
@@ -8,8 +13,17 @@ extendZodWithOpenApi(z);
  * Login request schema
  */
 export const LoginRequestSchema = z.object({
-  username: z.string().email().openapi({ description: "User email address", example: "user@example.com" }),
-  password: z.string().min(1).openapi({ description: "User password", example: "password123" }),
+  username: z
+    .string()
+    .email()
+    .openapi({
+      description: "User email address",
+      example: "user@example.com",
+    }),
+  password: z
+    .string()
+    .min(1)
+    .openapi({ description: "User password", example: "password123" }),
 });
 
 /**
@@ -34,25 +48,38 @@ export const LoginResponseSchema = SingleItemResponseSchema(
  */
 export const DriverLoginResponseSchema = z.object({
   success: z.boolean().openapi({ description: "Success flag" }),
-  token: z.string().optional().openapi({ description: "JWT token for authenticated driver (only in login response)" }),
-  driver: z.object({
-    id: z.string().uuid(),
-    firstName: z.string(),
-    lastName: z.string(),
-    phoneNumber: z.string(),
-    vehicleId: z.string().uuid().nullable(),
-    vehicleName: z.string().nullable(),
-    role: z.enum(["main", "substitute"]),
-    assignedTrips: z.array(z.object({
+  token: z
+    .string()
+    .optional()
+    .openapi({
+      description:
+        "JWT token for authenticated driver (only in login response)",
+    }),
+  driver: z
+    .object({
       id: z.string().uuid(),
+      firstName: z.string(),
+      lastName: z.string(),
+      phoneNumber: z.string(),
       vehicleId: z.string().uuid().nullable(),
-      startLocation: z.string().nullable(),
-      endLocation: z.string().nullable(),
-      startTime: z.string().datetime(),
-      status: z.string(),
-    })),
-  }).optional(),
-  message: z.string().optional().openapi({ description: "Error message if operation failed" }),
+      vehicleName: z.string().nullable(),
+      role: z.enum(["main", "substitute"]),
+      assignedTrips: z.array(
+        z.object({
+          id: z.string().uuid(),
+          vehicleId: z.string().uuid().nullable(),
+          startLocation: z.string().nullable(),
+          endLocation: z.string().nullable(),
+          startTime: z.string().datetime(),
+          status: z.string(),
+        })
+      ),
+    })
+    .optional(),
+  message: z
+    .string()
+    .optional()
+    .openapi({ description: "Error message if operation failed" }),
 });
 
 /**
@@ -60,16 +87,24 @@ export const DriverLoginResponseSchema = z.object({
  */
 export const AdminLoginResponseSchema = z.object({
   success: z.boolean().openapi({ description: "Success flag" }),
-  token: z.string().optional().openapi({ description: "JWT token for authenticated admin" }),
-  user: z.object({
-    id: z.string().uuid(),
-    firstName: z.string(),
-    lastName: z.string(),
-    email: z.string().email(),
-    role: z.string(),
-    department: z.string().nullable(),
-  }).optional(),
-  message: z.string().optional().openapi({ description: "Error message if operation failed" }),
+  token: z
+    .string()
+    .optional()
+    .openapi({ description: "JWT token for authenticated admin" }),
+  user: z
+    .object({
+      id: z.string().uuid(),
+      firstName: z.string(),
+      lastName: z.string(),
+      email: z.string().email(),
+      role: z.string(),
+      department: z.string().nullable(),
+    })
+    .optional(),
+  message: z
+    .string()
+    .optional()
+    .openapi({ description: "Error message if operation failed" }),
 });
 
 /**
@@ -78,14 +113,21 @@ export const AdminLoginResponseSchema = z.object({
 export const DriverVerifyResponseSchema = z.object({
   success: z.boolean().openapi({ description: "Success flag" }),
   valid: z.boolean().openapi({ description: "Whether the token is valid" }),
-  payload: z.object({
-    id: z.string().uuid().openapi({ description: "User or Driver ID" }),
-    vehicleId: z.string().uuid().nullable(),
-    role: z.string().nullable(),
-    phoneNumber: z.string().nullable(),
-    type: z.enum(["driver", "systemUser"]).openapi({ description: "Token type" }),
-  }).optional(),
-  message: z.string().optional().openapi({ description: "Error message if verification failed" }),
+  payload: z
+    .object({
+      id: z.string().uuid().openapi({ description: "User or Driver ID" }),
+      vehicleId: z.string().uuid().nullable(),
+      role: z.string().nullable(),
+      phoneNumber: z.string().nullable(),
+      type: z
+        .enum(["driver", "systemUser"])
+        .openapi({ description: "Token type" }),
+    })
+    .optional(),
+  message: z
+    .string()
+    .optional()
+    .openapi({ description: "Error message if verification failed" }),
 });
 
 /**
@@ -94,29 +136,77 @@ export const DriverVerifyResponseSchema = z.object({
 export const ChangePasswordRequestSchema = z.object({
   userId: z.string().uuid().openapi({ description: "User ID" }),
   oldPassword: z.string().min(1).openapi({ description: "Current password" }),
-  password: z.string().min(8).openapi({ description: "New password (min 8 characters)" }),
+  password: z
+    .string()
+    .min(8)
+    .openapi({ description: "New password (min 8 characters)" }),
 });
 
 /**
  * Forget password request schema
  */
+/**
+ * Forget password request schema
+ */
 export const ForgetPasswordRequestSchema = z.object({
-  email: z.string().email().openapi({ description: "User email address" }),
+  email: z
+    .string()
+    .email()
+    .optional()
+    .openapi({
+      description: "User email address (required if phone is not provided)",
+    }),
+  phone: z
+    .string()
+    .optional()
+    .openapi({
+      description: "Driver phone number (required if email is not provided)",
+    }),
 });
 
 /**
- * Reset password request schema
+ * Forget password system user request schema
+ */
+export const ForgetPasswordSystemUserRequestSchema = z.object({
+  email: z
+    .string()
+    .email()
+    .openapi({ description: "System user email address" }),
+});
+
+/**
+ * Reset password request schema (Legacy PATCH)
  */
 export const ResetPasswordRequestSchema = z.object({
   email: z.string().email().openapi({ description: "User email address" }),
-  newPassword: z.string().min(8).openapi({ description: "New password (min 8 characters)" }),
+  newPassword: z
+    .string()
+    .min(8)
+    .openapi({ description: "New password (min 8 characters)" }),
+});
+
+/**
+ * Reset password confirm request schema (New POST)
+ */
+export const ResetPasswordConfirmRequestSchema = z.object({
+  identifier: z.string().openapi({ description: "Email or Phone Number" }),
+  otp: z.string().length(6).openapi({ description: "6-digit OTP code" }),
+  newPassword: z
+    .string()
+    .min(8)
+    .openapi({ description: "New password (min 8 characters)" }),
 });
 
 /**
  * Verify OTP request schema
  */
 export const VerifyOtpRequestSchema = z.object({
-  email: z.string().email(),
+  email: z
+    .string()
+    .email()
+    .optional()
+    .openapi({ description: "User email address" }),
+  phone: z.string().optional().openapi({ description: "Driver phone number" }),
   otp: z.string().length(6).openapi({ description: "6-digit OTP code" }),
 });
 
@@ -124,27 +214,48 @@ export const VerifyOtpRequestSchema = z.object({
  * Driver login request schema
  */
 export const DriverLoginRequestSchema = z.object({
-  phoneNumber: z.string().min(1).openapi({ description: "Driver phone number", example: "255783845395" }),
-  password: z.string().min(1).openapi({ description: "Driver password", example: "Welcome@123" }),
+  phoneNumber: z
+    .string()
+    .min(1)
+    .openapi({ description: "Driver phone number", example: "255783845395" }),
+  password: z
+    .string()
+    .min(1)
+    .openapi({ description: "Driver password", example: "Welcome@123" }),
 });
 
 /**
  * Admin login request schema
  */
 export const AdminLoginRequestSchema = z.object({
-  email: z.string().email().openapi({ description: "Admin email address", example: "admin@fleetco.com" }),
-  password: z.string().min(1).openapi({ description: "Admin password", example: "password123" }),
+  email: z
+    .string()
+    .email()
+    .openapi({
+      description: "Admin email address",
+      example: "admin@fleetco.com",
+    }),
+  password: z
+    .string()
+    .min(1)
+    .openapi({ description: "Admin password", example: "password123" }),
 });
 
 /**
  * Driver verify request schema (verifies JWT token)
  */
-export const DriverVerifyRequestSchema = z.object({
-  token: z.string().optional().openapi({ 
-    description: "JWT token to verify. Can also be provided in Authorization header as 'Bearer <token>'", 
-    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
-  }),
-}).openapi({ description: "Token can be provided in request body or Authorization header" });
+export const DriverVerifyRequestSchema = z
+  .object({
+    token: z.string().optional().openapi({
+      description:
+        "JWT token to verify. Can also be provided in Authorization header as 'Bearer <token>'",
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    }),
+  })
+  .openapi({
+    description:
+      "Token can be provided in request body or Authorization header",
+  });
 
 /**
  * Validate reset token request schema

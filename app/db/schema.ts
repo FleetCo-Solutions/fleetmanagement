@@ -267,7 +267,11 @@ export const passwordResetOtps = pgTable(
     systemUserId: uuid("system_user_id").references(() => systemUsers.id, {
       onDelete: "cascade",
     }),
-    email: varchar("email", { length: 100 }).notNull(),
+    driverId: uuid("driver_id").references(() => drivers.id, {
+      onDelete: "cascade",
+    }),
+    email: varchar("email", { length: 100 }),
+    phone: varchar("phone", { length: 20 }),
     otp: varchar("otp", { length: 6 }).notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     verified: boolean("verified").default(false).notNull(),
@@ -278,6 +282,7 @@ export const passwordResetOtps = pgTable(
   (table) => {
     return {
       emailIdx: index("otp_email_idx").on(table.email),
+      phoneIdx: index("otp_phone_idx").on(table.phone),
     };
   }
 );

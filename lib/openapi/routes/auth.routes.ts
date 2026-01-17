@@ -4,7 +4,9 @@ import {
   LoginResponseSchema,
   ChangePasswordRequestSchema,
   ForgetPasswordRequestSchema,
+  ForgetPasswordSystemUserRequestSchema,
   ResetPasswordRequestSchema,
+  ResetPasswordConfirmRequestSchema,
   VerifyOtpRequestSchema,
   DriverLoginRequestSchema,
   DriverLoginResponseSchema,
@@ -22,6 +24,8 @@ import {
 import { z } from "zod";
 
 export function registerAuthRoutes(registry: OpenAPIRegistry) {
+  // ... (Login routes remain unchanged) ...
+
   // User Login
   registry.registerPath({
     method: "post",
@@ -125,7 +129,8 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     path: "/api/adminusers/login",
     tags: ["Authentication"],
     summary: "Admin login",
-    description: "Authenticate a system user (admin/staff) with email and password. Returns JWT token and user profile.",
+    description:
+      "Authenticate a system user (admin/staff) with email and password. Returns JWT token and user profile.",
     request: {
       body: {
         content: {
@@ -208,13 +213,14 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     },
   });
 
-  // Forget Password
+  // Forget Password (Company Users & Drivers)
   registry.registerPath({
     method: "post",
     path: "/api/auth/forgetPassword",
     tags: ["Authentication"],
-    summary: "Request password reset",
-    description: "Send password reset email to user",
+    summary: "Request password reset (Company Users & Drivers)",
+    description:
+      "Send password reset OTP via Email (Company Users) or return OTP (Drivers/Dev Mode)",
     request: {
       body: {
         content: {
@@ -226,7 +232,44 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     },
     responses: {
       200: {
-        description: "Reset email sent successfully",
+        description: "OTP generated/sent successfully",
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+              message: z.string(),
+              otp: z
+                .string()
+                .optional()
+                .openapi({
+                  description: "OTP returned in dev mode for drivers",
+                }),
+            }),
+          },
+        },
+      },
+    },
+  });
+
+  // Forget Password (System Users)
+  registry.registerPath({
+    method: "post",
+    path: "/api/auth/forgetPasswordSystemUser",
+    tags: ["Authentication"],
+    summary: "Request password reset (System Users)",
+    description: "Send password reset OTP via Email to system users",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: ForgetPasswordSystemUserRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "OTP sent successfully",
         content: {
           "application/json": {
             schema: SuccessResponseSchema,
@@ -242,7 +285,7 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     path: "/api/auth/verifyOtp",
     tags: ["Authentication"],
     summary: "Verify OTP",
-    description: "Verify one-time password for password reset",
+    description: "Verify one-time password for password reset (Email or Phone)",
     request: {
       body: {
         content: {
@@ -272,14 +315,49 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     },
   });
 
-  // Reset Password
+  // Reset Password Confirm (New)
+  registry.registerPath({
+    method: "post",
+    path: "/api/auth/resetPassword/confirm",
+    tags: ["Authentication"],
+    summary: "Confirm password reset",
+    description: "Finalize password reset using verified OTP and new password",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: ResetPasswordConfirmRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Password reset successfully",
+        content: {
+          "application/json": {
+            schema: SuccessResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid OTP session or password too short",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  // Reset Password (Legacy PATCH - keeping for backward compatibility if needed, or remove if unused)
   registry.registerPath({
     method: "patch",
     path: "/api/auth/resetPassword",
     tags: ["Authentication"],
-    summary: "Reset password",
-    description:
-      "Reset password using verified OTP. OTP must be verified first via /api/auth/verifyOtp.",
+    summary: "Reset password (Legacy)",
+    description: "Reset password using verified OTP (Legacy endpoint)",
     request: {
       body: {
         content: {
@@ -299,15 +377,7 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Bad request - missing fields or no verified OTP found",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-          },
-        },
-      },
-      404: {
-        description: "User not found",
+        description: "Bad request",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

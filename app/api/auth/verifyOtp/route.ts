@@ -5,23 +5,35 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, otp } = await request.json();
+    const { email, phone, otp } = await request.json();
 
-    if (!email || !otp) {
+    if ((!email && !phone) || !otp) {
       return NextResponse.json(
-        { message: "Email and OTP are required" },
+        { message: "Email/Phone and OTP are required" },
         { status: 400 }
       );
     }
 
-    // Find the most recent OTP for this email
-    const otpRecord = await db.query.passwordResetOtps.findFirst({
-      where: and(
+    // Find the most recent OTP for this email or phone
+    let whereClause;
+    if (phone) {
+      whereClause = and(
+        eq(passwordResetOtps.phone, phone),
+        eq(passwordResetOtps.otp, otp),
+        eq(passwordResetOtps.verified, false),
+        gt(passwordResetOtps.expiresAt, new Date())
+      );
+    } else {
+      whereClause = and(
         eq(passwordResetOtps.email, email),
         eq(passwordResetOtps.otp, otp),
         eq(passwordResetOtps.verified, false),
         gt(passwordResetOtps.expiresAt, new Date())
-      ),
+      );
+    }
+
+    const otpRecord = await db.query.passwordResetOtps.findFirst({
+      where: whereClause,
       orderBy: (otps, { desc }) => [desc(otps.createdAt)],
     });
 
@@ -42,6 +54,7 @@ export async function POST(request: NextRequest) {
       message: "OTP verified successfully",
       success: true,
       email: email,
+      phone: phone,
     });
   } catch (error) {
     console.error("OTP verification error:", error);
