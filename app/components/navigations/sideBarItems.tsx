@@ -18,15 +18,11 @@ export const sideBarItems = [
         />
       </svg>
     ),
-    // children: [
-    //   { subItemName: "Real-time Data" },
-    //   { subItemName: "Overview" },
-    //   { subItemName: "Events" },
-    // ],
   },
   {
     itemName: "Asset",
     route: "/asset",
+    permission: "vehicle.read",
     itemIcon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -51,6 +47,7 @@ export const sideBarItems = [
   {
     itemName: "Drivers",
     route: "/drivers",
+    permission: "driver.read",
     itemIcon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -67,15 +64,11 @@ export const sideBarItems = [
         />
       </svg>
     ),
-    // children: [
-    //   { subItemName: "Real-time Data" },
-    //   { subItemName: "Overview" },
-    //   { subItemName: "Events" },
-    // ],
   },
   {
     itemName: "Trips",
     route: "/trips",
+    permission: "trip.read",
     itemIcon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -97,15 +90,11 @@ export const sideBarItems = [
         />
       </svg>
     ),
-    // children: [
-    //   { subItemName: "Real-time Data" },
-    //   { subItemName: "Overview" },
-    //   { subItemName: "Events" },
-    // ],
   },
   {
     itemName: "Fuel",
     route: "/fuel",
+    permission: "maintenance.read",
     itemIcon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -126,6 +115,7 @@ export const sideBarItems = [
   {
     itemName: "Maintenance",
     route: "/maintenance",
+    permission: "maintenance.read",
     itemIcon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -155,6 +145,7 @@ export const sideBarItems = [
   {
     itemName: "User Management",
     route: "/userManagement",
+    permission: "user.read",
     itemIcon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -171,10 +162,5 @@ export const sideBarItems = [
         />
       </svg>
     ),
-    // children: [
-    //   { subItemName: "Users" },
-    //   { subItemName: "Roles" },
-    //   { subItemName: "Permissions" },
-    // ],
   },
 ];

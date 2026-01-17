@@ -15,6 +15,7 @@ import {
 } from "./query";
 import DriverProfileForm from "../components/DriverProfileForm";
 import EmergencyContactForm from "@/app/components/forms/EmergencyContactForm";
+import DriverRolesTab from "../components/DriverRolesTab";
 import { EmergencyContactPayload } from "@/app/types";
 import { toast } from "sonner";
 
@@ -130,7 +131,7 @@ export default function DriverProfile() {
   // ... (historyColumns remain same)
 
   const [activeTab, setActiveTab] = useState<
-    "profile" | "emergency" | "trips" | "vehicle"
+    "profile" | "emergency" | "trips" | "vehicle" | "roles"
   >("profile");
 
   const [isEditing, setIsEditing] = useState(false);
@@ -203,12 +204,18 @@ export default function DriverProfile() {
               { key: "emergency", label: "Emergency Contact" },
               { key: "trips", label: "Trips" },
               { key: "vehicle", label: "Vehicle History" },
+              { key: "roles", label: "Roles & Permissions" },
             ].map((tab) => (
               <button
                 key={tab.key}
                 onClick={() =>
                   setActiveTab(
-                    tab.key as "profile" | "emergency" | "trips" | "vehicle"
+                    tab.key as
+                      | "profile"
+                      | "emergency"
+                      | "trips"
+                      | "vehicle"
+                      | "roles"
                   )
                 }
                 className={`pb-3 px-1 text-lg font-semibold transition-colors ${
@@ -237,7 +244,9 @@ export default function DriverProfile() {
                     // Let's ensure we format it correctly.
                     const payload = {
                       ...data,
+                      id: driverId,
                       licenseExpiry: String(data.licenseExpiry),
+                      alternativePhone: data.alternativePhone || null,
                     };
 
                     toast.promise(updateDriver({ id: driverId, payload }), {
@@ -349,6 +358,10 @@ export default function DriverProfile() {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === "roles" && driverDetails && (
+          <DriverRolesTab driverData={driverDetails.dto} />
         )}
       </div>
     </div>

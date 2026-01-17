@@ -1,27 +1,21 @@
 import { auth } from "@/app/auth";
 import { verifyToken, extractTokenFromHeader } from "./jwt";
 import { NextRequest } from "next/server";
+import { AuthenticatedUser, AuthenticatedError } from "./types";
 
-export interface AuthenticatedUser {
-  id?: string;
-  companyId: string;
-  role?: string;
-  type: "user" | "driver" | "systemUser";
-}
-
-export interface AuthenticatedError {
-  timestamp: Date;
-  message: string;
-}
+export type { AuthenticatedUser, AuthenticatedError };
 
 /**
  * Get the authenticated user from either session (Web) or JWT (Mobile/Admin)
  */
-export async function getAuthenticatedUser(request: NextRequest): Promise<AuthenticatedUser | AuthenticatedError | null> {
+export async function getAuthenticatedUser(
+  request: NextRequest
+): Promise<AuthenticatedUser | AuthenticatedError | null> {
   // 1. Check for Web Session (Cookies)
   const session = await auth();
-  if (session?.user?.companyId ) {
+  if (session?.user?.companyId) {
     return {
+      id: session.user.id,
       companyId: session.user.companyId,
       type: "user",
     };
@@ -31,7 +25,7 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<Authen
   const authHeader = request.headers.get("Authorization");
 
   const token = extractTokenFromHeader(authHeader);
- 
+
   if (token) {
     try {
       const payload = verifyToken(token);

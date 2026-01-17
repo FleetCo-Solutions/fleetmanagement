@@ -4,6 +4,7 @@ import putVehicle from "./put";
 import { AuthenticatedUser, getAuthenticatedUser } from "@/lib/auth/utils";
 import { AuthenticatedError } from "@/lib/auth/utils";
 import { NextResponse } from "next/server";
+import { hasPermission } from "@/lib/rbac/utils";
 
 export async function GET(
   request: NextRequest,
@@ -11,6 +12,9 @@ export async function GET(
 ) {
   const { id } = await params;
   const user = await getAuthenticatedUser(request);
+  const allowed = await hasPermission(user as AuthenticatedUser,
+    "vehicle.read"
+  );
   if (!user) {
     return NextResponse.json(
       { timestamp: new Date(), message: "Unauthorized Please Login" },
@@ -20,6 +24,16 @@ export async function GET(
   if ((user as AuthenticatedError).message) {
     return NextResponse.json(
       { timestamp: new Date(), message: (user as AuthenticatedError).message },
+      { status: 401 }
+    );
+  }
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        timestamp: new Date(),
+        success: false,
+        message: "Forbidden!! Contact Administrator",
+      },
       { status: 401 }
     );
   }
@@ -32,6 +46,9 @@ export async function PUT(
 ) {
   const { id } = await params;
   const user = await getAuthenticatedUser(request);
+  const allowed = await hasPermission(user as AuthenticatedUser,
+    "vehicle.update"
+  );
   if (!user) {
     return NextResponse.json(
       { timestamp: new Date(), message: "Unauthorized Please Login" },
@@ -44,7 +61,17 @@ export async function PUT(
       { status: 401 }
     );
   }
-  if((user as AuthenticatedUser).companyId){
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        timestamp: new Date(),
+        success: false,
+        message: "Forbidden!! Contact Administrator",
+      },
+      { status: 401 }
+    );
+  }
+  if ((user as AuthenticatedUser).companyId) {
     return putVehicle(id, request, (user as AuthenticatedUser).companyId);
   }
   return NextResponse.json(

@@ -3,10 +3,12 @@ import { getUserDetails } from "./get";
 import { editUser } from "./put";
 import { getAuthenticatedUser } from "@/lib/auth/utils";
 import { AuthenticatedError, AuthenticatedUser } from "@/lib/auth/utils";
+import { hasPermission } from "@/lib/rbac/utils";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const user = await getAuthenticatedUser(request);
+    const allowed = await hasPermission(user as AuthenticatedUser, "user.read");
     if (!user) {
         return NextResponse.json(
             { timestamp: new Date(), message: "Unauthorized Please Login" },
@@ -16,6 +18,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if ((user as AuthenticatedError).message) {
         return NextResponse.json(
             { timestamp: new Date(), message: (user as AuthenticatedError).message },
+            { status: 401 }
+        );
+    }
+    if (!allowed) {
+        return NextResponse.json(
+            {
+                timestamp: new Date(),
+                success: false,
+                message: "Forbidden!! Contact Administrator",
+            },
             { status: 401 }
         );
     }
@@ -32,6 +44,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params;
     const body = await request.json();
     const user = await getAuthenticatedUser(request);
+    const allowed = await hasPermission(user as AuthenticatedUser, "user.update");
     if (!user) {
         return NextResponse.json(
             { timestamp: new Date(), message: "Unauthorized Please Login" },
@@ -41,6 +54,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if ((user as AuthenticatedError).message) {
         return NextResponse.json(
             { timestamp: new Date(), message: (user as AuthenticatedError).message },
+            { status: 401 }
+        );
+    }
+    if (!allowed) {
+        return NextResponse.json(
+            {
+                timestamp: new Date(),
+                success: false,
+                message: "Forbidden!! Contact Administrator",
+            },
             { status: 401 }
         );
     }

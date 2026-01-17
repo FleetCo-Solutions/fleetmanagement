@@ -15,6 +15,27 @@
       "when": 1766991413580,
       "tag": "0001_rapid_rhodey",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768400393532,
+      "tag": "0002_talented_viper",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1768540959845,
+      "tag": "0003_perpetual_raider",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1768554140274,
+      "tag": "0004_jittery_bedlam",
+      "breakpoints": true
     }
   ]
 }

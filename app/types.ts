@@ -8,9 +8,8 @@ export interface UserFormData {
   firstName: string;
   lastName: string;
   phone: string | null;
-  // departmentId: number;
-  // roles: number[];
-  // status: "active" | "inactive" | "suspended";
+  roleIds: string[];
+  status?: "active" | "inactive" | "suspended";
   // emergencyContacts?: {
   //   firstName: string;
   //   lastName: string;
@@ -48,6 +47,12 @@ export interface BackendUser {
   createdAt: Date;
   updatedAt: Date | null;
   deletedAt: Date | null;
+  roles?: {
+    role: {
+      id: string;
+      name: string;
+    };
+  }[];
 }
 
 export interface UserDetails {
@@ -61,6 +66,12 @@ export interface UserDetail {
   profile: UserProfile;
   activity: UserActivity;
   emergencyContacts: EmergencyContact[];
+  roles: {
+    role: {
+      id: string;
+      name: string;
+    };
+  }[];
 }
 
 export interface UserActivity {
@@ -91,8 +102,7 @@ export interface IAddUser {
   email: string;
   phone: string | null;
   passwordHash?: string;
-  // roles: number[];
-  // departmentId: number;
+  roleIds?: string[];
 }
 export interface Department {
   id: number;
@@ -162,6 +172,12 @@ export interface DriverData {
   profile: DriverProfile;
   activity: DriverActivity;
   emergencyContacts: EmergencyContact[];
+  roles: {
+    role: {
+      id: string;
+      name: string;
+    };
+  }[];
 }
 
 export interface DriverActivity {
@@ -178,6 +194,10 @@ export interface DriverProfile {
   licenseNumber: string;
   licenseExpiry: string;
   status: "active" | "inactive" | "suspended";
+}
+
+export interface IUpdateDriver extends DriverProfile {
+  roleIds?: string[];
 }
 
 export interface EmergencyContact {
@@ -215,6 +235,10 @@ export interface ProfilePayload {
   email: string;
   phone: string;
   status: "active" | "inactive" | "suspended";
+}
+
+export interface IEditUser extends ProfilePayload {
+  roleIds?: string[];
 }
 
 export interface DriversList {
@@ -308,7 +332,7 @@ export interface VehicleDriver {
   phone: string;
   alternativePhone: string | null;
   licenseNumber: string;
-  licenseExpiry: string; 
+  licenseExpiry: string;
   status: "active" | "inactive" | "suspended";
   passwordHash: string;
   role: "main" | "substitute" | null;

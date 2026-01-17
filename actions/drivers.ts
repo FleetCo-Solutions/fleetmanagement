@@ -1,6 +1,12 @@
 "use server";
 
-import type { IDriver, DriverDetails, DriversList, IndividualDriver } from "@/app/types";
+import type {
+  IDriver,
+  DriverDetails,
+  DriversList,
+  IndividualDriver,
+  IUpdateDriver,
+} from "@/app/types";
 import { headers } from "next/headers";
 
 export interface AddDriverPayload {
@@ -17,16 +23,6 @@ export interface AssignDriverPayload {
   vehicleId: string;
   driverId: string;
   role: "main" | "substitute";
-}
-
-export interface UpdateDriverPayload {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  alternativePhone?: string;
-  licenseNumber: string;
-  licenseExpiry: string;
-  status: "active" | "inactive" | "suspended";
 }
 
 export async function getDrivers(): Promise<IDriver> {
@@ -229,10 +225,7 @@ export async function addDriver(driverData: AddDriverPayload) {
   }
 }
 
-export async function updateDriver(
-  id: string,
-  driverData: UpdateDriverPayload
-) {
+export async function updateDriver(id: string, driverData: IUpdateDriver) {
   try {
     const headersList = await headers();
     const response = await fetch(
@@ -272,7 +265,7 @@ export async function getDriverVehicleHistory(id: string) {
         headers: {
           "Content-Type": "application/json",
           Cookie: headersList.get("cookie") || "",
-        }
+        },
       }
     );
     const result = await response.json();

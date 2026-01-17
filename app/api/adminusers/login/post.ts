@@ -17,8 +17,6 @@ interface AdminLoginResponse {
     id: string;
     name: string;
     email: string;
-    role: string;
-    department: string | null;
   };
   message?: string;
 }
@@ -92,7 +90,6 @@ export async function loginAdmin(
     const token = generateToken({
       id: userData.id,
       type: "systemUser",
-      role: userData.role,
     });
 
     return NextResponse.json(
@@ -103,8 +100,6 @@ export async function loginAdmin(
           id: userData.id,
           name: userData.firstName + " " + userData.lastName,
           email: userData.email,
-          role: userData.role,
-          department: userData.department,
         },
       },
       { status: 200 }

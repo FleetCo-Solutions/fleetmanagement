@@ -1,10 +1,14 @@
-import { getDriverDetails, getDriverVehicleHistory, UpdateDriverPayload } from "@/actions/drivers";
+import { getDriverDetails, getDriverVehicleHistory } from "@/actions/drivers";
 import {
   addEmergencyContact,
   updateEmergencyContact as updateAction,
   deleteEmergencyContact as deleteAction,
 } from "@/actions/emergencyContact";
-import { IndividualDriver, EmergencyContactPayload } from "@/app/types";
+import {
+  IndividualDriver,
+  EmergencyContactPayload,
+  IUpdateDriver,
+} from "@/app/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useDriverDetailsQuery = ({ id }: { id: string }) => {
@@ -76,7 +80,7 @@ export const useUpdateDriver = (driverId?: string) => {
       payload,
     }: {
       id: string;
-      payload: UpdateDriverPayload;
+      payload: IUpdateDriver;
     }) => {
       const { updateDriver } = await import("@/actions/drivers");
       return await updateDriver(id, payload);

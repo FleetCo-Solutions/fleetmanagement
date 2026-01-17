@@ -1,8 +1,7 @@
 import { db } from "@/app/db";
-import { users } from "@/app/db/schema";
+import { users, userRoles } from "@/app/db/schema";
 import { sendUserCredentialsEmail } from "@/app/lib/mail";
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 
 export interface IPostUser {
   firstName: string;
@@ -11,10 +10,12 @@ export interface IPostUser {
   email: string;
   password?: string;
   status?: "active" | "inactive" | "suspended";
+  roleIds?: string[];
 }
 
 export default async function postUser(companyId: string, body: IPostUser) {
   try {
+
     if (!body.firstName || !body.lastName || !body.email || !body.phone) {
       return NextResponse.json(
         {
@@ -26,41 +27,47 @@ export default async function postUser(companyId: string, body: IPostUser) {
     }
 
     const plainPassword = body.password || "Welcome@123";
-    // Using plain text as per previous action logic, or should we hash?
-    // The previous action had hashing commented out.
-    // However, the existing API had hashing.
-    // I will stick to the previous action's logic to avoid breaking changes if they are in migration phase.
-    // But wait, the previous action WAS using plain text.
-    // const hashedPassword = await bcrypt.hash(plainPassword, 10);
     const passwordToStore = plainPassword;
+    
+    const result = await db.transaction(async (tx) => {
+      const [user] = await tx
+        .insert(users)
+        .values({
+          firstName: body.firstName,
+          lastName: body.lastName,
+          phone: body.phone,
+          email: body.email,
+          passwordHash: passwordToStore,
+          companyId: companyId,
+          status: body.status || "active",
+        })
+        .returning();
 
-    const [user] = await db
-      .insert(users)
-      .values({
-        firstName: body.firstName,
-        lastName: body.lastName,
-        phone: body.phone,
-        email: body.email,
-        passwordHash: passwordToStore,
-        companyId: companyId,
-        status: "active",
-      })
-      .returning();
+      if (body.roleIds && body.roleIds.length > 0) {
+        await tx.insert(userRoles).values(
+          body.roleIds.map((roleId) => ({
+            userId: user.id,
+            roleId: roleId,
+          }))
+        );
+      }
 
-    if (user) {
+      return user;
+    });
+
+    if (result) {
       await sendUserCredentialsEmail({
-        to: user.email,
-        username: user.email,
+        to: result.email,
+        username: result.email,
         password: plainPassword,
       });
     }
 
     return NextResponse.json(
-      { message: `User Created Successfully`, dto: user },
+      { message: `User Created Successfully`, dto: result },
       { status: 201 }
     );
   } catch (err: any) {
-    // PostgreSQL error code for unique constraint violation
     if (err.cause?.code === "23505" || err.cause?.constraint) {
       const constraint = err.cause?.constraint || "";
       const detail = err.cause?.detail || "";
@@ -95,7 +102,7 @@ export default async function postUser(companyId: string, body: IPostUser) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to create user:" + (err as Error).message,
+        message: "Failed to create user: " + (err as Error).message,
       },
       { status: 500 }
     );

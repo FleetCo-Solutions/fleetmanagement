@@ -3,10 +3,13 @@ import { getTrips } from "./get";
 import { postTrip } from "./post";
 import { AuthenticatedError, getAuthenticatedUser } from "@/lib/auth/utils";
 import { AuthenticatedUser } from "@/lib/auth/utils";
+import { hasPermission } from "@/lib/rbac/utils";
 
 export async function GET(request: NextRequest) {
   const user = await getAuthenticatedUser(request);
-
+  const allowed = await hasPermission(user as AuthenticatedUser,
+    "trip.read"
+  );
   if (!user) {
     return NextResponse.json(
       { timestamp: new Date(), message: "Unauthorized Please Login" },
@@ -16,6 +19,16 @@ export async function GET(request: NextRequest) {
   if ((user as AuthenticatedError).message) {
     return NextResponse.json(
       { timestamp: new Date(), message: (user as AuthenticatedError).message },
+      { status: 401 }
+    );
+  }
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        timestamp: new Date(),
+        success: false,
+        message: "Forbidden!! Contact Administrator",
+      },
       { status: 401 }
     );
   }
@@ -30,7 +43,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const user = await getAuthenticatedUser(request);
-
+  const allowed = await hasPermission(user as AuthenticatedUser,
+    "trip.create"
+  );
   if (!user) {
     return NextResponse.json(
       { message: "Unauthorized Please Login" },
@@ -41,6 +56,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { message: (user as AuthenticatedError).message },
       { status: 400 }
+    );
+  }
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        timestamp: new Date(),
+        success: false,
+        message: "Forbidden!! Contact Administrator",
+      },
+      { status: 401 }
     );
   }
   if ((user as AuthenticatedUser).companyId) {

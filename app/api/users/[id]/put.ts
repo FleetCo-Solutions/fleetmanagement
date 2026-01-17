@@ -1,14 +1,21 @@
-import { auth } from "@/app/auth";
 import { db } from "@/app/db";
-import { users } from "@/app/db/schema";
+import { users, userRoles } from "@/app/db/schema";
 import { ProfilePayload } from "@/app/types";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function editUser(companyId: string, id: string, userData: ProfilePayload) {
+export interface IEditUser extends ProfilePayload {
+  roleIds?: string[];
+}
+
+export async function editUser(
+  companyId: string,
+  id: string,
+  userData: IEditUser
+) {
   const date = new Date();
   try {
-    // Verify user belongs to company
+    // Verify user belongs to company 
     const existing = await db.query.users.findFirst({
       where: and(eq(users.id, id), eq(users.companyId, companyId)),
     });
@@ -20,24 +27,43 @@ export async function editUser(companyId: string, id: string, userData: ProfileP
       );
     }
 
-    const updatedUser = await db
-      .update(users)
-      .set({
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        phone: userData.phone,
-        status: userData.status,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, id))
-      .returning();
+    const result = await db.transaction(async (tx) => {
+      const [updatedUser] = await tx
+        .update(users)
+        .set({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          phone: userData.phone,
+          status: userData.status,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, id))
+        .returning();
+
+      if (userData.roleIds) {
+        // Delete existing roles
+        await tx.delete(userRoles).where(eq(userRoles.userId, id));
+
+        // Insert new roles
+        if (userData.roleIds.length > 0) {
+          await tx.insert(userRoles).values(
+            userData.roleIds.map((roleId) => ({
+              userId: id,
+              roleId: roleId,
+            }))
+          );
+        }
+      }
+
+      return updatedUser;
+    });
 
     return NextResponse.json(
       {
         timestamp: date,
         message: "User Updated Successfully",
-        dto: updatedUser[0],
+        dto: result,
       },
       { status: 200 }
     );

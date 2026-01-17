@@ -1,18 +1,21 @@
 "use server";
 
-import { IAddUser, ProfilePayload, IUsers, UserDetails } from "@/app/types";
+import { IAddUser, IEditUser, IUsers, UserDetails } from "@/app/types";
 import { headers } from "next/headers";
 
 export async function getUsers(): Promise<IUsers> {
   try {
     const headersList = await headers();
-    const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/users/usersByCompanyId`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: headersList.get("cookie") || "",
-      },
-    });
+    const response = await fetch(
+      `${process.env.LOCAL_BACKENDBASE_URL}/users/usersByCompanyId`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: headersList.get("cookie") || "",
+        },
+      }
+    );
 
     const result = await response.json();
 
@@ -54,31 +57,31 @@ export async function getUserDetails(id: string): Promise<UserDetails> {
 }
 
 export async function addUser(userData: IAddUser) {
-    const headersList = await headers();
-    const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: headersList.get("cookie") || "",
-      },
-      body: JSON.stringify(userData),
-    });
+  const headersList = await headers();
+  const response = await fetch(`${process.env.LOCAL_BACKENDBASE_URL}/users`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: headersList.get("cookie") || "",
+    },
+    body: JSON.stringify(userData),
+  });
 
-    const result = await response.json();
+  const result = await response.json();
 
-    if (!response.ok) {
-      throw new Error(result.message || "Failed to create user");
-    }
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to create user");
+  }
 
-    return {
-      timestamp: new Date(),
-      statusCode: "201",
-      message: result.message,
-      dto: result.dto,
-    };
+  return {
+    timestamp: new Date(),
+    statusCode: "201",
+    message: result.message,
+    dto: result.dto,
+  };
 }
 
-export async function updateUser(id: string, userData: ProfilePayload) {
+export async function updateUser(id: string, userData: IEditUser) {
   try {
     const headersList = await headers();
     const response = await fetch(

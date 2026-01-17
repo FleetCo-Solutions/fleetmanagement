@@ -1,12 +1,17 @@
 "use client";
 import React, { useState } from "react";
-import { useSearchParams} from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useUserByIdQuery } from "../../query";
 import ProfileTab from "./ProfileEditForm";
 import SecurityTab from "./SecurityTab";
 import ActivityTab from "./ActivityTab";
+import UserRolesTab from "./UserRolesTab";
 
-import { useAddEmergencyContact, useUpdateEmergencyContact, useDeleteEmergencyContact } from "../../query";
+import {
+  useAddEmergencyContact,
+  useUpdateEmergencyContact,
+  useDeleteEmergencyContact,
+} from "../../query";
 import EmergencyContactForm from "@/app/components/forms/EmergencyContactForm";
 import { EmergencyContactPayload } from "@/app/types";
 import { toast } from "sonner";
@@ -15,12 +20,16 @@ export default function EditUserPage() {
   const searchParams = useSearchParams();
   const userId = searchParams.get("id");
   const [activeTab, setActiveTab] = useState<
-    "profile" | "security" | "activity" | "emergency"
+    "profile" | "security" | "activity" | "emergency" | "roles"
   >("profile");
-  
-  const { mutateAsync: addEmergencyContact } = useAddEmergencyContact(userId || undefined);
-  const { mutateAsync: updateEmergencyContactMutate } = useUpdateEmergencyContact(userId || undefined);
-  const { mutateAsync: deleteEmergencyContactMutate } = useDeleteEmergencyContact(userId || undefined);
+
+  const { mutateAsync: addEmergencyContact } = useAddEmergencyContact(
+    userId || undefined
+  );
+  const { mutateAsync: updateEmergencyContactMutate } =
+    useUpdateEmergencyContact(userId || undefined);
+  const { mutateAsync: deleteEmergencyContactMutate } =
+    useDeleteEmergencyContact(userId || undefined);
 
   const {
     data: userData,
@@ -39,7 +48,9 @@ export default function EditUserPage() {
   if (isError || !userData) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-red-500">Error loading user data: {error?.message}</p>
+        <p className="text-red-500">
+          Error loading user data: {error?.message}
+        </p>
       </div>
     );
   }
@@ -108,24 +119,38 @@ export default function EditUserPage() {
             >
               Emergency Contact
             </button>
+            <button
+              onClick={() => setActiveTab("roles")}
+              className={`pb-4 px-2 font-medium transition-colors ${
+                activeTab === "roles"
+                  ? "border-b-2 border-[#004953] text-[#004953]"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Roles & Permissions
+            </button>
           </nav>
         </div>
 
         {/* Tab Content */}
         <div className="space-y-6">
           {/* Profile Tab */}
-          {activeTab === "profile" && <ProfileTab userData={userData.dto.profile} />}
+          {activeTab === "profile" && (
+            <ProfileTab userData={userData.dto.profile} />
+          )}
 
           {/* Security Tab */}
-          {activeTab === "security" && <SecurityTab/>}
+          {activeTab === "security" && <SecurityTab />}
 
           {/* Activity Tab */}
-          {activeTab === "activity" && <ActivityTab userData={userData.dto.activity} />}
+          {activeTab === "activity" && (
+            <ActivityTab userData={userData.dto.activity} />
+          )}
 
           {/* Emergency Contact Tab */}
           {activeTab === "emergency" && (
-             <div className="bg-white border border-gray-200 rounded-xl p-10 shadow-sm">
-               <EmergencyContactForm
+            <div className="bg-white border border-gray-200 rounded-xl p-10 shadow-sm">
+              <EmergencyContactForm
                 contacts={userData.dto.emergencyContacts}
                 onSave={async (contacts) => {
                   try {
@@ -133,12 +158,18 @@ export default function EditUserPage() {
 
                     // Handle Updates and Adds
                     for (const contact of contacts) {
-                      if (contact.id && contact.id.length > 10) { // Simple check for real ID
-                        promises.push(updateEmergencyContactMutate({ id: contact.id, payload: contact }));
+                      if (contact.id && contact.id.length > 10) {
+                        // Simple check for real ID
+                        promises.push(
+                          updateEmergencyContactMutate({
+                            id: contact.id,
+                            payload: contact,
+                          })
+                        );
                       } else {
                         const payload: EmergencyContactPayload = {
                           ...contact,
-                          userId: userId || undefined
+                          userId: userId || undefined,
                         };
                         promises.push(addEmergencyContact(payload));
                       }
@@ -158,12 +189,15 @@ export default function EditUserPage() {
                   await toast.promise(deleteEmergencyContactMutate(id), {
                     loading: "Deleting contact...",
                     success: "Contact deleted successfully",
-                    error: "Failed to delete contact"
+                    error: "Failed to delete contact",
                   });
                 }}
               />
-             </div>
+            </div>
           )}
+
+          {/* Roles Tab */}
+          {activeTab === "roles" && <UserRolesTab userData={userData.dto} />}
         </div>
       </div>
     </div>

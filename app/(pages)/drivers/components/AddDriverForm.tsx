@@ -24,17 +24,28 @@ export default function AddDriverForm({
   onCancel: () => void;
   initialValues?: Driver;
 }) {
-  const {mutateAsync: addDriver} = useAddDriver()
-  const {mutateAsync: updateDriverMutation} = useUpdateDriver()
-  const { register, handleSubmit, control, formState: { errors, isSubmitting }, reset, } = useForm<AddDriverFormValues>({
-    defaultValues:{
+  const { mutateAsync: addDriver } = useAddDriver();
+  const { mutateAsync: updateDriverMutation } = useUpdateDriver();
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<AddDriverFormValues>({
+    defaultValues: {
       firstName: initialValues ? initialValues.firstName : "",
       lastName: initialValues ? initialValues.lastName : "",
       phone: initialValues ? initialValues.phone : "",
-      alternativePhone: initialValues ? (initialValues.alternativePhone || "") : "",
+      alternativePhone: initialValues
+        ? initialValues.alternativePhone || ""
+        : "",
       licenseNumber: initialValues ? initialValues.licenseNumber : "",
       licenseExpiry: initialValues ? initialValues.licenseExpiry : "",
-      status: (initialValues ? initialValues.status : "active") as "active" | "inactive" | "suspended",
+      status: (initialValues ? initialValues.status : "active") as
+        | "active"
+        | "inactive"
+        | "suspended",
     },
     mode: "onChange",
   });
@@ -55,18 +66,22 @@ export default function AddDriverForm({
   };
 
   const onSubmit = async (values: AddDriverFormValues) => {
-    console.log(initialValues ? "Update driver payload:" : "Add driver payload:", values);
-    
+    console.log(
+      initialValues ? "Update driver payload:" : "Add driver payload:",
+      values
+    );
+
     if (initialValues?.id) {
       // Update existing driver
       await toast.promise(
         updateDriverMutation({
           id: initialValues.id,
           data: {
+            id: initialValues.id,
             firstName: values.firstName,
             lastName: values.lastName,
             phone: values.phone,
-            alternativePhone: values.alternativePhone,
+            alternativePhone: values.alternativePhone || null,
             licenseNumber: values.licenseNumber,
             licenseExpiry: values.licenseExpiry,
             status: values.status || initialValues.status || "active",
@@ -158,9 +173,7 @@ export default function AddDriverForm({
                   paddingLeft: "50px",
                   paddingTop: "20px",
                   paddingBottom: "20px",
-                  border: errors.phone
-                    ? "1px solid red"
-                    : "1px solid #d1d5db",
+                  border: errors.phone ? "1px solid red" : "1px solid #d1d5db",
                   borderRadius: "0.375rem", // rounded-md
                 }}
                 containerStyle={{
@@ -170,9 +183,7 @@ export default function AddDriverForm({
             )}
           />
           {errors.phone && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.phone.message}
-            </p>
+            <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
           )}
         </div>
         <div>
@@ -259,7 +270,11 @@ export default function AddDriverForm({
           disabled={isSubmitting}
           className="px-4 py-2 text-sm font-medium text-white bg-[#004953] rounded-lg hover:bg-[#014852] disabled:opacity-50"
         >
-          {isSubmitting ? "Saving..." : initialValues ? "Update Driver" : "Save Driver"}
+          {isSubmitting
+            ? "Saving..."
+            : initialValues
+            ? "Update Driver"
+            : "Save Driver"}
         </button>
       </div>
     </form>

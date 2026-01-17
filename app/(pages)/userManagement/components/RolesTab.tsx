@@ -2,79 +2,77 @@
 import React, { useState } from "react";
 import Modal from "@/app/components/Modal";
 import RoleForm from "./RoleForm";
-import { useRolesQuery } from "../query";
-import { Role } from "@/app/types";
+import {
+  useRolesQuery,
+  useAddRole,
+  useUpdateRole,
+  useDeleteRole,
+} from "../query";
+import { toast } from "sonner";
 
 interface RoleFormData {
   name: string;
   description: string;
+  permissionIds: string[];
 }
-
-// interface RoleFormProps {
-//   role: Role | null;
-//   onSave: (roleData: RoleFormData & { id?: number }) => void;
-//   onClose: () => void;
-// }
-
-// // Mock data - replace with actual data from your backend
-// const mockRoles: Role[] = [
-
-// ];
 
 const RolesTab = () => {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [editingRole, setEditingRole] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const { data, isLoading, error } = useRolesQuery();
 
-  console.log(data, isLoading, error);
+  const { data: roles, isLoading, error } = useRolesQuery();
+  const addRoleMutation = useAddRole();
+  const updateRoleMutation = useUpdateRole();
+  const deleteRoleMutation = useDeleteRole();
 
   if (isLoading) {
-    return <div className="text-black/80 font-bold">Loading...</div>;
+    return <div className="text-black/80 font-bold p-6">Loading roles...</div>;
   }
 
   if (error) {
     return (
-      <div className="text-red-600 font-bold">
+      <div className="text-red-600 font-bold p-6">
         Error loading roles: {error.message}
       </div>
     );
   }
 
-  // Get roles from the API response
-  const roles = data?.dto || [];
-
-  const filteredRoles = roles.filter(
-    (role) =>
+  const filteredRoles = (roles || []).filter(
+    (role: any) =>
       role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      role.description.toLowerCase().includes(searchTerm.toLowerCase())
+      role.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddRole = (roleData: RoleFormData & { id?: number }) => {
-    // TODO: Implement add role API call
-    console.log("Add role:", roleData);
-    setShowAddModal(false);
+  const handleAddRole = async (roleData: RoleFormData) => {
+    try {
+      await addRoleMutation.mutateAsync(roleData);
+      toast.success("Role created successfully");
+      setShowAddModal(false);
+    } catch (err) {
+      toast.error("Failed to create role: " + (err as Error).message);
+    }
   };
 
-  const handleEditRole = (roleData: RoleFormData & { id?: number }) => {
-    // TODO: Implement edit role API call
-    console.log("Edit role:", roleData);
-    setEditingRole(null);
+  const handleEditRole = async (roleData: RoleFormData & { id?: string }) => {
+    if (!roleData.id) return;
+    try {
+      await updateRoleMutation.mutateAsync({ id: roleData.id, roleData });
+      toast.success("Role updated successfully");
+      setEditingRole(null);
+    } catch (err) {
+      toast.error("Failed to update role: " + (err as Error).message);
+    }
   };
 
-  const handleDeleteRole = (roleId: number) => {
-    const role = roles.find((r) => r.id === roleId);
-    if (role?.disabled) {
-      alert("Cannot delete disabled roles");
-      return;
-    }
-    if (role && role.numberOfUsers > 0) {
-      alert("Cannot delete role that has assigned users");
-      return;
-    }
+  const handleDeleteRole = async (roleId: string) => {
     if (confirm("Are you sure you want to delete this role?")) {
-      // TODO: Implement delete role API call
-      console.log("Delete role:", roleId);
+      try {
+        await deleteRoleMutation.mutateAsync(roleId);
+        toast.success("Role deleted successfully");
+      } catch (err) {
+        toast.error("Failed to delete role: " + (err as Error).message);
+      }
     }
   };
 
@@ -84,7 +82,7 @@ const RolesTab = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-black">Roles</h2>
-          <p className="text-black">Manage roles and their permissions</p>
+          <p className="text-black/60">Manage roles and their permissions</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
@@ -105,68 +103,71 @@ const RolesTab = () => {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 outline-none text-black"
         />
       </div>
+
       {/* Roles Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRoles.map((role) => (
+        {filteredRoles.map((role: any) => (
           <div
             key={role.id}
-            className="bg-white border border-black/20 rounded-xl p-6 hover:shadow-md transition-shadow"
+            className="bg-white border border-black/20 rounded-xl p-6 hover:shadow-md transition-shadow flex flex-col"
           >
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-black flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-black">
                   {role.name}
-                  {role.disabled && (
-                    <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
-                      Disabled
-                    </span>
-                  )}
                 </h3>
-                <p className="text-sm text-black mt-1"></p>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-[#004953]">
-                  {role.numberOfUsers}
-                </div>
-                <div className="text-lg text-black">users</div>
+                <p className="text-sm text-black/60 mt-1 line-clamp-2">
+                  {role.description || "No description"}
+                </p>
               </div>
             </div>
 
-            {/* Role Info */}
-            <div className="mb-4">
-              <div className="text-sm font-medium text-black my-5 flex flex-col">
-                <h5 className="uppercase font-semibold">Description</h5>
-                <p className="text-black/60">{role.description}</p>
-              </div>
-              <div className="text-xs text-gray-600 flex justify-between w-full items-center">
-                <div className="font-bold">Created by: <span className="font-normal">{role.createdBy}</span></div>
-                <div className="font-bold">
-                  Status:{" "}
-                  <span className="bg-green-300 rounded-full font-normal py-0.5 px-2">
-                    {role.disabled ? "Disabled" : "Active"}
+            {/* Permissions Summary */}
+            <div className="flex-1 mb-4">
+              <h5 className="text-xs font-bold uppercase text-black/40 mb-2">
+                Permissions
+              </h5>
+              <div className="flex flex-wrap gap-1">
+                {role.permissions?.length > 0 ? (
+                  role.permissions.slice(0, 5).map((p: any) => (
+                    <span
+                      key={p.permissionId}
+                      className="text-[10px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded"
+                    >
+                      {p.permission.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-gray-400 italic">
+                    No permissions assigned
                   </span>
-                </div>
+                )}
+                {role.permissions?.length > 5 && (
+                  <span className="text-[10px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                    +{role.permissions.length - 5} more
+                  </span>
+                )}
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
-              <button
-                onClick={() => setEditingRole(role)}
-                className="text-sm font-medium cursor-pointer bg-[#004953] px-4 py-1 rounded-sm"
-              >
-                Edit
-              </button>
-              {!role.disabled && role.numberOfUsers === 0 && (
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditingRole(role)}
+                  className="text-sm font-medium text-[#004953] hover:underline"
+                >
+                  Edit
+                </button>
                 <button
                   onClick={() => handleDeleteRole(role.id)}
-                  className="text-red-600 hover:text-red-800 text-sm font-medium"
+                  className="text-sm font-medium text-red-600 hover:underline"
                 >
                   Delete
                 </button>
-              )}
-              <div className="text-xs text-black ml-auto">
-                Created: {new Date(role.createdDate).toLocaleDateString()}
+              </div>
+              <div className="text-[10px] text-black/40">
+                {new Date(role.createdAt).toLocaleDateString()}
               </div>
             </div>
           </div>
@@ -185,23 +186,7 @@ const RolesTab = () => {
       >
         <RoleForm
           role={editingRole}
-          onSave={
-            editingRole
-              ? (roleData) => {
-                  // Convert id back to number for handleEditRole
-                  handleEditRole({
-                    ...roleData,
-                    id: roleData.id ? Number(roleData.id) : undefined,
-                  });
-                }
-              : (roleData) => {
-                  // Convert id back to number for handleAddRole (shouldn't have id, but just in case)
-                  handleAddRole({
-                    ...roleData,
-                    id: roleData.id ? Number(roleData.id) : undefined,
-                  });
-                }
-          }
+          onSave={editingRole ? handleEditRole : handleAddRole}
           onClose={() => {
             setShowAddModal(false);
             setEditingRole(null);

@@ -1,6 +1,6 @@
 import { db } from "@/app/db";
-import { drivers, emergencyContacts } from "@/app/db/schema";
-import { eq, and } from "drizzle-orm";
+import { drivers } from "@/app/db/schema";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export default async function getDriverDetails(id: string, companyId: string) {
@@ -8,16 +8,24 @@ export default async function getDriverDetails(id: string, companyId: string) {
   try {
     // Verify driver belongs to user's company
     const driverDetails = await db.query.drivers.findFirst({
-      where: and(
-        eq(drivers.id, id),
-        eq(drivers.companyId, companyId)
-      ),
-      with: { emergencyContacts: true }
+      where: and(eq(drivers.id, id), eq(drivers.companyId, companyId)),
+      with: {
+        emergencyContacts: true,
+        roles: {
+          with: {
+            role: true,
+          },
+        },
+      },
     });
 
     if (!driverDetails) {
       return NextResponse.json(
-        { timestamp: date, message: "Driver not found or access denied", dto: null },
+        {
+          timestamp: date,
+          message: "Driver not found or access denied",
+          dto: null,
+        },
         { status: 404 }
       );
     }
@@ -43,7 +51,8 @@ export default async function getDriverDetails(id: string, companyId: string) {
                 (1000 * 60 * 60 * 24)
             ),
           },
-          emergencyContacts: driverDetails.emergencyContacts
+          emergencyContacts: driverDetails.emergencyContacts,
+          roles: driverDetails.roles || [],
         },
       },
       { status: 200 }

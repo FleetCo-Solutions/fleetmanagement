@@ -43,6 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             password?: string;
             status: "active" | "inactive" | "suspended";
             companyId?: string;
+            permissions?: string[];
           };
           message: string;
         };
@@ -59,6 +60,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email: user.user.email,
             status: user.user.status,
             companyId: user.user.companyId,
+            permissions: user.user.permissions || [],
           };
         } else return null;
       },
@@ -73,16 +75,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // Store user data in JWT token
     jwt: async ({ token, user }) => {
       if (user) {
+        token.id = user.id;
         token.companyId = user.companyId;
         token.status = user.status;
+        token.permissions = user.permissions;
       }
       return token;
     },
     // Add user data to session from token
     session: async ({ session, token }) => {
       if (session.user) {
+        (session.user as any).id = token.id;
         (session.user as any).companyId = token.companyId;
         (session.user as any).status = token.status;
+        (session.user as any).permissions = token.permissions || [];
       }
       return session;
     },

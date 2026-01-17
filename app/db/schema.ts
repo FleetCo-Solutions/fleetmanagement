@@ -8,6 +8,7 @@ import {
   index,
   boolean,
   jsonb,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 export const userStatusEnum = pgEnum("user_status", [
@@ -52,7 +53,9 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    companyId: uuid("company_id"), // Links to admin_companies table
+    companyId: uuid("company_id").references(() => companies.id, {
+      onDelete: "cascade",
+    }), // Links to admin_companies table
     firstName: varchar("first_name", { length: 50 }).notNull(),
     lastName: varchar("last_name", { length: 50 }).notNull(),
     phone: varchar("phone", { length: 20 }).unique(),
@@ -112,15 +115,10 @@ export const systemUsers = pgTable(
     email: varchar("email", { length: 255 }).unique().notNull(),
     passwordHash: varchar("password_hash", { length: 255 }).notNull(),
 
-    role: systemUserRoleEnum("role").default("support").notNull(),
-    department: varchar("department", { length: 100 }),
     status: systemUserStatusEnum("status").default("active").notNull(),
 
     phone: varchar("phone", { length: 50 }),
     avatar: varchar("avatar", { length: 255 }),
-
-    // Permissions (can be expanded)
-    permissions: varchar("permissions", { length: 1000 }), // JSON string of permissions
 
     lastLogin: timestamp("last_login", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -131,7 +129,6 @@ export const systemUsers = pgTable(
   },
   (table) => ({
     emailIdx: index("system_user_email_idx").on(table.email),
-    roleIdx: index("system_user_role_idx").on(table.role),
   })
 );
 
@@ -432,6 +429,7 @@ export const tripsRelations = relations(trips, ({ one }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
   emergencyContacts: many(emergencyContacts), // user -> multiple emergencyContacts
   maintenanceRequests: many(maintenanceRecords), // user -> multiple maintenance requests
+  roles: many(userRoles),
 }));
 
 // Relation: A driver has many emergency contacts
@@ -483,6 +481,7 @@ export const driversRelation = relations(drivers, ({ many, one }) => ({
   tripsAsMain: many(trips, { relationName: "mainDriver" }),
   tripsAsSubstitute: many(trips, { relationName: "substituteDriver" }),
   assignments: many(vehicleAssignments),
+  roles: many(driverRoles),
 }));
 
 // Update vehicles relations to include assignments
@@ -500,6 +499,7 @@ export const companiesRelations = relations(companies, ({ many }) => ({
 
 export const systemUsersRelations = relations(systemUsers, ({ many }) => ({
   auditLogs: many(auditLogs),
+  roles: many(systemUserRoles),
 }));
 
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
@@ -508,3 +508,164 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
     references: [systemUsers.id],
   }),
 }));
+
+// RBAC Tables
+export const roles = pgTable(
+  "roles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id").references(() => companies.id, {
+      onDelete: "cascade",
+    }), // Nullable for System Roles
+    name: varchar("name", { length: 100 }).notNull(),
+    description: varchar("description", { length: 255 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }),
+  },
+  (table) => ({
+    companyIdx: index("roles_company_idx").on(table.companyId),
+  })
+);
+
+export const permissionScopeEnum = pgEnum("permission_scope", [
+  "system",
+  "company",
+]);
+
+export const permissions = pgTable("permissions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 100 }).unique().notNull(), // e.g., 'vehicle.create'
+  description: varchar("description", { length: 255 }),
+  scope: permissionScopeEnum("scope").default("company").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const rolePermissions = pgTable(
+  "role_permissions",
+  {
+    roleId: uuid("role_id")
+      .references(() => roles.id, { onDelete: "cascade" })
+      .notNull(),
+    permissionId: uuid("permission_id")
+      .references(() => permissions.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.roleId, table.permissionId] }),
+  })
+);
+
+export const userRoles = pgTable(
+  "user_roles",
+  {
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    roleId: uuid("role_id")
+      .references(() => roles.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.roleId] }),
+  })
+);
+
+export const systemUserRoles = pgTable(
+  "system_user_roles",
+  {
+    systemUserId: uuid("system_user_id")
+      .references(() => systemUsers.id, { onDelete: "cascade" })
+      .notNull(),
+    roleId: uuid("role_id")
+      .references(() => roles.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.systemUserId, table.roleId] }),
+  })
+);
+
+export const driverRoles = pgTable(
+  "driver_roles",
+  {
+    driverId: uuid("driver_id")
+      .references(() => drivers.id, { onDelete: "cascade" })
+      .notNull(),
+    roleId: uuid("role_id")
+      .references(() => roles.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.driverId, table.roleId] }),
+  })
+);
+
+// RBAC Relations
+export const rolesRelations = relations(roles, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [roles.companyId],
+    references: [companies.id],
+  }),
+  permissions: many(rolePermissions),
+  users: many(userRoles),
+  drivers: many(driverRoles),
+  systemUsers: many(systemUserRoles),
+}));
+
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  roles: many(rolePermissions),
+}));
+
+export const rolePermissionsRelations = relations(
+  rolePermissions,
+  ({ one }) => ({
+    role: one(roles, {
+      fields: [rolePermissions.roleId],
+      references: [roles.id],
+    }),
+    permission: one(permissions, {
+      fields: [rolePermissions.permissionId],
+      references: [permissions.id],
+    }),
+  })
+);
+
+export const userRolesRelations = relations(userRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [userRoles.userId],
+    references: [users.id],
+  }),
+  role: one(roles, {
+    fields: [userRoles.roleId],
+    references: [roles.id],
+  }),
+}));
+
+export const driverRolesRelations = relations(driverRoles, ({ one }) => ({
+  driver: one(drivers, {
+    fields: [driverRoles.driverId],
+    references: [drivers.id],
+  }),
+  role: one(roles, {
+    fields: [driverRoles.roleId],
+    references: [roles.id],
+  }),
+}));
+
+export const systemUserRolesRelations = relations(
+  systemUserRoles,
+  ({ one }) => ({
+    systemUser: one(systemUsers, {
+      fields: [systemUserRoles.systemUserId],
+      references: [systemUsers.id],
+    }),
+    role: one(roles, {
+      fields: [systemUserRoles.roleId],
+      references: [roles.id],
+    }),
+  })
+);

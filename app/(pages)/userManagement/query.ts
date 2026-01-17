@@ -1,5 +1,11 @@
 import { getDepartments } from "@/actions/departments";
-import { getRoles } from "@/actions/roles";
+import {
+  getRoles,
+  addRole,
+  updateRole,
+  deleteRole,
+  getPermissions,
+} from "@/actions/roles";
 import {
   addUser,
   changePassword,
@@ -16,9 +22,14 @@ import {
   IDepartments,
   UserDetails,
   EmergencyContactPayload,
-  ProfilePayload
+  ProfilePayload,
+  IEditUser,
 } from "@/app/types";
-import { addEmergencyContact, updateEmergencyContact as updateAction, deleteEmergencyContact as deleteAction } from "@/actions/emergencyContact";
+import {
+  addEmergencyContact,
+  updateEmergencyContact as updateAction,
+  deleteEmergencyContact as deleteAction,
+} from "@/actions/emergencyContact";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUserQuery = () => {
@@ -33,12 +44,19 @@ export const useUserByIdQuery = (id: string) => {
     queryKey: ["User", id],
     queryFn: async () => await getUserDetails(id),
   });
-}
+};
 
 export const useRolesQuery = () => {
-  return useQuery<IRoles>({
+  return useQuery<any[]>({
     queryKey: ["Roles"],
     queryFn: async () => await getRoles(),
+  });
+};
+
+export const usePermissionsQuery = () => {
+  return useQuery<any[]>({
+    queryKey: ["Permissions"],
+    queryFn: async () => await getPermissions(),
   });
 };
 
@@ -68,7 +86,7 @@ export const useUpdateUser = (userId: string) => {
 
   return useMutation({
     mutationKey: ["updateUser"],
-    mutationFn: async ({ id, userData }: { id: string; userData: ProfilePayload }) =>
+    mutationFn: async ({ id, userData }: { id: string; userData: IEditUser }) =>
       await updateUser(id, userData),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["User", userId] });
@@ -112,46 +130,87 @@ export const useChangePassword = () => {
 };
 
 export const useAddEmergencyContact = (userId?: string) => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["EmergencyContact"],
-    mutationFn: async (payload: EmergencyContactPayload) => await addEmergencyContact(payload),
+    mutationFn: async (payload: EmergencyContactPayload) =>
+      await addEmergencyContact(payload),
     onSettled: () => {
       if (userId) {
-        queryClient.invalidateQueries({queryKey:["User", userId]})
+        queryClient.invalidateQueries({ queryKey: ["User", userId] });
       } else {
-         queryClient.invalidateQueries({queryKey:["User"]})
+        queryClient.invalidateQueries({ queryKey: ["User"] });
       }
-    }
-  })
-}
+    },
+  });
+};
 
 export const useUpdateEmergencyContact = (userId?: string) => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["EmergencyContact"],
-    mutationFn: async ({id, payload}: {id: string, payload: EmergencyContactPayload}) => await updateAction(id, payload),
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: EmergencyContactPayload;
+    }) => await updateAction(id, payload),
     onSettled: () => {
       if (userId) {
-        queryClient.invalidateQueries({queryKey:["User", userId]})
+        queryClient.invalidateQueries({ queryKey: ["User", userId] });
       } else {
-        queryClient.invalidateQueries({queryKey:["User"]})
+        queryClient.invalidateQueries({ queryKey: ["User"] });
       }
-    }
-  })
-}
+    },
+  });
+};
 
 export const useDeleteEmergencyContact = (userId?: string) => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["EmergencyContact"],
     mutationFn: async (id: string) => await deleteAction(id),
     onSettled: () => {
       if (userId) {
-        queryClient.invalidateQueries({queryKey:["User", userId]})
+        queryClient.invalidateQueries({ queryKey: ["User", userId] });
       } else {
-        queryClient.invalidateQueries({queryKey:["User"]})
+        queryClient.invalidateQueries({ queryKey: ["User"] });
       }
-    }
-  })
-}
+    },
+  });
+};
+
+export const useAddRole = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["addRole"],
+    mutationFn: async (roleData: any) => await addRole(roleData),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["Roles"] });
+    },
+  });
+};
+
+export const useUpdateRole = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateRole"],
+    mutationFn: async ({ id, roleData }: { id: string; roleData: any }) =>
+      await updateRole(id, roleData),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["Roles"] });
+    },
+  });
+};
+
+export const useDeleteRole = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["deleteRole"],
+    mutationFn: async (id: string) => await deleteRole(id),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["Roles"] });
+    },
+  });
+};

@@ -14,6 +14,11 @@ export async function getUserDetails(companyId: string, id: string) {
       ),
       with: {
         emergencyContacts: true,
+        roles: {
+          with: {
+            role: true,
+          },
+        },
       },
     });
 
@@ -55,6 +60,7 @@ export async function getUserDetails(companyId: string, id: string) {
             accountAge,
           },
           emergencyContacts: user.emergencyContacts || [],
+          roles: user.roles || [],
         },
       },
       { status: 200 }

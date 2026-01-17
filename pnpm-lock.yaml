@@ -29,6 +29,9 @@ importers:
       '@types/bcryptjs':
         specifier: ^3.0.0
         version: 3.0.0
+      '@types/dotenv':
+        specifier: ^8.2.3
+        version: 8.2.3
       '@types/mapbox__polyline':
         specifier: ^1.0.5
         version: 1.0.5
@@ -38,6 +41,9 @@ importers:
       bcryptjs:
         specifier: ^3.0.2
         version: 3.0.2
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       drizzle-kit:
         specifier: ^0.31.4
         version: 0.31.4
@@ -1092,6 +1098,10 @@ packages:
   '@types/d3-timer@3.0.2':
     resolution: {integrity: sha512-Ps3T8E8dZDam6fUyNiMkekK3XUsaUEik+idO9/YjPtfj2qruF8tFBXS7XhtE4iIXBLxhmLjP3SXpLhVf21I9Lw==}
 
+  '@types/dotenv@8.2.3':
+    resolution: {integrity: sha512-g2FXjlDX/cYuc5CiQvyU/6kkbP1JtmGzh0obW50zD7OKeILVL0NSpPWLXVfqoAGQjom2/SLLx9zHq0KXvD6mbw==}
+    deprecated: This is a stub types definition. dotenv provides its own type definitions, so you do not need this installed.
+
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
@@ -1670,6 +1680,10 @@ packages:
 
   dompurify@3.2.6:
     resolution: {integrity: sha512-/2GogDQlohXPZe6D6NOgQvXLPSYBqIWMnZ8zzOhn09REE4eyAzb+Hed3jhoM9OkuaJ8P6ZGTTVWQKAi8ieIzfQ==}
+
+  dotenv@17.2.3:
+    resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
+    engines: {node: '>=12'}
 
   drange@1.1.1:
     resolution: {integrity: sha512-pYxfDYpued//QpnLIm4Avk7rsNtAtQkUES2cwAYSvD/wd2pKD71gN2Ebj3e7klzXwjocvE8c5vx/1fxwpqmSxA==}
@@ -4550,6 +4564,10 @@ snapshots:
 
   '@types/d3-timer@3.0.2': {}
 
+  '@types/dotenv@8.2.3':
+    dependencies:
+      dotenv: 17.2.3
+
   '@types/estree@1.0.8': {}
 
   '@types/geojson@7946.0.16': {}
@@ -5135,6 +5153,8 @@ snapshots:
   dompurify@3.2.6:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
+
+  dotenv@17.2.3: {}
 
   drange@1.1.1: {}
 

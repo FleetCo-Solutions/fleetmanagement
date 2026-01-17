@@ -1,0 +1,2 @@
+ALTER TABLE "trips" ADD COLUMN "deleted_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_company_id_admin_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."admin_companies"("id") ON DELETE cascade ON UPDATE no action;
