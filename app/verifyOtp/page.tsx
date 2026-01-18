@@ -80,6 +80,8 @@ export default function VerifyOtpPage() {
 
     try {
       await verifyOtp(email, otpString);
+      // Store OTP for password reset
+      sessionStorage.setItem("resetOtp", otpString);
       toast.success("OTP verified successfully!");
       router.push("/resetPassword");
     } catch (error) {

@@ -10,6 +10,7 @@ import {
 import { NextRequest, NextResponse } from "next/server";
 import { sendUserCredentialsEmail } from "@/app/lib/mail";
 import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export async function postCompany(request: NextRequest) {
   try {
@@ -37,7 +38,7 @@ export async function postCompany(request: NextRequest) {
           lastName: "",
           phone: body.contactPhone,
           email: body.contactEmail,
-          passwordHash: "Welcome@123",
+          passwordHash: await bcrypt.hash("Welcome@123", 12),
           companyId: company.id,
         })
         .returning();

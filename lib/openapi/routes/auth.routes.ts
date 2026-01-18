@@ -176,43 +176,6 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
     },
   });
 
-  // Change Password
-  registry.registerPath({
-    method: "post",
-    path: "/api/auth/changePassword",
-    tags: ["Authentication"],
-    summary: "Change user password",
-    description: "Change the password for the authenticated user",
-    security: [{ cookieAuth: [] }], // Uses NextAuth session cookie
-    request: {
-      body: {
-        content: {
-          "application/json": {
-            schema: ChangePasswordRequestSchema,
-          },
-        },
-      },
-    },
-    responses: {
-      200: {
-        description: "Password changed successfully",
-        content: {
-          "application/json": {
-            schema: SuccessResponseSchema,
-          },
-        },
-      },
-      401: {
-        description: "Unauthorized",
-        content: {
-          "application/json": {
-            schema: UnauthorizedResponseSchema,
-          },
-        },
-      },
-    },
-  });
-
   // Forget Password (Company Users & Drivers)
   registry.registerPath({
     method: "post",
@@ -238,12 +201,9 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
             schema: z.object({
               success: z.boolean(),
               message: z.string(),
-              otp: z
-                .string()
-                .optional()
-                .openapi({
-                  description: "OTP returned in dev mode for drivers",
-                }),
+              otp: z.string().optional().openapi({
+                description: "OTP returned in dev mode for drivers",
+              }),
             }),
           },
         },

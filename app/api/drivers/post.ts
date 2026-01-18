@@ -1,6 +1,7 @@
 import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { drivers } from "@/app/db/schema";
+import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
 interface IPostDriver {
@@ -32,6 +33,7 @@ export default async function postDriver(request: NextRequest, companyId: string
             lastName: body.lastName,
             phone: body.phone,
             alternativePhone: body.alternativePhone,
+            passwordHash: await bcrypt.hash("Welcome@123", 12),
             licenseNumber: body.licenseNumber,
             licenseExpiry: body.licenseExpiry,
             companyId: companyId, // Auto-assign companyId from session
@@ -39,7 +41,7 @@ export default async function postDriver(request: NextRequest, companyId: string
         .returning()
         .onConflictDoNothing();
 
-        return NextResponse.json({message: "Driver Created Successfully moody", data: driver},{status: 201})
+        return NextResponse.json({message: "Driver Created Successfully", data: driver},{status: 201})
 
     }catch(error){
         return NextResponse.json({message: "Failed to create Driver: "+ (error as Error).message},{status: 500})

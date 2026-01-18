@@ -3,6 +3,7 @@ import { drivers, trips } from "@/app/db/schema";
 import { and, eq, isNull, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateToken } from "@/lib/auth/jwt";
+import bcrypt from "bcryptjs";
 
 interface DriverLoginRequest {
   phoneNumber: string;
@@ -66,7 +67,7 @@ export async function loginDriver(
       );
     }
 
-    if (driver.passwordHash !== body.password) {
+    if (!await bcrypt.compare(body.password, driver.passwordHash)) {
       return NextResponse.json(
         {
           success: false,

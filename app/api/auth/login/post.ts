@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserPermissions } from "@/lib/rbac/utils";
 import { AuthenticatedUser } from "@/lib/auth/types";
+import bcrypt from "bcryptjs";
 
 export async function loginUser(request: NextRequest) {
   const { username, password } = await request.json();
@@ -37,7 +38,7 @@ export async function loginUser(request: NextRequest) {
     }
 
     // Here you would normally verify the password with a hashed password stored in the database\
-    if (user.password !== password) {
+    if (!await bcrypt.compare(password, user.password)) {
       return NextResponse.json(
         { message: "Invalid email or password" },
         { status: 401 }

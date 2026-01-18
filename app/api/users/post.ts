@@ -1,6 +1,7 @@
 import { db } from "@/app/db";
 import { users, userRoles } from "@/app/db/schema";
 import { sendUserCredentialsEmail } from "@/app/lib/mail";
+import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
 export interface IPostUser {
@@ -26,8 +27,8 @@ export default async function postUser(companyId: string, body: IPostUser) {
       );
     }
 
-    const plainPassword = body.password || "Welcome@123";
-    const passwordToStore = plainPassword;
+    // const plainPassword = body.password || "Welcome@123";
+    // const passwordToStore = plainPassword;
     
     const result = await db.transaction(async (tx) => {
       const [user] = await tx
@@ -37,7 +38,7 @@ export default async function postUser(companyId: string, body: IPostUser) {
           lastName: body.lastName,
           phone: body.phone,
           email: body.email,
-          passwordHash: passwordToStore,
+          passwordHash: await bcrypt.hash("Welcome@123", 12),
           companyId: companyId,
           status: body.status || "active",
         })
@@ -59,7 +60,7 @@ export default async function postUser(companyId: string, body: IPostUser) {
       await sendUserCredentialsEmail({
         to: result.email,
         username: result.email,
-        password: plainPassword,
+        password: "Welcome@123",
       });
     }
 

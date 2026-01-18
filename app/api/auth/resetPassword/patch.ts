@@ -1,5 +1,6 @@
 import { db } from "@/app/db";
 import { users } from "@/app/db/schema";
+import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -31,7 +32,7 @@ export default async function changePassword(request: NextRequest) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    if (existingUser.passwordHash !== oldPassword) {
+    if (!await bcrypt.compare(oldPassword, existingUser.passwordHash)) {
       return NextResponse.json(
         { message: "Old password is incorrect" },
         { status: 400 }
@@ -40,7 +41,7 @@ export default async function changePassword(request: NextRequest) {
 
     const [user] = await db
       .update(users)
-      .set({ passwordHash: password })
+      .set({ passwordHash: await bcrypt.hash(password, 12) })
       .where(eq(users.id, userId))
       .returning();
 

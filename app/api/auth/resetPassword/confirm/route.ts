@@ -5,6 +5,7 @@ import {
   drivers,
   systemUsers,
 } from "@/app/db/schema";
+import bcrypt from "bcryptjs";
 import { eq, and, gt } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -54,19 +55,19 @@ export async function POST(request: NextRequest) {
       // Update Driver Password
       await db
         .update(drivers)
-        .set({ passwordHash: newPassword })
+        .set({ passwordHash: await bcrypt.hash(newPassword, 12) })
         .where(eq(drivers.id, otpRecord.driverId));
     } else if (otpRecord.systemUserId) {
       // Update System User Password
       await db
         .update(systemUsers)
-        .set({ passwordHash: newPassword })
+        .set({ passwordHash:  await bcrypt.hash(newPassword, 12) })
         .where(eq(systemUsers.id, otpRecord.systemUserId));
     } else if (otpRecord.userId) {
       // Update Company User Password
       await db
         .update(users)
-        .set({ passwordHash: newPassword })
+        .set({ passwordHash: await bcrypt.hash(newPassword, 12) })
         .where(eq(users.id, otpRecord.userId));
     } else {
       return NextResponse.json(

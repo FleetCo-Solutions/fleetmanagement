@@ -50,16 +50,20 @@ export async function verifyOtp(email: string, otp: string) {
   }
 }
 
-export async function resetPassword(email: string, newPassword: string) {
+export async function resetPassword(
+  email: string,
+  otp: string,
+  newPassword: string
+) {
   try {
     const response = await fetch(
-      `${process.env.LOCAL_BACKENDBASE_URL}/auth/changePassword`,
+      `${process.env.LOCAL_BACKENDBASE_URL}/auth/resetPassword/confirm`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, newPassword }),
+        body: JSON.stringify({ identifier: email, otp, newPassword }),
       }
     );
 

@@ -17,6 +17,7 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const router = useRouter();
 
   const {
@@ -30,24 +31,29 @@ export default function ResetPasswordPage() {
   const password = watch("password");
 
   useEffect(() => {
-    // Get email from sessionStorage
+    // Get email and OTP from sessionStorage
     const storedEmail = sessionStorage.getItem("resetEmail");
-    if (!storedEmail) {
+    const storedOtp = sessionStorage.getItem("resetOtp");
+
+    if (!storedEmail || !storedOtp) {
       toast.error("Session expired. Please start from forgot password page.");
       router.push("/forgotPassword");
       return;
     }
+
     setEmail(storedEmail);
+    setOtp(storedOtp);
   }, [router]);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     setIsLoading(true);
 
     try {
-      await resetPassword(email, data.password);
+      await resetPassword(email, otp, data.password);
 
       // Clear sessionStorage
       sessionStorage.removeItem("resetEmail");
+      sessionStorage.removeItem("resetOtp");
 
       toast.success(
         "Password reset successfully! You can now sign in with your new password."
