@@ -11,6 +11,8 @@ import { registerMaintenanceRoutes } from "./routes/maintenance.routes";
 import { registerVehicleTrackingRoutes } from "./routes/vehicle-tracking.routes";
 import { registerEmergencyContactRoutes } from "./routes/emergency-contact.routes";
 import { registerCompanyRoutes } from "./routes/company.routes";
+import { registerAuditLogsRoutes } from "./routes/audit-logs.routes";
+import { registerRBACRoutes } from "./routes/rbac.routes";
 
 /**
  * Create and configure the OpenAPI registry
@@ -47,6 +49,8 @@ function createOpenAPIRegistry(): OpenAPIRegistry {
   registerVehicleTrackingRoutes(registry);
   registerEmergencyContactRoutes(registry);
   registerCompanyRoutes(registry);
+  registerAuditLogsRoutes(registry);
+  registerRBACRoutes(registry);
 
   return registry;
 }
@@ -105,6 +109,11 @@ export function generateOpenAPISpec() {
         description: "Emergency contact management endpoints",
       },
       { name: "Companies", description: "Company management endpoints" },
+      {
+        name: "Audit Logs",
+        description: "Audit logging and tracking endpoints",
+      },
+      { name: "RBAC", description: "Role-Based Access Control endpoints" },
     ],
   });
 }
