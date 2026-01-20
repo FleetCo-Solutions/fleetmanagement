@@ -3,6 +3,7 @@ import { users, userRoles } from "@/app/db/schema";
 import { sendUserCredentialsEmail } from "@/app/lib/mail";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
 
 export interface IPostUser {
   firstName: string;
@@ -14,9 +15,12 @@ export interface IPostUser {
   roleIds?: string[];
 }
 
-export default async function postUser(companyId: string, body: IPostUser) {
+export default async function postUser(
+  companyId: string,
+  body: IPostUser,
+  actorId?: string
+) {
   try {
-
     if (!body.firstName || !body.lastName || !body.email || !body.phone) {
       return NextResponse.json(
         {
@@ -29,7 +33,7 @@ export default async function postUser(companyId: string, body: IPostUser) {
 
     // const plainPassword = body.password || "Welcome@123";
     // const passwordToStore = plainPassword;
-    
+
     const result = await db.transaction(async (tx) => {
       const [user] = await tx
         .insert(users)
@@ -61,6 +65,22 @@ export default async function postUser(companyId: string, body: IPostUser) {
         to: result.email,
         username: result.email,
         password: "Welcome@123",
+      });
+    }
+
+    // Log user creation
+    if (actorId) {
+      await logAudit({
+        action: "user.created",
+        entityType: "user",
+        entityId: result.id,
+        newValues: {
+          ...sanitizeForAudit(result),
+          roleIds: body.roleIds,
+        },
+        actorId,
+        actorType: "user",
+        companyId,
       });
     }
 

@@ -2,6 +2,7 @@ import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { vehicles } from "@/app/db/schema";
 import { NextRequest, NextResponse } from "next/server";
+import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
 
 export interface IPostVehicle {
   vehicleRegNo: string;
@@ -13,8 +14,9 @@ export interface IPostVehicle {
 
 export async function postVehicle(request: NextRequest, companyId: string) {
   try {
-
+    const session = await auth();
     const body = (await request.json()) as IPostVehicle;
+
     // Check required fields
     if (
       !body.manufacturer ||
@@ -54,6 +56,20 @@ export async function postVehicle(request: NextRequest, companyId: string) {
       })
       .returning()
       .onConflictDoNothing();
+
+    // Log vehicle creation
+    if (session?.user?.id && vehicle) {
+      await logAudit({
+        action: "vehicle.created",
+        entityType: "vehicle",
+        entityId: vehicle.id,
+        newValues: sanitizeForAudit(vehicle),
+        actorId: session.user.id,
+        actorType: "user",
+        companyId,
+        request,
+      });
+    }
 
     return NextResponse.json(
       { message: "Vehicle added Successfully", dto: vehicle },

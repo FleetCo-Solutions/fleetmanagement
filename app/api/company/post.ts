@@ -11,11 +11,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendUserCredentialsEmail } from "@/app/lib/mail";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
+import { auth } from "@/app/auth";
 
 export async function postCompany(request: NextRequest) {
   try {
     const date = new Date();
     const body = await request.json();
+    const session = await auth();
+
     const result = await db.transaction(async (tx) => {
       // 1. Create Company
       const [company] = await tx
@@ -83,6 +87,20 @@ export async function postCompany(request: NextRequest) {
       }
       return company;
     });
+
+    // Log company creation
+    if (session?.user?.id) {
+      await logAudit({
+        action: "company.created",
+        entityType: "company",
+        entityId: result.id,
+        newValues: sanitizeForAudit(result),
+        actorId: session.user.id,
+        actorType: "systemUser",
+        request,
+      });
+    }
+
     return NextResponse.json(
       {
         timestamp: date,

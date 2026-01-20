@@ -163,4 +163,25 @@ export const sideBarItems = [
       </svg>
     ),
   },
+  {
+    itemName: "Audit Logs",
+    route: "/auditLogs",
+    permission: "audit.read",
+    itemIcon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        className="size-6"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9 12h3.75M9 15h3.375m1.875-12h-9.75a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-3.75a.75.75 0 0 1-.75-.75V3.75A.75.75 0 0 0 14.25 3h-1.5a.75.75 0 0 0-.75.75v.75a.75.75 0 0 1-.75.75H9Z"
+        />
+      </svg>
+    ),
+  },
 ];

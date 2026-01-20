@@ -28,7 +28,8 @@ export async function PUT(
     );
   }
 
-  const allowed = await hasPermission(user as AuthenticatedUser,
+  const allowed = await hasPermission(
+    user as AuthenticatedUser,
     "maintenance.update"
   );
 
@@ -65,7 +66,8 @@ export async function DELETE(
     );
   }
 
-  const allowed = await hasPermission(user as AuthenticatedUser,
+  const allowed = await hasPermission(
+    user as AuthenticatedUser,
     "maintenance.delete"
   );
 
@@ -102,7 +104,8 @@ export async function GET(
     );
   }
 
-  const allowed = await hasPermission(user as AuthenticatedUser,
+  const allowed = await hasPermission(
+    user as AuthenticatedUser,
     "maintenance.read"
   );
 

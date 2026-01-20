@@ -137,24 +137,43 @@ export const auditLogs = pgTable(
   "admin_audit_logs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+
+    // Actor (who performed the action) - ONE of these will be populated
     systemUserId: uuid("system_user_id").references(() => systemUsers.id),
-    action: varchar("action", { length: 255 }).notNull(), // e.g., "company.created", "user.suspended"
-    entityType: varchar("entity_type", { length: 100 }).notNull(), // e.g., "company", "system_user"
+    userId: uuid("user_id").references(() => users.id),
+    driverId: uuid("driver_id").references(() => drivers.id),
+
+    // Company context (for multi-tenancy filtering)
+    companyId: uuid("company_id").references(() => companies.id),
+
+    // Action details
+    action: varchar("action", { length: 255 }).notNull(), // e.g., "vehicle.created", "user.suspended"
+    entityType: varchar("entity_type", { length: 100 }).notNull(), // e.g., "vehicle", "user"
     entityId: uuid("entity_id"),
-    details: varchar("details", { length: 1000 }), // JSON string with additional details
+
+    // Change tracking (before/after state)
+    oldValues: varchar("old_values", { length: 2000 }), // JSON before state
+    newValues: varchar("new_values", { length: 2000 }), // JSON after state
+
+    // Request metadata
     ipAddress: varchar("ip_address", { length: 45 }),
     userAgent: varchar("user_agent", { length: 255 }),
+
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (table) => ({
-    userIdx: index("audit_log_user_idx").on(table.systemUserId),
+    systemUserIdx: index("audit_log_system_user_idx").on(table.systemUserId),
+    userIdx: index("audit_log_user_idx").on(table.userId),
+    driverIdx: index("audit_log_driver_idx").on(table.driverId),
+    companyIdx: index("audit_log_company_idx").on(table.companyId),
     actionIdx: index("audit_log_action_idx").on(table.action),
     entityIdx: index("audit_log_entity_idx").on(
       table.entityType,
       table.entityId
     ),
+    createdAtIdx: index("audit_log_created_at_idx").on(table.createdAt),
   })
 );
 

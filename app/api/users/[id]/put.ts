@@ -3,6 +3,7 @@ import { users, userRoles } from "@/app/db/schema";
 import { ProfilePayload } from "@/app/types";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
 
 export interface IEditUser extends ProfilePayload {
   roleIds?: string[];
@@ -11,11 +12,12 @@ export interface IEditUser extends ProfilePayload {
 export async function editUser(
   companyId: string,
   id: string,
-  userData: IEditUser
+  userData: IEditUser,
+  actorId?: string
 ) {
   const date = new Date();
   try {
-    // Verify user belongs to company 
+    // Verify user belongs to company
     const existing = await db.query.users.findFirst({
       where: and(eq(users.id, id), eq(users.companyId, companyId)),
     });
@@ -58,6 +60,23 @@ export async function editUser(
 
       return updatedUser;
     });
+
+    // Log user update
+    if (actorId) {
+      await logAudit({
+        action: userData.roleIds ? "user.role_assigned" : "user.updated",
+        entityType: "user",
+        entityId: id,
+        oldValues: sanitizeForAudit(existing),
+        newValues: {
+          ...sanitizeForAudit(result),
+          roleIds: userData.roleIds,
+        },
+        actorId,
+        actorType: "user",
+        companyId,
+      });
+    }
 
     return NextResponse.json(
       {

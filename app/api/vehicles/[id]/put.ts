@@ -2,8 +2,14 @@ import { db } from "@/app/db";
 import { vehicles } from "@/app/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
+import { auth } from "@/app/auth";
 
-export default async function putVehicle(id: string, request: NextRequest, companyId: string) {
+export default async function putVehicle(
+  id: string,
+  request: NextRequest,
+  companyId: string
+) {
   try {
     const body = await request.json();
     const { registrationNumber, model, manufacturer, vin, color } = body;
@@ -18,10 +24,7 @@ export default async function putVehicle(id: string, request: NextRequest, compa
 
     // Verify vehicle belongs to company
     const existing = await db.query.vehicles.findFirst({
-      where: and(
-        eq(vehicles.id, id),
-        eq(vehicles.companyId, companyId)
-      ),
+      where: and(eq(vehicles.id, id), eq(vehicles.companyId, companyId)),
     });
 
     if (!existing) {
@@ -50,6 +53,22 @@ export default async function putVehicle(id: string, request: NextRequest, compa
         { message: "Vehicle not found" },
         { status: 404 }
       );
+    }
+
+    // Log vehicle update
+    const session = await auth();
+    if (session?.user?.id) {
+      await logAudit({
+        action: "vehicle.updated",
+        entityType: "vehicle",
+        entityId: id,
+        oldValues: sanitizeForAudit(existing),
+        newValues: sanitizeForAudit(updatedVehicle[0]),
+        actorId: session.user.id,
+        actorType: "user",
+        companyId,
+        request,
+      });
     }
 
     return NextResponse.json({

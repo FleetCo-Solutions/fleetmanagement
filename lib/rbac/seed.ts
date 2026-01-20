@@ -119,6 +119,18 @@ const SYSTEM_PERMISSIONS = [
     description: "Delete system users",
     scope: "system",
   },
+
+  // Audit Logs
+  {
+    name: "audit.read",
+    description: "View audit logs for company",
+    scope: "company",
+  },
+  {
+    name: "audit.read",
+    description: "View all audit logs (system-wide)",
+    scope: "system",
+  },
 ] as const;
 
 export async function seedPermissions() {

@@ -3,10 +3,7 @@ import { maintenanceRecords } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function putMaintenanceRecord(
-  request: NextRequest,
-  id: string
-) {
+export async function putMaintenanceRecord(request: NextRequest, id: string) {
   const date = new Date();
   try {
     const body = await request.json();

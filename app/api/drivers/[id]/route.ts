@@ -14,9 +14,7 @@ export async function GET(
 ) {
   const { id } = await params;
   const user = await getAuthenticatedUser(request);
-  const allowed = await hasPermission(user as AuthenticatedUser,
-    "driver.read"
-  );
+  const allowed = await hasPermission(user as AuthenticatedUser, "driver.read");
   if (!user) {
     return NextResponse.json(
       { message: "Unauthorized Please login" },
@@ -52,7 +50,8 @@ export async function PUT(
   const { id } = await params;
   const payload = await request.json();
   const user = await getAuthenticatedUser(request);
-  const allowed = await hasPermission(user as AuthenticatedUser,
+  const allowed = await hasPermission(
+    user as AuthenticatedUser,
     "driver.update"
   );
   if (!user) {

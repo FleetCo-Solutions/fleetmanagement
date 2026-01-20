@@ -2,44 +2,54 @@ import { auth } from "@/app/auth";
 import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
 import { NextRequest, NextResponse } from "next/server";
+import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
 
 export async function postTrip(request: NextRequest, companyId: string) {
   const date = new Date();
   try {
+    const session = await auth();
     const body = await request.json();
 
     // Validate location coordinates if provided
     const validateCoordinates = (loc: any, locName: string) => {
       if (!loc) return null;
-      
+
       const lat = loc.latitude;
       const lon = loc.longitude;
-      
-      if (typeof lat !== 'number' || typeof lon !== 'number') {
-        console.warn(`${locName}: Invalid coordinate types - latitude: ${typeof lat}, longitude: ${typeof lon}`);
+
+      if (typeof lat !== "number" || typeof lon !== "number") {
+        console.warn(
+          `${locName}: Invalid coordinate types - latitude: ${typeof lat}, longitude: ${typeof lon}`
+        );
         return null;
       }
-      
+
       // Validate coordinate ranges
       if (lat < -90 || lat > 90) {
         console.warn(`${locName}: Latitude ${lat} out of range [-90, 90]`);
         return null;
       }
-      
+
       if (lon < -180 || lon > 180) {
         console.warn(`${locName}: Longitude ${lon} out of range [-180, 180]`);
         return null;
       }
-      
+
       return {
         latitude: lat,
         longitude: lon,
-        address: loc.address || `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+        address: loc.address || `${lat.toFixed(6)}, ${lon.toFixed(6)}`,
       };
     };
 
-    const actualStartLoc = validateCoordinates(body.actualStartLocation, 'actualStartLocation');
-    const actualEndLoc = validateCoordinates(body.actualEndLocation, 'actualEndLocation');
+    const actualStartLoc = validateCoordinates(
+      body.actualStartLocation,
+      "actualStartLocation"
+    );
+    const actualEndLoc = validateCoordinates(
+      body.actualEndLocation,
+      "actualEndLocation"
+    );
 
     const newTrip = await db
       .insert(trips)
@@ -62,6 +72,20 @@ export async function postTrip(request: NextRequest, companyId: string) {
         companyId: companyId,
       })
       .returning();
+
+    // Log trip creation
+    if (session?.user?.id && newTrip[0]) {
+      await logAudit({
+        action: "trip.created",
+        entityType: "trip",
+        entityId: newTrip[0].id,
+        newValues: sanitizeForAudit(newTrip[0]),
+        actorId: session.user.id,
+        actorType: "user",
+        companyId,
+        request,
+      });
+    }
 
     return NextResponse.json(
       {

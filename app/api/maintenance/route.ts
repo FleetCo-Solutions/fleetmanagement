@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const allowed = await hasPermission(user as AuthenticatedUser,
+  const allowed = await hasPermission(
+    user as AuthenticatedUser,
     "maintenance.read"
   );
 
@@ -56,7 +57,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const allowed = await hasPermission(user as AuthenticatedUser,
+  const allowed = await hasPermission(
+    user as AuthenticatedUser,
     "maintenance.create"
   );
 

@@ -634,7 +634,6 @@ export interface TripMainDriver {
   updatedAt: Date | null;
   deletedAt: Date | null;
 }
-
 export interface TripVehicle {
   id: string;
   companyId: string | null;
@@ -646,4 +645,33 @@ export interface TripVehicle {
   createdAt: Date;
   updatedAt: Date | null;
   deletedAt: Date | null;
+}
+
+export interface AuditLog {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  oldValues: string | null;
+  newValues: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  companyId: string | null;
+  actorName: string;
+  actorType: string;
+}
+
+export interface AuditLogsPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface AuditLogsResponse {
+  success: boolean;
+  data: AuditLog[];
+  pagination: AuditLogsPagination;
+  message?: string;
 }

@@ -18,9 +18,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const allowed = await hasPermission(user as AuthenticatedUser,
-    "role.manage"
-  );
+  const allowed = await hasPermission(user as AuthenticatedUser, "role.manage");
 
   if (!allowed) {
     return NextResponse.json(

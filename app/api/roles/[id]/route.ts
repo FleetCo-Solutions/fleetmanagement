@@ -21,9 +21,7 @@ export async function PUT(
     );
   }
 
-  const allowed = await hasPermission(user as AuthenticatedUser,
-    "role.manage"
-  );
+  const allowed = await hasPermission(user as AuthenticatedUser, "role.manage");
 
   if (!allowed) {
     return NextResponse.json(
@@ -100,9 +98,7 @@ export async function DELETE(
     );
   }
 
-  const allowed = await hasPermission(user as AuthenticatedUser,
-    "role.manage"
-  );
+  const allowed = await hasPermission(user as AuthenticatedUser, "role.manage");
 
   if (!allowed) {
     return NextResponse.json(
