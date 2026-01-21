@@ -1,5 +1,5 @@
 import { db } from "@/app/db";
-import { drivers, trips } from "@/app/db/schema";
+import { drivers, trips, driverRoles, roles } from "@/app/db/schema";
 import { and, eq, isNull, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateToken } from "@/lib/auth/jwt";
@@ -16,7 +16,7 @@ interface DriverLoginResponse {
     id: string;
     name: string;
     phoneNumber: string;
-    companyId: string
+    companyId: string;
     role: "main" | "substitute";
   };
   message?: string;
@@ -67,7 +67,7 @@ export async function loginDriver(
       );
     }
 
-    if (!await bcrypt.compare(body.password, driver.passwordHash)) {
+    if (!(await bcrypt.compare(body.password, driver.passwordHash))) {
       return NextResponse.json(
         {
           success: false,
@@ -83,12 +83,23 @@ export async function loginDriver(
       .set({ lastLogin: new Date() })
       .where(eq(drivers.id, driver.id));
 
+    // Fetch driver roles
+    const driverRoleList = await db.query.driverRoles.findMany({
+      where: eq(driverRoles.driverId, driver.id),
+      with: {
+        role: true,
+      },
+    });
+
+    const primaryRole = driverRoleList[0]?.role?.name || "Driver";
+
     // Generate JWT token
     const token = generateToken({
       id: driver.id,
       type: "driver",
       companyId: driver.companyId!,
       phoneNumber: driver.phone,
+      role: primaryRole,
     });
 
     return NextResponse.json(

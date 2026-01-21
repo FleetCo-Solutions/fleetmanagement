@@ -5,6 +5,7 @@ import {
   permissions,
   systemUsers,
   systemUserRoles,
+  driverRoles,
 } from "@/app/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { AuthenticatedUser } from "@/lib/auth/types";
@@ -27,6 +28,12 @@ export async function hasPermission(
         where: eq(systemUserRoles.systemUserId, user.id),
       });
       roleIds = userRoleList.map((ur) => ur.roleId);
+    } else if (user.type === "driver") {
+      // 1. Get all roles for the driver
+      const driverRoleList = await db.query.driverRoles.findMany({
+        where: eq(driverRoles.driverId, user.id),
+      });
+      roleIds = driverRoleList.map((dr) => dr.roleId);
     } else {
       // 1. Get all roles for the company user
       const userRoleList = await db.query.userRoles.findMany({
@@ -71,6 +78,11 @@ export async function getUserPermissions(
         where: eq(systemUserRoles.systemUserId, user.id),
       });
       roleIds = userRoleList.map((ur) => ur.roleId);
+    } else if (user.type === "driver") {
+      const driverRoleList = await db.query.driverRoles.findMany({
+        where: eq(driverRoles.driverId, user.id),
+      });
+      roleIds = driverRoleList.map((dr) => dr.roleId);
     } else {
       const userRoleList = await db.query.userRoles.findMany({
         where: eq(userRoles.userId, user.id),
