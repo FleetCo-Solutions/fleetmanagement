@@ -4,6 +4,7 @@ import { trips } from "@/app/db/schema";
 import { eq, and, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, verifyToken } from "@/lib/auth/jwt";
+import { notify } from "@/lib/notifications/notifier";
 
 /**
  * Trip update request body
@@ -227,6 +228,10 @@ export async function putTrip(request: NextRequest, id: string) {
           .where(eq(trips.id, id))
           .returning();
 
+        // Notify company (admins) that trip has started
+        // For now, we don't have a specific admin ID, so we might need a "notifyCompanyAdmins" helper
+        // But we can at least notify the driver if they didn't start it themselves (though they usually do)
+
         return NextResponse.json(
           {
             timestamp: date,
@@ -310,6 +315,21 @@ export async function putTrip(request: NextRequest, id: string) {
       .set(updateData)
       .where(eq(trips.id, id))
       .returning();
+
+    if (updatedTrip.length > 0 && body.status === "cancelled") {
+      // Notify driver if trip was cancelled
+      if (updatedTrip[0].mainDriverId) {
+        await notify({
+          userId: updatedTrip[0].mainDriverId,
+          actorType: "driver",
+          type: "trip.cancelled",
+          title: "Trip Cancelled",
+          message: `Your trip from ${updatedTrip[0].startLocation} to ${updatedTrip[0].endLocation} has been cancelled.`,
+          link: `/trips/${updatedTrip[0].id}`,
+          channels: ["in_app", "push"],
+        });
+      }
+    }
 
     if (updatedTrip.length === 0) {
       return NextResponse.json(

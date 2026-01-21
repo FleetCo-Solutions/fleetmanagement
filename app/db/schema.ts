@@ -49,6 +49,18 @@ export const systemUserStatusEnum = pgEnum("admin_system_user_status", [
   "suspended",
 ]);
 
+export const actorTypeEnum = pgEnum("actor_type", [
+  "user",
+  "system_user",
+  "driver",
+]);
+
+export const notificationChannelEnum = pgEnum("notification_channel", [
+  "email",
+  "push",
+  "in_app",
+]);
+
 export const users = pgTable(
   "users",
   {
@@ -693,3 +705,54 @@ export const systemUserRolesRelations = relations(
     }),
   })
 );
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    actorType: actorTypeEnum("actor_type").notNull(),
+    type: varchar("type", { length: 100 }).notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    message: varchar("message", { length: 1000 }).notNull(),
+    link: varchar("link", { length: 255 }),
+    isRead: boolean("is_read").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    userIdx: index("notification_user_idx").on(table.userId),
+    actorTypeIdx: index("notification_actor_type_idx").on(table.actorType),
+    isReadIdx: index("notification_is_read_idx").on(table.isRead),
+    createdAtIdx: index("notification_created_at_idx").on(table.createdAt),
+  })
+);
+
+export const notificationPreferences = pgTable(
+  "notification_preferences",
+  {
+    userId: uuid("user_id").notNull(),
+    actorType: actorTypeEnum("actor_type").notNull(),
+    channel: notificationChannelEnum("channel").notNull(),
+    enabled: boolean("enabled").default(true).notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.actorType, table.channel] }),
+  })
+);
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+  driver: one(drivers, {
+    fields: [notifications.userId],
+    references: [drivers.id],
+  }),
+  systemUser: one(systemUsers, {
+    fields: [notifications.userId],
+    references: [systemUsers.id],
+  }),
+}));

@@ -9,9 +9,10 @@ import {
 } from "@/app/db/schema";
 import { NextRequest, NextResponse } from "next/server";
 import { sendUserCredentialsEmail } from "@/app/lib/mail";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
+import { notify } from "@/lib/notifications/notifier";
 import { auth } from "@/app/auth";
 
 export async function postCompany(request: NextRequest) {
@@ -72,7 +73,39 @@ export async function postCompany(request: NextRequest) {
         );
       }
 
-      // 6. Assign Role to User
+      // 6. Create Driver Role for this Company
+      const [driverRole] = await tx
+        .insert(roles)
+        .values({
+          name: "Driver",
+          description: "Limited access for drivers",
+          companyId: company.id,
+        })
+        .returning();
+
+      // 7. Fetch specific permissions for Driver Role
+      const driverPermissions = await tx.query.permissions.findMany({
+        where: inArray(permissions.name, [
+          "driver.read",
+          "driver.update",
+          "trip.read",
+          "vehicle.read",
+        ]),
+      });
+
+      // 8. Assign Permissions to Driver Role
+      if (driverPermissions.length > 0) {
+        await tx.insert(rolePermissions).values(
+          driverPermissions
+            .filter((p) => p.scope === "company") // Ensure we only assign company-scoped permissions
+            .map((p) => ({
+              roleId: driverRole.id,
+              permissionId: p.id,
+            }))
+        );
+      }
+
+      // 9. Assign Super Admin Role to User
       await tx.insert(userRoles).values({
         userId: adminuser.id,
         roleId: superAdminRole.id,
@@ -83,6 +116,17 @@ export async function postCompany(request: NextRequest) {
           to: adminuser.email,
           username: adminuser.email,
           password: "Welcome@123",
+        });
+
+        // Send welcome notification to company admin
+        await notify({
+          userId: adminuser.id,
+          actorType: "user",
+          type: "system.welcome",
+          title: "Welcome to FleetCo",
+          message: `Your company ${company.name} has been registered. Welcome aboard!`,
+          link: "/dashboard",
+          channels: ["in_app", "email"],
         });
       }
       return company;

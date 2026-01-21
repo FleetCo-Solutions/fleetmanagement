@@ -242,7 +242,7 @@ export default function VehicleEditForm({
   ];
 
   return (
-    <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
+    <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm h-full">
       {/* Tabs */}
       <div className="flex space-x-6 border-b border-gray-200 mb-6">
         <button

@@ -6,8 +6,9 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Driver, IDriver } from "@/app/types";
 import Modal from "@/app/components/Modal";
 import DriverForm from "./driverForm";
-import { useAddDriver, useDriverQuery } from "../query";
+import { useDriverQuery } from "../query";
 import UniversalTableSkeleton from "@/app/components/universalTableSkeleton";
+import ErrorTemplate from "@/app/components/error/errorTemplate";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -188,12 +189,12 @@ export default function DriversTable() {
       ),
 
       onClick: (row: Driver) => {
-       // Open modal for editing and pass selected row as defaults
-       setEditingDriver(row);
-       setShowAddModal(true);
+        // Open modal for editing and pass selected row as defaults
+        setEditingDriver(row);
+        setShowAddModal(true);
       },
       variant: "secondary" as const,
-    }
+    },
   ];
 
   const filterOptions = [
@@ -210,34 +211,14 @@ export default function DriversTable() {
         <div className="text-black">
           <UniversalTableSkeleton
             title="Loading Table..."
-            rows={7}
+            rows={8}
             columns={5}
           />
         </div>
       )}
       {isError && (
-        <div className="text-black flex justify-center pt-20 h-full w-full">
-          <div className="mx-auto w-fit flex flex-col items-center gap-4">
-            <div className="w-48">
-              <img
-                src="/error1.png"
-                alt="Error"
-                className="w-fill h-fill object-cover"
-              />
-            </div>
-            <h2 className="font-bold text-3xl">An Expected Error Occurred</h2>
-            <p className="text-lg text-black/60">
-              We sincerely apologize for this happening. Working on making this
-              rare as possible
-            </p>
-            <p>{error.message}</p>
-            {/* <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-[#004953] text-white px-6 py-2 rounded-lg hover:bg-[#014852] transition-colors"
-          >
-            Add User
-          </button> */}
-          </div>
+        <div className="flex justify-center pt-30 h-full">
+          <ErrorTemplate error={error} />
         </div>
       )}
       {driversData && (
@@ -286,7 +267,6 @@ export default function DriversTable() {
           initialValues={editingDriver ?? undefined}
         />
       </Modal>
-
     </>
   );
 }

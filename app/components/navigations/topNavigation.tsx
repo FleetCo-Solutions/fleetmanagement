@@ -1,5 +1,6 @@
 import { auth } from "@/app/auth";
 import UserDropdown from "./UserDropdown";
+import NotificationDrawer from "../notification/NotificationDrawer";
 
 const TopNavigation = async () => {
   const session = await auth();
@@ -10,6 +11,7 @@ const TopNavigation = async () => {
         {/* <Image src="/fleetco.png" width={120} height={30} alt="Co Brand" /> */}
       </div>
       <div className="flex gap-3 items-center">
+        <NotificationDrawer />
         <UserDropdown
           imageSrc="https://img.freepik.com/free-photo/androgynous-avatar-non-binary-queer-person_23-2151100149.jpg?t=st=1753541121~exp=1753544721~hmac=97d073003530b562fde1ff78c4045722159b9f30825be2ed48e9d2acad9799f5&w=1380"
           userName={session?.user?.name}
