@@ -2,8 +2,18 @@ import { ReactNode } from "react";
 import SideBarNavigation from "../components/navigations/sideBarNavigation";
 import TopNavigation from "../components/navigations/topNavigation";
 import Link from "next/link";
+import { auth } from "../auth";
+import { navItems } from "../components/navigations/navData";
 
 const WebLayout = async ({ children }: { children: ReactNode }) => {
+  const session = await auth();
+  const userPermissions = (session?.user as any)?.permissions || [];
+
+  const authorizedItems = navItems.filter((item) => {
+    if (!item.permission) return true;
+    return userPermissions.includes(item.permission);
+  });
+
   return (
     <div>
       <div className="flex flex-col">
@@ -44,8 +54,10 @@ const WebLayout = async ({ children }: { children: ReactNode }) => {
           <TopNavigation />
         </div>
         <div className="flex h-[93vh]">
-          <SideBarNavigation />
-          <div className=" overflow-auto bg-white h-full flex-1">{children}</div>
+          <SideBarNavigation authorizedItems={authorizedItems} />
+          <div className=" overflow-auto bg-white h-full flex-1">
+            {children}
+          </div>
         </div>
       </div>
     </div>

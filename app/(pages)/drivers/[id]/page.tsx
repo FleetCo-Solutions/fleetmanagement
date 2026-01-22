@@ -18,11 +18,18 @@ import EmergencyContactForm from "@/app/components/forms/EmergencyContactForm";
 import DriverRolesTab from "../components/DriverRolesTab";
 import { EmergencyContactPayload } from "@/app/types";
 import { toast } from "sonner";
+import { SkeletonShimmer } from "@/app/components/universalTableSkeleton";
+import ErrorTemplate from "@/app/components/error/errorTemplate";
 
 export default function DriverProfile() {
   const params = useParams();
   const driverId = params.id as string;
-  const { data: driverDetails } = useDriverDetailsQuery({ id: driverId });
+  const {
+    data: driverDetails,
+    isLoading,
+    isError,
+    error,
+  } = useDriverDetailsQuery({ id: driverId });
   const { data: driverTrips } = useDriverTrips(driverId);
   const { data: vehicleHistory } = useDriverVehicleHistory(driverId);
   const { mutateAsync: addEmergencyContact } =
@@ -154,6 +161,17 @@ export default function DriverProfile() {
               </svg>
             </div>
             <div>
+              {isLoading && (
+                <div className="flex flex-col gap-2">
+                  <SkeletonShimmer className="h-7 w-58" />
+                  <SkeletonShimmer className="h-4 w-20" />
+                </div>
+              )}
+              {isError && (
+                <p className="text-red-500 font-bold text-lg">
+                  Error: {error.message}
+                </p>
+              )}
               {driverDetails && (
                 <>
                   <h1 className="text-3xl font-bold text-black">
@@ -233,6 +251,45 @@ export default function DriverProfile() {
         {/* Tab Content */}
         {activeTab === "profile" && (
           <div className="bg-white border border-black/20 rounded-xl p-10 shadow-sm">
+            {isLoading && (
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="flex flex-col gap-2">
+                    <SkeletonShimmer className="h-4 w-40" />
+                    <SkeletonShimmer className="h-10" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <SkeletonShimmer className="h-4 w-40" />
+                    <SkeletonShimmer className="h-10" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <SkeletonShimmer className="h-4 w-40" />
+                    <SkeletonShimmer className="h-10" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <SkeletonShimmer className="h-4 w-40" />
+                    <SkeletonShimmer className="h-10" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <SkeletonShimmer className="h-4 w-40" />
+                    <SkeletonShimmer className="h-10" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <SkeletonShimmer className="h-4 w-40" />
+                    <SkeletonShimmer className="h-10" />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                    <SkeletonShimmer className="h-4 w-40" />
+                  <SkeletonShimmer className="h-10" />
+                  </div>
+                <div className="flex gap-4 justify-end">
+                  <SkeletonShimmer className="h-10 w-30" />
+                  <SkeletonShimmer className="h-10 w-30" />
+                </div>
+              </div>
+            )}
+            {isError && <ErrorTemplate error={error} />}
             {driverDetails && (
               <DriverProfileForm
                 driver={driverDetails.dto.profile}

@@ -2,7 +2,7 @@
 import React from 'react'
 
 // Skeleton shimmer animation component
-const SkeletonShimmer = ({ className = "" }: { className?: string }) => (
+export const SkeletonShimmer = ({ className = "" }: { className?: string }) => (
   <div className={`animate-pulse bg-gray-200 rounded ${className}`}></div>
 )
 

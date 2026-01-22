@@ -1,6 +1,6 @@
 
 import WebLayout from "./(pages)/layout";
-import RealTimeData from "./(pages)/realTimeData/page";
+import RealTimeData from "./(pages)/dashboard/page";
 
 export default async function Home() {
  
