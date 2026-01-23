@@ -15,7 +15,7 @@ const TopNavigation = async () => {
         <UserDropdown
           imageSrc="https://img.freepik.com/free-photo/androgynous-avatar-non-binary-queer-person_23-2151100149.jpg?t=st=1753541121~exp=1753544721~hmac=97d073003530b562fde1ff78c4045722159b9f30825be2ed48e9d2acad9799f5&w=1380"
           userName={session?.user?.name}
-          userRole="Fleet Manager"
+          userRole={session?.user?.role[0]}
         />
       </div>
     </div>
