@@ -63,34 +63,56 @@ export async function hasPermission(
 }
 
 /**
- * Get all permissions for a user
+ * Get all permissions and roles for a user
  */
-export async function getUserPermissions(
-  user: AuthenticatedUser
-): Promise<string[]> {
-  if (!user.id) return [];
+export async function getUserPermissions(user: AuthenticatedUser): Promise<{
+  permissions: string[];
+  roles: string[];
+}> {
+  if (!user.id) return { permissions: [], roles: [] };
 
   try {
-    let roleIds: string[] = [];
+    let roleList: { roleId: string; role: { name: string } }[] = [];
 
     if (user.type === "systemUser") {
-      const userRoleList = await db.query.systemUserRoles.findMany({
+      roleList = (await db.query.systemUserRoles.findMany({
         where: eq(systemUserRoles.systemUserId, user.id),
-      });
-      roleIds = userRoleList.map((ur) => ur.roleId);
+        with: {
+          role: {
+            columns: {
+              name: true,
+            },
+          },
+        },
+      })) as any;
     } else if (user.type === "driver") {
-      const driverRoleList = await db.query.driverRoles.findMany({
+      roleList = (await db.query.driverRoles.findMany({
         where: eq(driverRoles.driverId, user.id),
-      });
-      roleIds = driverRoleList.map((dr) => dr.roleId);
+        with: {
+          role: {
+            columns: {
+              name: true,
+            },
+          },
+        },
+      })) as any;
     } else {
-      const userRoleList = await db.query.userRoles.findMany({
+      roleList = (await db.query.userRoles.findMany({
         where: eq(userRoles.userId, user.id),
-      });
-      roleIds = userRoleList.map((ur) => ur.roleId);
+        with: {
+          role: {
+            columns: {
+              name: true,
+            },
+          },
+        },
+      })) as any;
     }
 
-    if (roleIds.length === 0) return [];
+    if (roleList.length === 0) return { permissions: [], roles: [] };
+
+    const roleIds = roleList.map((r) => r.roleId);
+    const roleNames = roleList.map((r) => r.role.name);
 
     const rolePermissionList = await db.query.rolePermissions.findMany({
       where: inArray(rolePermissions.roleId, roleIds),
@@ -99,11 +121,16 @@ export async function getUserPermissions(
       },
     });
 
-    return Array.from(
+    const permissions = Array.from(
       new Set(rolePermissionList.map((rp) => rp.permission.name))
     );
+
+    return {
+      permissions,
+      roles: roleNames,
+    };
   } catch (error) {
     console.error("Error getting user permissions:", error);
-    return [];
+    return { permissions: [], roles: [] };
   }
 }

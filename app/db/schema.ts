@@ -9,6 +9,8 @@ import {
   boolean,
   jsonb,
   primaryKey,
+  doublePrecision,
+  real,
 } from "drizzle-orm/pg-core";
 
 export const userStatusEnum = pgEnum("user_status", [
@@ -86,7 +88,7 @@ export const users = pgTable(
       emailIdx: index("email_idx").on(user.email),
       companyIdx: index("company_idx").on(user.companyId),
     };
-  }
+  },
 );
 
 // Companies Table
@@ -114,7 +116,7 @@ export const companies = pgTable(
   (table) => ({
     statusIdx: index("company_status_idx").on(table.status),
     emailIdx: index("company_email_idx").on(table.contactEmail),
-  })
+  }),
 );
 
 // System Users Table (FleetCo staff, admins, support)
@@ -141,7 +143,7 @@ export const systemUsers = pgTable(
   },
   (table) => ({
     emailIdx: index("system_user_email_idx").on(table.email),
-  })
+  }),
 );
 
 // Audit Logs Table (Track all admin actions)
@@ -183,10 +185,10 @@ export const auditLogs = pgTable(
     actionIdx: index("audit_log_action_idx").on(table.action),
     entityIdx: index("audit_log_entity_idx").on(
       table.entityType,
-      table.entityId
+      table.entityId,
     ),
     createdAtIdx: index("audit_log_created_at_idx").on(table.createdAt),
-  })
+  }),
 );
 
 export const drivers = pgTable(
@@ -218,7 +220,7 @@ export const drivers = pgTable(
       licenseNumberIdx: index("licenseNumberIdx").on(driver.licenseNumber),
       companyIdx: index("drivers_company_idx").on(driver.companyId),
     };
-  }
+  },
 );
 
 export const vehicles = pgTable(
@@ -243,7 +245,7 @@ export const vehicles = pgTable(
     return {
       companyIdx: index("vehicles_company_idx").on(vehicle.companyId),
     };
-  }
+  },
 );
 
 export const emergencyContacts = pgTable(
@@ -273,7 +275,7 @@ export const emergencyContacts = pgTable(
       userIdx: index("user_idx").on(table.userId),
       driverIdx: index("driver_idx").on(table.driverId),
     };
-  }
+  },
 );
 
 export const emergencyContactsRelations = relations(
@@ -287,7 +289,7 @@ export const emergencyContactsRelations = relations(
       fields: [emergencyContacts.driverId],
       references: [drivers.id],
     }),
-  })
+  }),
 );
 
 export const passwordResetOtps = pgTable(
@@ -315,7 +317,7 @@ export const passwordResetOtps = pgTable(
       emailIdx: index("otp_email_idx").on(table.email),
       phoneIdx: index("otp_phone_idx").on(table.phone),
     };
-  }
+  },
 );
 
 // Maintenance Enums
@@ -386,7 +388,7 @@ export const maintenanceRecords = pgTable(
       statusIdx: index("maintenance_status_idx").on(table.status),
       companyIdx: index("maintenance_company_idx").on(table.companyId),
     };
-  }
+  },
 );
 
 // Trips Enum
@@ -410,7 +412,7 @@ export const trips = pgTable(
       .references(() => drivers.id)
       .notNull(),
     substituteDriverId: uuid("substitute_driver_id").references(
-      () => drivers.id
+      () => drivers.id,
     ),
     startLocation: varchar("start_location", { length: 255 }).notNull(),
     endLocation: varchar("end_location", { length: 255 }).notNull(),
@@ -440,7 +442,7 @@ export const trips = pgTable(
       startTimeIdx: index("trip_start_time_idx").on(table.startTime),
       companyIdx: index("trips_company_idx").on(table.companyId),
     };
-  }
+  },
 );
 
 export const tripsRelations = relations(trips, ({ one }) => ({
@@ -503,7 +505,7 @@ export const vehicleAssignmentsRelations = relations(
       fields: [vehicleAssignments.vehicleId],
       references: [vehicles.id],
     }),
-  })
+  }),
 );
 
 // Update drivers relations to include assignments
@@ -521,11 +523,15 @@ export const driversRelation = relations(drivers, ({ many, one }) => ({
 }));
 
 // Update vehicles relations to include assignments
-export const vehiclesRelation = relations(vehicles, ({ many }) => ({
+export const vehiclesRelation = relations(vehicles, ({ many, one }) => ({
   drivers: many(drivers),
   maintenanceRecords: many(maintenanceRecords),
   trips: many(trips),
   assignments: many(vehicleAssignments),
+  location: one(vehicleLocations, {
+    fields: [vehicles.id],
+    references: [vehicleLocations.vehicleId],
+  }),
 }));
 
 // New Relations
@@ -562,7 +568,7 @@ export const roles = pgTable(
   },
   (table) => ({
     companyIdx: index("roles_company_idx").on(table.companyId),
-  })
+  }),
 );
 
 export const permissionScopeEnum = pgEnum("permission_scope", [
@@ -592,7 +598,7 @@ export const rolePermissions = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.roleId, table.permissionId] }),
-  })
+  }),
 );
 
 export const userRoles = pgTable(
@@ -607,7 +613,7 @@ export const userRoles = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.userId, table.roleId] }),
-  })
+  }),
 );
 
 export const systemUserRoles = pgTable(
@@ -622,7 +628,7 @@ export const systemUserRoles = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.systemUserId, table.roleId] }),
-  })
+  }),
 );
 
 export const driverRoles = pgTable(
@@ -637,7 +643,7 @@ export const driverRoles = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.driverId, table.roleId] }),
-  })
+  }),
 );
 
 // RBAC Relations
@@ -667,7 +673,7 @@ export const rolePermissionsRelations = relations(
       fields: [rolePermissions.permissionId],
       references: [permissions.id],
     }),
-  })
+  }),
 );
 
 export const userRolesRelations = relations(userRoles, ({ one }) => ({
@@ -703,7 +709,7 @@ export const systemUserRolesRelations = relations(
       fields: [systemUserRoles.roleId],
       references: [roles.id],
     }),
-  })
+  }),
 );
 
 export const notifications = pgTable(
@@ -726,7 +732,7 @@ export const notifications = pgTable(
     actorTypeIdx: index("notification_actor_type_idx").on(table.actorType),
     isReadIdx: index("notification_is_read_idx").on(table.isRead),
     createdAtIdx: index("notification_created_at_idx").on(table.createdAt),
-  })
+  }),
 );
 
 export const notificationPreferences = pgTable(
@@ -739,7 +745,7 @@ export const notificationPreferences = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.userId, table.actorType, table.channel] }),
-  })
+  }),
 );
 
 export const notificationsRelations = relations(notifications, ({ one }) => ({
@@ -756,3 +762,43 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     references: [systemUsers.id],
   }),
 }));
+
+export const vehicleLocations = pgTable(
+  "vehicle_locations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id").references(() => companies.id, {
+      onDelete: "cascade",
+    }),
+    vehicleId: uuid("vehicle_id")
+      .references(() => vehicles.id, { onDelete: "cascade" })
+      .notNull()
+      .unique(),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    heading: real("heading"),
+    speed: real("speed"),
+    status: varchar("status", { length: 20 }).default("moving"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    vehicleIdx: index("vehicle_location_vehicle_idx").on(table.vehicleId),
+    companyIdx: index("vehicle_location_company_idx").on(table.companyId),
+  }),
+);
+
+export const vehicleLocationsRelations = relations(
+  vehicleLocations,
+  ({ one }) => ({
+    vehicle: one(vehicles, {
+      fields: [vehicleLocations.vehicleId],
+      references: [vehicles.id],
+    }),
+    company: one(companies, {
+      fields: [vehicleLocations.companyId],
+      references: [companies.id],
+    }),
+  }),
+);
