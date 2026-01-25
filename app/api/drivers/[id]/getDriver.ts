@@ -11,6 +11,7 @@ export default async function getDriverDetails(id: string, companyId: string) {
       where: and(eq(drivers.id, id), eq(drivers.companyId, companyId)),
       with: {
         emergencyContacts: true,
+        vehicle: true,
         roles: {
           with: {
             role: true,
@@ -29,6 +30,12 @@ export default async function getDriverDetails(id: string, companyId: string) {
         { status: 404 }
       );
     }
+    const vehicleName = driverDetails.vehicle
+      ? driverDetails.vehicle.manufacturer && driverDetails.vehicle.model
+        ? `${driverDetails.vehicle.manufacturer} ${driverDetails.vehicle.model}`
+        : driverDetails.vehicle.registrationNumber || null
+      : null;
+
     return NextResponse.json(
       {
         timestamp: date,
@@ -53,6 +60,8 @@ export default async function getDriverDetails(id: string, companyId: string) {
           },
           emergencyContacts: driverDetails.emergencyContacts,
           roles: driverDetails.roles || [],
+          vehicleId: driverDetails.vehicleId || null,
+          vehicleName: vehicleName,
         },
       },
       { status: 200 }

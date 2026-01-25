@@ -228,5 +228,11 @@ export const DriverDetailResponseSchema = z.object({
       accountAge: z.number(),
     }),
     emergencyContacts: z.array(z.any()),
+    vehicleId: z.string().uuid().nullable().openapi({
+      description: "Assigned vehicle ID",
+    }),
+    vehicleName: z.string().nullable().openapi({
+      description: "Assigned vehicle name (manufacturer + model or registration number)",
+    }),
   }),
 });
