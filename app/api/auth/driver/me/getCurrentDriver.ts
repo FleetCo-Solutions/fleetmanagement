@@ -25,6 +25,18 @@ interface DriverProfileResponse {
       startTime: string;
       status: string;
     }>;
+    emergencyContacts?: Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      relationship: string;
+      address: string | null;
+      phone: string;
+      email: string | null;
+      alternativeNo: string | null;
+      createdAt: string;
+      updatedAt: string | null;
+    }>;
   };
   message?: string;
 }
@@ -69,11 +81,12 @@ export async function getCurrentDriver(
       );
     }
 
-    // Query driver by ID with vehicle relation
+    // Query driver by ID with vehicle and emergency contacts relations
     const driverData = await db.query.drivers.findFirst({
       where: eq(drivers.id, payload.id),
       with: {
         vehicle: true,
+        emergencyContacts: true,
       },
     });
 
@@ -133,6 +146,22 @@ export async function getCurrentDriver(
     // Ensure role is not null (default to 'substitute' if null)
     const driverRole: "main" | "substitute" = driverData.role || "substitute";
 
+    // Format emergency contacts (exclude deleted ones)
+    const emergencyContacts = (driverData.emergencyContacts || [])
+      .filter((contact) => !contact.deleted)
+      .map((contact) => ({
+        id: contact.id,
+        firstName: contact.firstName,
+        lastName: contact.lastName,
+        relationship: contact.relationship,
+        address: contact.address,
+        phone: contact.phone,
+        email: contact.email,
+        alternativeNo: contact.alternativeNo,
+        createdAt: contact.createdAt.toISOString(),
+        updatedAt: contact.updatedAt?.toISOString() || null,
+      }));
+
     // Return driver profile
     return NextResponse.json(
       {
@@ -146,6 +175,7 @@ export async function getCurrentDriver(
           vehicleName: driverData.vehicle?.registrationNumber || null,
           role: driverRole,
           assignedTrips,
+          emergencyContacts,
         },
       },
       { status: 200 }
