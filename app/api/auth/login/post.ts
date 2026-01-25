@@ -38,7 +38,7 @@ export async function loginUser(request: NextRequest) {
     }
 
     // Here you would normally verify the password with a hashed password stored in the database\
-    if (!await bcrypt.compare(password, user.password)) {
+    if (!(await bcrypt.compare(password, user.password))) {
       return NextResponse.json(
         { message: "Invalid email or password" },
         { status: 401 }
@@ -50,13 +50,13 @@ export async function loginUser(request: NextRequest) {
       .set({ lastLogin: new Date() })
       .where(eq(users.id, user.id));
 
-    // Fetch permissions
+    // Fetch permissions and roles
     const authUser: AuthenticatedUser = {
       id: user.id,
       companyId: user.companyId || "",
       type: "user",
     };
-    const permissions = await getUserPermissions(authUser);
+    const { permissions, roles } = await getUserPermissions(authUser);
 
     return NextResponse.json(
       {
@@ -64,6 +64,7 @@ export async function loginUser(request: NextRequest) {
         user: {
           ...user,
           permissions,
+          role: roles || [], // Include the primary role
         },
       },
       { status: 200 }
