@@ -91,8 +91,10 @@ const Trips = () => {
         </div>
 
         {/* Tab Content */}
-        {activeTab === "overview" && <TripsTable />}
-        {activeTab === "statistics" && <TripCharts />}
+        <div className="flex-1 overflow-auto">
+          {activeTab === "overview" && <TripsTable />}
+          {activeTab === "statistics" && <TripCharts />}
+        </div>
       </div>
     </div>
   );

@@ -225,7 +225,7 @@ export default function UniversalTable<T>({
       )}
 
       {/* Table */}
-      <div className="rounded-md border border-gray-300 overflow-hidden">
+      <div className="rounded-md border border-gray-300 overflow-hidden max-h-[70vh] overflow-y-auto">
         <table className="min-w-full divide-y divide-gray-300 border-collapse">
           <thead className="bg-gray-50">
             {table.getHeaderGroups().map((headerGroup) => (
