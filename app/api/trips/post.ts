@@ -4,6 +4,7 @@ import { trips } from "@/app/db/schema";
 import { NextRequest, NextResponse } from "next/server";
 import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
 import { notify } from "@/lib/notifications/notifier";
+import { parseTripDateTime } from "@/lib/utils/date-timezone";
 
 export async function postTrip(request: NextRequest, companyId: string) {
   const date = new Date();
@@ -52,6 +53,20 @@ export async function postTrip(request: NextRequest, companyId: string) {
       "actualEndLocation"
     );
 
+    // Parse start and end times as GMT+3 (treat form input as local time GMT+3)
+    const startTime = parseTripDateTime(body.startTime);
+    const endTime = parseTripDateTime(body.endTime);
+
+    if (!startTime) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Start time is required and must be valid",
+        },
+        { status: 400 }
+      );
+    }
+
     const newTrip = await db
       .insert(trips)
       .values({
@@ -60,8 +75,8 @@ export async function postTrip(request: NextRequest, companyId: string) {
         substituteDriverId: body.substituteDriverId || null,
         startLocation: body.startLocation,
         endLocation: body.endLocation,
-        startTime: new Date(body.startTime),
-        endTime: body.endTime ? new Date(body.endTime) : null,
+        startTime: startTime,
+        endTime: endTime,
         status: body.status || "scheduled",
         distanceKm: body.distanceKm?.toString() || null,
         fuelUsed: body.fuelUsed?.toString() || null,

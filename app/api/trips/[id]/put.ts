@@ -5,6 +5,7 @@ import { eq, and, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, verifyToken } from "@/lib/auth/jwt";
 import { notify } from "@/lib/notifications/notifier";
+import { parseTripDateTime } from "@/lib/utils/date-timezone";
 
 /**
  * Trip update request body
@@ -294,9 +295,15 @@ export async function putTrip(request: NextRequest, id: string) {
       updateData.substituteDriverId = body.substituteDriverId;
     if (body.startLocation) updateData.startLocation = body.startLocation;
     if (body.endLocation) updateData.endLocation = body.endLocation;
-    if (body.startTime) updateData.startTime = new Date(body.startTime);
-    if (body.endTime !== undefined)
-      updateData.endTime = body.endTime ? new Date(body.endTime) : null;
+    if (body.startTime) {
+      const parsedStartTime = parseTripDateTime(body.startTime);
+      if (parsedStartTime) {
+        updateData.startTime = parsedStartTime;
+      }
+    }
+    if (body.endTime !== undefined) {
+      updateData.endTime = parseTripDateTime(body.endTime);
+    }
     if (body.status) updateData.status = body.status;
     if (body.distanceKm !== undefined)
       updateData.distanceKm = body.distanceKm?.toString() || null;
