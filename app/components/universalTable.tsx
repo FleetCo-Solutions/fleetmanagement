@@ -266,17 +266,23 @@ export default function UniversalTable<T>({
                   }`}
                   onClick={() => onRowClick?.(row.original as T)}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="whitespace-nowrap px-3 py-4 text-base font-semibold text-black/60"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const columnMeta = cell.column.columnDef.meta as { className?: string } | undefined;
+                    const cellClassName = columnMeta?.className 
+                      ? `px-3 py-4 text-base font-semibold text-black/60 ${columnMeta.className}`
+                      : "whitespace-nowrap px-3 py-4 text-base font-semibold text-black/60";
+                    return (
+                      <td
+                        key={cell.id}
+                        className={cellClassName}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))
             ) : (

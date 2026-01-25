@@ -73,6 +73,7 @@ export default function TripsTable() {
     {
       header: "Start Location",
       accessorKey: "startLocation",
+      size: 150,
       cell: ({ row }) => {
         const actualStartLoc = (row.original as any).actualStartLocation;
         const scheduledLoc = row.original.startLocation;
@@ -82,21 +83,47 @@ export default function TripsTable() {
           const loc = typeof actualStartLoc === 'string' 
             ? JSON.parse(actualStartLoc) 
             : actualStartLoc;
+          const actualText = `Actual: ${loc.latitude?.toFixed(4)}, ${loc.longitude?.toFixed(4)}`;
+          const fullText = `${scheduledLoc}\n${actualText}`;
           return (
-            <div className="flex flex-col">
-              <span className="text-xs text-gray-500">{scheduledLoc}</span>
-              <span className="text-blue-600 font-medium text-sm">
-                Actual: {loc.latitude?.toFixed(4)}, {loc.longitude?.toFixed(4)}
+            <div 
+              className="flex flex-col max-w-[150px]"
+              title={fullText}
+              style={{ width: '200px' }}
+            >
+              <span 
+                className="text-xs text-gray-500 truncate block"
+                title={scheduledLoc}
+              >
+                {scheduledLoc}
+              </span>
+              <span 
+                className="text-blue-600 font-medium text-sm truncate block"
+                title={actualText}
+              >
+                {actualText}
               </span>
             </div>
           );
         }
-        return <span>{scheduledLoc}</span>;
+        return (
+          <span 
+            className="block max-w-[150px] truncate"
+            title={scheduledLoc}
+            style={{ width: '150px', display: 'block' }}
+          >
+            {scheduledLoc}
+          </span>
+        );
+      },
+      meta: {
+        className: '!whitespace-normal max-w-[150px]',
       },
     },
     {
       header: "End Location",
       accessorKey: "endLocation",
+      size: 150,
       cell: ({ row }) => {
         const actualEndLoc = (row.original as any).actualEndLocation;
         const scheduledLoc = row.original.endLocation;
@@ -106,16 +133,41 @@ export default function TripsTable() {
           const loc = typeof actualEndLoc === 'string' 
             ? JSON.parse(actualEndLoc) 
             : actualEndLoc;
+          const actualText = `Actual: ${loc.latitude?.toFixed(4)}, ${loc.longitude?.toFixed(4)}`;
+          const fullText = `${scheduledLoc}\n${actualText}`;
           return (
-            <div className="flex flex-col">
-              <span className="text-xs text-gray-500">{scheduledLoc}</span>
-              <span className="text-green-600 font-medium text-sm">
-                Actual: {loc.latitude?.toFixed(4)}, {loc.longitude?.toFixed(4)}
+            <div 
+              className="flex flex-col max-w-[150px]"
+              title={fullText}
+              style={{ width: '200px' }}
+            >
+              <span 
+                className="text-xs text-gray-500 truncate block"
+                title={scheduledLoc}
+              >
+                {scheduledLoc}
+              </span>
+              <span 
+                className="text-green-600 font-medium text-sm truncate block"
+                title={actualText}
+              >
+                {actualText}
               </span>
             </div>
           );
         }
-        return <span>{scheduledLoc}</span>;
+        return (
+          <span 
+            className="block max-w-[150px] truncate"
+            title={scheduledLoc}
+            style={{ width: '150px', display: 'block' }}
+          >
+            {scheduledLoc}
+          </span>
+        );
+      },
+      meta: {
+        className: '!whitespace-normal max-w-[150px]',
       },
     },
     {
