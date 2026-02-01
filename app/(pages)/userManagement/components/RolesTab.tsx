@@ -9,6 +9,8 @@ import {
   useDeleteRole,
 } from "../query";
 import { toast } from "sonner";
+import { SkeletonShimmer } from "@/app/components/universalTableSkeleton";
+import { SkeletonGrid } from "./roleSkeleton";
 
 interface RoleFormData {
   name: string;
@@ -25,18 +27,6 @@ const RolesTab = () => {
   const addRoleMutation = useAddRole();
   const updateRoleMutation = useUpdateRole();
   const deleteRoleMutation = useDeleteRole();
-
-  if (isLoading) {
-    return <div className="text-black/80 font-bold p-6">Loading roles...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="text-red-600 font-bold p-6">
-        Error loading roles: {error.message}
-      </div>
-    );
-  }
 
   const filteredRoles = (roles || []).filter(
     (role: any) =>
@@ -75,6 +65,20 @@ const RolesTab = () => {
       }
     }
   };
+
+   if (isLoading) {
+    return (
+      <SkeletonGrid/>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-600 font-bold p-6">
+        Error loading roles: {error.message}
+      </div>
+    );
+  }
 
   return (
     <div>
