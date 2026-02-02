@@ -748,6 +748,117 @@ export const notificationPreferences = pgTable(
   }),
 );
 
+// Notification Groups
+export const notificationGroups = pgTable(
+  "notification_groups",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .references(() => companies.id, { onDelete: "cascade" })
+      .notNull(),
+    name: varchar("name", { length: 100 }).notNull(),
+    description: varchar("description", { length: 255 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    companyIdx: index("notification_group_company_idx").on(table.companyId),
+  }),
+);
+
+// Group Subscriptions (Topics defined by Strings for now)
+export const notificationGroupTypes = pgTable(
+  "notification_group_types",
+  {
+    groupId: uuid("group_id")
+      .references(() => notificationGroups.id, { onDelete: "cascade" })
+      .notNull(),
+    type: varchar("type", { length: 100 }).notNull(), // e.g. "violation.overspeed"
+    sendEmail: boolean("send_email").default(false).notNull(), // Control email delivery per topic
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.groupId, table.type] }),
+    groupIdx: index("notification_group_type_idx").on(table.groupId),
+    typeIdx: index("notification_group_type_string_idx").on(table.type),
+  }),
+);
+
+// Group Members (Users)
+export const notificationGroupUsers = pgTable(
+  "notification_group_users",
+  {
+    groupId: uuid("group_id")
+      .references(() => notificationGroups.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.groupId, table.userId] }),
+    groupIdx: index("notification_group_user_idx").on(table.groupId),
+    userIdx: index("notification_group_user_userid_idx").on(table.userId),
+  }),
+);
+
+// Notification Rules (e.g. Speed > 80)
+export const notificationRules = pgTable(
+  "notification_rules",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .references(() => companies.id, { onDelete: "cascade" })
+      .notNull(),
+    name: varchar("name", { length: 100 }).notNull(),
+    type: varchar("type", { length: 50 }).notNull(), // OVERSPEED, GEOFENCE, EXPIRY
+    criteria: jsonb("criteria").notNull(), // { limit: 80, duration: 5 }
+    enabled: boolean("enabled").default(true).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    companyIdx: index("notification_rules_company_idx").on(table.companyId),
+  }),
+);
+
+export const notificationGroupsRelations = relations(
+  notificationGroups,
+  ({ one, many }) => ({
+    company: one(companies, {
+      fields: [notificationGroups.companyId],
+      references: [companies.id],
+    }),
+    types: many(notificationGroupTypes),
+    users: many(notificationGroupUsers),
+  }),
+);
+
+export const notificationGroupUsersRelations = relations(
+  notificationGroupUsers,
+  ({ one }) => ({
+    group: one(notificationGroups, {
+      fields: [notificationGroupUsers.groupId],
+      references: [notificationGroups.id],
+    }),
+    user: one(users, {
+      fields: [notificationGroupUsers.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
+export const notificationGroupTypesRelations = relations(
+  notificationGroupTypes,
+  ({ one }) => ({
+    group: one(notificationGroups, {
+      fields: [notificationGroupTypes.groupId],
+      references: [notificationGroups.id],
+    }),
+  }),
+);
+
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, {
     fields: [notifications.userId],

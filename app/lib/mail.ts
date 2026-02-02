@@ -150,3 +150,90 @@ export async function sendOtpEmail({
     throw error;
   }
 }
+
+export async function sendNotificationEmail({
+  to,
+  userName,
+  title,
+  message,
+  link,
+  notificationType,
+}: {
+  to: string;
+  userName: string;
+  title: string;
+  message: string;
+  link?: string;
+  notificationType: string;
+}) {
+  try {
+    const data = await resend.emails.send({
+      from: "FleetCo <noreply@fleetcotelematics.com>",
+      to,
+      subject: title,
+      html: `
+  <div style="background-color:#f6f8fa; padding:40px 0; font-family:Arial, sans-serif;">
+    <div style="max-width:600px; margin:0 auto; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.05); overflow:hidden;">
+      
+      <!-- Header -->
+      <div style="background:linear-gradient(to right, #004953, #004953); padding:24px; text-align:center;">
+        <div style="width:56px; height:56px; margin:0 auto; background:white; border-radius:16px; display:inline-flex; align-items:center; justify-content:center; color:#004953; font-size:24px; font-weight:700; box-shadow:0 0 10px rgba(255,255,255,0.2);">
+          <div>FC</div>
+        </div>
+        <div style="margin-top:10px;">
+          <span style="font-size:28px; font-weight:700; color:white;">FleetCo</span>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div style="padding:32px;">
+        <h2 style="color:#111827; margin-bottom:16px;">${title}</h2>
+        <p style="color:#374151; line-height:1.6; margin-bottom:24px;">
+          Hi ${userName},
+        </p>
+        <p style="color:#374151; line-height:1.6; margin-bottom:24px;">
+          ${message}
+        </p>
+
+        ${
+          link
+            ? `
+        <!-- Action Button -->
+        <div style="text-align:center; margin:32px 0;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://solutions.fleetcotelematics.com"}${link}"
+             style="display:inline-block; background:linear-gradient(to right, #004953, #006b7a); color:white; padding:14px 32px; border-radius:8px; font-weight:600; text-decoration:none; box-shadow:0 4px 12px rgba(0,73,83,0.3);">
+             View Details
+          </a>
+        </div>
+        `
+            : ""
+        }
+
+        <!-- Info Box -->
+        <div style="background-color:#f3f4f6; border-left:4px solid #004953; padding:16px; border-radius:8px; margin:24px 0;">
+          <p style="margin:0; color:#374151; font-size:14px; line-height:1.5;">
+            <strong>Notification Type:</strong> ${notificationType}
+          </p>
+        </div>
+
+        <p style="color:#6b7280; font-size:14px; line-height:1.5; margin-top:24px;">
+          You received this notification because you are subscribed to <strong>${notificationType}</strong> alerts in your notification group settings.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div style="background-color:#f9fafb; text-align:center; padding:16px; color:#9ca3af; font-size:12px;">
+        © ${new Date().getFullYear()} FleetCo Telematics. All rights reserved.
+      </div>
+    </div>
+  </div>
+      `,
+    });
+
+    console.log(`[Email] Sent notification to ${to}: ${title}`);
+    return data;
+  } catch (error) {
+    console.error("Notification email sending failed:", error);
+    throw error;
+  }
+}
