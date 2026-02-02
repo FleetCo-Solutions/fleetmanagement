@@ -7,10 +7,18 @@ import {
   CreateTripPayload,
   UpdateTripPayload,
   Trip,
+  tripSummary,
+  tripMachineLearning,
+  getTripLatestLocation,
 } from "@/actions/trips";
-import { TripDetails, ITrips } from "@/app/types";
+import {
+  TripDetails,
+  ITrips,
+  TripSummary,
+  NewTripDetails,
+  FrankTripDetails,
+} from "@/app/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
 
 export const useTripsQuery = () => {
   return useQuery<ITrips>({
@@ -21,9 +29,38 @@ export const useTripsQuery = () => {
 };
 
 export const useTripByIdQuery = (id: string) => {
-  return useQuery<TripDetails>({
+  return useQuery<NewTripDetails>({
     queryKey: ["Trip", id],
     queryFn: async () => await getTripById(id),
+    enabled: !!id,
+  });
+};
+
+export const useTripSummaryQuery = (id: string) => {
+  return useQuery<TripSummary>({
+    queryKey: ["TripSummary", id],
+    queryFn: async () => await tripSummary(id),
+    enabled: !!id,
+  });
+};
+
+export const useTripMachineLearningQuery = (id: string) => {
+  return useQuery<FrankTripDetails>({
+    queryKey: ["TripMachineLearning", id],
+    queryFn: async () => await tripMachineLearning(id),
+    enabled: !!id,
+  });
+};
+
+export const useTripLocationQuery = (id: string) => {
+  return useQuery({
+    queryKey: ["tripLocation", id],
+    queryFn: async () => {
+      const result = await getTripLatestLocation(id);
+      return result;
+    },
+    refetchInterval: 3000,
+    retry: false,
     enabled: !!id,
   });
 };

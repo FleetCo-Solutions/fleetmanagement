@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { PermissionGuard } from "@/components/rbac/PermissionGuard";
+import { PermissionGuard } from "@/app/components/rbac/PermissionGuard";
 import { getAuditLogs } from "@/actions/auditLogs";
 import { AuditLog, AuditLogsPagination } from "@/app/types";
+import Modal from "@/app/components/Modal";
 
 export default function AuditLogsPage() {
   const { data: session } = useSession();
@@ -123,7 +124,7 @@ export default function AuditLogsPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-lg shadow p-4 text-black">
           <h2 className="text-lg font-semibold mb-4">Filters</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
@@ -281,7 +282,7 @@ export default function AuditLogsPage() {
                   <span className="font-medium">
                     {Math.min(
                       pagination.page * pagination.limit,
-                      pagination.total
+                      pagination.total,
                     )}
                   </span>{" "}
                   of <span className="font-medium">{pagination.total}</span>{" "}
@@ -319,102 +320,71 @@ export default function AuditLogsPage() {
         </div>
 
         {/* Details Modal */}
-        {selectedLog && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    Audit Log Details
-                  </h2>
-                  <button
-                    onClick={() => setSelectedLog(null)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
+        <Modal
+          isOpen={!!selectedLog}
+          onClose={() => setSelectedLog(null)}
+          title="Audit Log Details"
+          size="3xl"
+        >
+          {selectedLog && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Action
+                  </label>
+                  <p className="text-gray-900">{selectedLog.action}</p>
                 </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">
-                        Action
-                      </label>
-                      <p className="text-gray-900">{selectedLog.action}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">
-                        Actor
-                      </label>
-                      <p className="text-gray-900">
-                        {selectedLog.actorName} ({selectedLog.actorType})
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">
-                        Date & Time
-                      </label>
-                      <p className="text-gray-900">
-                        {new Date(selectedLog.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">
-                        IP Address
-                      </label>
-                      <p className="text-gray-900">
-                        {selectedLog.ipAddress || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {selectedLog.oldValues && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 block mb-2">
-                        Before (Old Values)
-                      </label>
-                      <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto text-sm">
-                        {JSON.stringify(
-                          formatJSON(selectedLog.oldValues),
-                          null,
-                          2
-                        )}
-                      </pre>
-                    </div>
-                  )}
-
-                  {selectedLog.newValues && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 block mb-2">
-                        After (New Values)
-                      </label>
-                      <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto text-sm">
-                        {JSON.stringify(
-                          formatJSON(selectedLog.newValues),
-                          null,
-                          2
-                        )}
-                      </pre>
-                    </div>
-                  )}
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Actor
+                  </label>
+                  <p className="text-gray-900">
+                    {selectedLog.actorName} ({selectedLog.actorType})
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Date & Time
+                  </label>
+                  <p className="text-gray-900">
+                    {new Date(selectedLog.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    IP Address
+                  </label>
+                  <p className="text-gray-900">
+                    {selectedLog.ipAddress || "N/A"}
+                  </p>
                 </div>
               </div>
+
+              {selectedLog.oldValues && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500 block mb-2">
+                    Before (Old Values)
+                  </label>
+                  <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto text-sm">
+                    {JSON.stringify(formatJSON(selectedLog.oldValues), null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {selectedLog.newValues && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500 block mb-2">
+                    After (New Values)
+                  </label>
+                  <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto text-sm text-black font-bold">
+                    {JSON.stringify(formatJSON(selectedLog.newValues), null, 2)}
+                  </pre>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
+        </Modal>
       </div>
     </PermissionGuard>
   );

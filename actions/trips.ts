@@ -1,6 +1,6 @@
 "use server";
 
-import type { ITrips, TripDetails } from "@/app/types";
+import type { ITrips, NewTripDetails, TripDetails } from "@/app/types";
 import { headers } from "next/headers";
 
 export interface Trip {
@@ -78,7 +78,7 @@ export async function getTrips(): Promise<ITrips> {
   }
 }
 
-export async function getTripById(id: string): Promise<TripDetails> {
+export async function getTripById(id: string): Promise<NewTripDetails> {
   try {
     const headersList = await headers();
     const response = await fetch(
@@ -88,8 +88,8 @@ export async function getTripById(id: string): Promise<TripDetails> {
         headers: {
           "Content-Type": "application/json",
           Cookie: headersList.get("cookie") || "",
-        }
-      }
+        },
+      },
     );
 
     const result = await response.json();
@@ -105,7 +105,7 @@ export async function getTripById(id: string): Promise<TripDetails> {
 }
 
 export async function addTrip(
-  tripData: CreateTripPayload | CreateTripPayload[]
+  tripData: CreateTripPayload | CreateTripPayload[],
 ) {
   try {
     const headersList = await headers();
@@ -148,7 +148,7 @@ export async function updateTrip(id: string, payload: UpdateTripPayload) {
           Cookie: headersList.get("cookie") || "",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
 
     const result = await response.json();
@@ -177,7 +177,7 @@ export async function deleteTrip(id: string) {
           "Content-Type": "application/json",
           Cookie: headersList.get("cookie") || "",
         },
-      }
+      },
     );
 
     const result = await response.json();
@@ -191,5 +191,79 @@ export async function deleteTrip(id: string) {
     };
   } catch (error) {
     throw new Error((error as Error).message);
+  }
+}
+
+export async function tripSummary(id: string) {
+  try {
+    const headersList = await headers();
+    const response = await fetch(
+      `${process.env.COODINATE_URL}/trips/366c8117-0319-4349-a36a-60fdf78781fa/summary`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: headersList.get("cookie") || "",
+        },
+      },
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to get trip summary");
+    }
+
+    return result;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+}
+
+export async function tripMachineLearning(id: string) {
+  try {
+    const headersList = await headers();
+    const response = await fetch(
+      `${process.env.ML_URL}/v1/trips/366c8117-0319-4349-a36a-60fdf78781fa/summary`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: headersList.get("cookie") || "",
+        },
+      },
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to get trip machine learning");
+    }
+
+    return result;
+    return result;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+}
+
+export async function getTripLatestLocation(id: string) {
+  try {
+    // Use NEXT_PUBLIC_APP_URL for the Next.js server, falling back to localhost:3000
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    const response = await fetch(`${baseUrl}/api/trips/locations`, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch location");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching location:", error);
+    return null;
   }
 }

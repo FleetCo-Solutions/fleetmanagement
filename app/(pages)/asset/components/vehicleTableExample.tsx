@@ -110,7 +110,7 @@ export default function VehicleTableExample() {
         <div className="text-black">
           <UniversalTableSkeleton
             title="Loading Table..."
-            rows={10}
+            rows={7}
             columns={9}
           />
         </div>
@@ -120,9 +120,9 @@ export default function VehicleTableExample() {
           <ErrorTemplate error={error} />
         </div>
       )}
-      {Vehicles?.dto && (
+      {Vehicles && (
         <UniversalTable
-          data={Vehicles?.dto.content || []}
+          data={Vehicles.dto.content || []}
           columns={columns}
           title="Vehicle Fleet"
           searchPlaceholder="Search vehicles..."

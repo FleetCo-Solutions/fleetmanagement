@@ -195,6 +195,33 @@ export async function getDriverDashboard() {
   }
 }
 
+export async function getDriverMachineLearningData(id: string) {
+  try {
+    const headersList = await headers();
+    const response = await fetch(
+      `${process.env.ML_URL}/v1/drivers/5ba7fc05-a726-4331-8aad-7a8fca960002/summary`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: headersList.get("cookie") || "",
+        },
+        cache: "no-store",
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to fetch driver machine learning data");
+    }
+
+    return result;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+}
+
 export async function addDriver(driverData: AddDriverPayload) {
   try {
     const headersList = await headers();

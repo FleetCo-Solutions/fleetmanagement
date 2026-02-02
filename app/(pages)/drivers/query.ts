@@ -6,9 +6,10 @@ import {
   getDriversList,
   assignDriverToVehicle,
   updateDriver,
+  getDriverMachineLearningData,
 } from "@/actions/drivers";
 import { AssignDriverRequestBody } from "@/app/api/drivers/assignDriver/post";
-import { DriversList, IDriver, IUpdateDriver } from "@/app/types";
+import { DriversList, FrankDriverDetails, IDriver, IUpdateDriver } from "@/app/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useDriverQuery = () => {
@@ -76,6 +77,13 @@ export const useDriverDashboardQuery = () => {
   return useQuery({
     queryKey: ["DriverDashboard"],
     queryFn: async () => await getDriverDashboard(),
+  });
+};
+
+export const useDriverMachineLearningDataQuery = (driverId: string) => {
+  return useQuery<FrankDriverDetails>({
+    queryKey: ["DriverMachineLearningData", driverId],
+    queryFn: async () => await getDriverMachineLearningData(driverId),
   });
 };
 

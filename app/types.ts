@@ -577,7 +577,7 @@ export interface TripDetails {
   timestamp: Date;
   statusCode: string;
   message: string;
-  dto: Trips;
+  dto: TripDetailsDto;
 }
 
 export interface TripDetailsDto {
@@ -674,4 +674,220 @@ export interface AuditLogsResponse {
   data: AuditLog[];
   pagination: AuditLogsPagination;
   message?: string;
+}
+
+export interface TripSummary {
+  success: boolean;
+  data:    Data;
+}
+
+export interface Data {
+  tripId:          string;
+  vehicleId:       string;
+  startTime:       Date;
+  endTime:         Date;
+  locationCount:   number;
+  totalDistanceKm: number;
+  averageSpeedKmh: number;
+  maxSpeedKmh:     number;
+  durationMinutes: number;
+  eventsCount:     number;
+  violations:      Violation[];
+  fuelUsedLiters:  number;
+  route:           Route[];
+}
+
+export interface Route {
+  latitude:  number;
+  longitude: number;
+  time?:     Date;
+  speed:     number;
+  heading?:  number;
+}
+
+export interface Violation {
+  eventId:        string;
+  vehicleId:      string;
+  eventType:      string;
+  eventTime:      Date;
+  sourceType:     string;
+  location:       Route;
+  severity:       number;
+  additionalData: AdditionalData;
+}
+
+export interface AdditionalData {
+  additionalProp1: AdditionalProp1;
+}
+
+export interface AdditionalProp1 {
+}
+
+export interface NewTripDetails {
+  timestamp:  Date;
+  statusCode: string;
+  message:    string;
+  dto:        NewTripDetailsDto;
+}
+
+export interface NewTripDetailsDto {
+  content: NewTripDetailsContent;
+}
+
+export interface NewTripDetailsContent {
+  id:                  string;
+  companyId:           string;
+  vehicleId:           string;
+  mainDriverId:        string;
+  substituteDriverId:  null;
+  startLocation:       string;
+  endLocation:         string;
+  startTime:           Date;
+  endTime:             Date;
+  status:              string;
+  distanceKm:          null;
+  fuelUsed:            null;
+  durationMinutes:     null;
+  notes:               null;
+  actualStartTime:     Date;
+  actualEndTime:       null;
+  actualStartLocation: ActualLocation;
+  actualEndLocation:   ActualLocation;
+  createdAt:           Date;
+  updatedAt:           Date;
+  deletedAt:           null;
+  vehicle:             Vehicle;
+  mainDriver:          MainDriver;
+  substituteDriver:    null;
+}
+
+export interface ActualLocation {
+  address:   string;
+  latitude:  number;
+  longitude: number;
+}
+
+export interface MainDriver {
+  id:               string;
+  companyId:        string;
+  firstName:        string;
+  lastName:         string;
+  phone:            string;
+  alternativePhone: string;
+  licenseNumber:    string;
+  licenseExpiry:    Date;
+  status:           string;
+  passwordHash:     string;
+  role:             string;
+  vehicleId:        string;
+  lastLogin:        Date;
+  createdAt:        Date;
+  updatedAt:        Date;
+  deletedAt:        null;
+}
+
+export interface TripDetailsVehicle {
+  id:                 string;
+  companyId:          string;
+  registrationNumber: string;
+  model:              string;
+  manufacturer:       string;
+  vin:                string;
+  color:              string;
+}
+export interface FrankTripDetails {
+  trip_id: string;
+  driver_id: string;
+  trip_safety_score: number;
+  trip_safety_features: TripSafetyFeatures;
+  trip_violations_risk: null | number;
+  trip_violations: TripViolation[];
+  trip_violations_count: number;
+  trip_fuel_efficiency_kpl: null | number;
+  driver_safety_score: DriverSafetyScore;
+}
+
+export interface TripSafetyFeatures {
+  avg_speed: number;
+  speed_std: number;
+  harsh_braking_count: number;
+  harsh_accel_count: number;
+  idling_ratio: number;
+  cornering_intensity: number;
+  rpm_stress_ratio: number;
+  distance_km: number;
+  harsh_braking_rate: number;
+  harsh_accel_rate: number;
+  crash_events: number;
+  speed_compliance: number;
+  duration?: number; // Optional as it wasn't in JSON but user code used it
+  fuelUsed?: number; // Optional as it wasn't in JSON but user code used it
+}
+
+export interface TripViolation {
+  id: null | string;
+  trip_id: string;
+  driver_id: string;
+  vehicle_id: string;
+  violation_type: string;
+  severity: number;
+  timestamp: string;
+  latitude: number;
+  longitude: number;
+  metadata: ViolationMetadata | null;
+}
+
+export interface ViolationMetadata {
+  actual_speed?: number;
+  limit?: number;
+}
+
+export interface DriverSafetyScore {
+  driver_id: string;
+  score: number;
+  trip_count: number;
+  last_updated: string;
+}
+
+export interface FrankDriverDetails {
+  driver_id:          string;
+  safety_score:       SafetyScore;
+  violations:         Violation[];
+  violations_summary: ViolationsSummary;
+}
+
+export interface SafetyScore {
+  driver_id:    string;
+  score:        number;
+  trip_count:   number;
+  last_updated: Date;
+}
+
+export interface Violation {
+  id:             null;
+  trip_id:        string;
+  driver_id:      string;
+  vehicle_id:     string;
+  violation_type: string;
+  severity:       number;
+  timestamp:      Date;
+  latitude:       number;
+  longitude:      number;
+  metadata:       Metadata | null;
+}
+
+export interface Metadata {
+  actual_speed: number;
+  limit:        number;
+}
+
+export interface ViolationsSummary {
+  total_count: number;
+  by_type:     ByType;
+  by_severity: { [key: string]: number };
+}
+
+export interface ByType {
+  SPEEDING:      number;
+  HARSH_BRAKING: number;
 }

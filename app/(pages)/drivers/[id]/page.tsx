@@ -20,6 +20,9 @@ import { EmergencyContactPayload } from "@/app/types";
 import { toast } from "sonner";
 import { SkeletonShimmer } from "@/app/components/universalTableSkeleton";
 import ErrorTemplate from "@/app/components/error/errorTemplate";
+import { useDriverMachineLearningDataQuery } from "../query";
+import OverviewSkeleton from "@/app/components/cards/overviewSkeleton";
+import DriverViolationsTab from "../components/DriverViolationsTab";
 
 export default function DriverProfile() {
   const params = useParams();
@@ -32,6 +35,9 @@ export default function DriverProfile() {
   } = useDriverDetailsQuery({ id: driverId });
   const { data: driverTrips } = useDriverTrips(driverId);
   const { data: vehicleHistory } = useDriverVehicleHistory(driverId);
+  const { data: driverML, isLoading: isMLLoading } =
+    useDriverMachineLearningDataQuery(driverId);
+
   const { mutateAsync: addEmergencyContact } =
     usePostEmergencyContact(driverId);
   const { mutateAsync: updateEmergencyContactMutate } =
@@ -77,8 +83,8 @@ export default function DriverProfile() {
             row.original.status === "completed"
               ? "bg-green-100 text-green-800"
               : row.original.status === "in_progress"
-              ? "bg-blue-100 text-blue-800"
-              : "bg-gray-100 text-gray-800"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-gray-100 text-gray-800"
           }`}
         >
           {row.original.status.replace("_", " ")}
@@ -138,7 +144,7 @@ export default function DriverProfile() {
   // ... (historyColumns remain same)
 
   const [activeTab, setActiveTab] = useState<
-    "profile" | "emergency" | "trips" | "vehicle" | "roles"
+    "profile" | "emergency" | "trips" | "vehicle" | "roles" | "violations"
   >("profile");
 
   const [isEditing, setIsEditing] = useState(false);
@@ -192,26 +198,40 @@ export default function DriverProfile() {
           </div>
         </div>
         <div className="flex gap-6">
-          <OverviewRealTime
-            title="Total Trips"
-            quantity={20}
-            description="All time"
-          />
-          <OverviewRealTime
-            title="Safety Score"
-            quantity={"92%"}
-            description="Last 12 months"
-          />
-          <OverviewRealTime
-            title="Violations"
-            quantity={2}
-            description="Last 12 months"
-          />
-          <OverviewRealTime
-            title="Fuel Efficiency"
-            quantity={8.5}
-            description="km/L"
-          />
+          {isMLLoading ? (
+            <div className="flex gap-6 w-full">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <OverviewSkeleton key={index} />
+              ))}
+            </div>
+          ) : (
+            <>
+              <OverviewRealTime
+                title="Total Trips"
+                quantity={driverML?.safety_score?.trip_count || 0}
+                description="All time"
+              />
+              <OverviewRealTime
+                title="Safety Score"
+                quantity={
+                  driverML?.safety_score?.score
+                    ? `${driverML.safety_score.score}%`
+                    : "N/A"
+                }
+                description={`Last ${driverML?.safety_score?.trip_count || 0} trips`}
+              />
+              <OverviewRealTime
+                title="Violations"
+                quantity={driverML?.violations_summary?.total_count || 0}
+                description={`Last ${driverML?.safety_score?.trip_count || 0} trips`}
+              />
+              <OverviewRealTime
+                title="Fuel Efficiency"
+                quantity={"-"} // Placeholder as data not avail in ML response yet
+                description="km/L"
+              />
+            </>
+          )}
         </div>
 
         {/* Tabs */}
@@ -222,6 +242,7 @@ export default function DriverProfile() {
               { key: "emergency", label: "Emergency Contact" },
               { key: "trips", label: "Trips" },
               { key: "vehicle", label: "Vehicle History" },
+              { key: "violations", label: "Violations" },
               { key: "roles", label: "Roles & Permissions" },
             ].map((tab) => (
               <button
@@ -234,6 +255,7 @@ export default function DriverProfile() {
                       | "trips"
                       | "vehicle"
                       | "roles"
+                      | "violations",
                   )
                 }
                 className={`pb-3 px-1 text-lg font-semibold transition-colors ${
@@ -280,9 +302,9 @@ export default function DriverProfile() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                    <SkeletonShimmer className="h-4 w-40" />
+                  <SkeletonShimmer className="h-4 w-40" />
                   <SkeletonShimmer className="h-10" />
-                  </div>
+                </div>
                 <div className="flex gap-4 justify-end">
                   <SkeletonShimmer className="h-10 w-30" />
                   <SkeletonShimmer className="h-10 w-30" />
@@ -330,7 +352,6 @@ export default function DriverProfile() {
               <EmergencyContactForm
                 contacts={driverDetails.dto.emergencyContacts}
                 onSave={async (contacts) => {
-                  console.log("Saving bulk emergency contacts:", contacts);
                   try {
                     const promises = [];
 
@@ -342,7 +363,7 @@ export default function DriverProfile() {
                           updateEmergencyContactMutate({
                             id: contact.id,
                             payload: contact,
-                          })
+                          }),
                         );
                       } else {
                         const payload: EmergencyContactPayload = {
@@ -414,6 +435,15 @@ export default function DriverProfile() {
                 No vehicle assignment history found.
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === "violations" && (
+          <div className="space-y-6">
+            <DriverViolationsTab
+              isLoading={isMLLoading}
+              violations={driverML?.violations || []}
+            />
           </div>
         )}
 

@@ -1,24 +1,25 @@
-import React from 'react'
-import VehicleTableExample from './components/vehicleTableExample'
-import AddVehicleButton from './components/AddVehicleButton'
+import React from "react";
+import VehicleTableExample from "./components/vehicleTableExample";
+import AddVehicleButton from "./components/AddVehicleButton";
+import VehicleStats from "./components/vehicleStats";
+import AssetHeaderActions from "./components/AssetHeaderActions";
 
 const Assets = () => {
   return (
     <div className="bg-white w-full h-full flex items-center justify-center">
       <div className="w-[96%] h-[96%] flex flex-col gap-5">
+        <VehicleStats />
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-black">Vehicle List</h1>
           <div className="flex gap-3">
             <AddVehicleButton />
-            <button className="border border-[#004953] text-[#004953] px-4 py-2 rounded-lg hover:bg-[#004953] hover:text-white transition-colors">
-              Export Data
-            </button>
+            <AssetHeaderActions />
           </div>
         </div>
-          <VehicleTableExample />
+        <VehicleTableExample />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Assets
+export default Assets;

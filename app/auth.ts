@@ -44,6 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             status: "active" | "inactive" | "suspended";
             companyId?: string;
             permissions?: string[];
+            role: string[]
           };
           message: string;
         };
@@ -61,6 +62,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             status: user.user.status,
             companyId: user.user.companyId,
             permissions: user.user.permissions || [],
+            role: user.user.role
           };
         } else return null;
       },
@@ -79,6 +81,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.companyId = user.companyId;
         token.status = user.status;
         token.permissions = user.permissions;
+        token.role = user.role;
       }
       return token;
     },
@@ -89,6 +92,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (session.user as any).companyId = token.companyId;
         (session.user as any).status = token.status;
         (session.user as any).permissions = token.permissions || [];
+        (session.user as any).role = token.role;
       }
       return session;
     },

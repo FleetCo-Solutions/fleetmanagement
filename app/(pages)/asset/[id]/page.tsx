@@ -20,8 +20,7 @@ import VehicleEditForm from "./components/VehicleEditForm";
 import { useVehicleDetailsQuery, useUpdateVehicle } from "../query";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import type { VehicleDetailsResponse } from "@/app/types";
+import { SkeletonShimmer } from "@/app/components/universalTableSkeleton";
 
 export default function VehicleDetails() {
   const params = useParams();
@@ -32,11 +31,11 @@ export default function VehicleDetails() {
   const [activeTab, setActiveTab] = useState("overview");
 
   const tabs = [
-    { id: "overview", label: "Overview", icon: "📊" },
-    { id: "finance", label: "Finance", icon: "💰" },
-    { id: "maintenance", label: "Maintenance", icon: "🔧" },
-    { id: "trips", label: "Trips", icon: "🗺️" },
-    { id: "compliance", label: "Compliance", icon: "📋" },
+    { id: "overview", label: "Overview" },
+    { id: "finance", label: "Finance" },
+    { id: "maintenance", label: "Maintenance" },
+    { id: "trips", label: "Trips" },
+    { id: "compliance", label: "Compliance" },
   ];
 
   // Enhanced financial data for Finance tab
@@ -185,8 +184,50 @@ export default function VehicleDetails() {
   const renderOverviewTab = () => {
     if (isLoading || !vehicleDetails) {
       return (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#004953]"></div>
+        <div className="p-5 border rounded-xl border-gray-200">
+          <div className="flex gap-6">
+            <SkeletonShimmer className="h-8 w-20" />
+            <SkeletonShimmer className="h-8 w-20" />
+            <SkeletonShimmer className="h-8 w-20" />
+            <SkeletonShimmer className="h-8 w-20" />
+          </div>
+          <div className="grid grid-cols-2 gap-6 py-8">
+            <div className="flex flex-col gap-1">
+              <SkeletonShimmer className="h-8 w-40" />
+              <SkeletonShimmer className="h-12" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <SkeletonShimmer className="h-8 w-40" />
+              <SkeletonShimmer className="h-12" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <SkeletonShimmer className="h-8 w-40" />
+              <SkeletonShimmer className="h-12" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <SkeletonShimmer className="h-8 w-40" />
+              <SkeletonShimmer className="h-12" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <SkeletonShimmer className="h-8 w-40" />
+              <SkeletonShimmer className="h-12" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <SkeletonShimmer className="h-8 w-40" />
+              <SkeletonShimmer className="h-12" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <SkeletonShimmer className="h-8 w-40" />
+              <SkeletonShimmer className="h-12" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <SkeletonShimmer className="h-8 w-40" />
+              <SkeletonShimmer className="h-12" />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <SkeletonShimmer className="h-10 w-40" />
+          </div>
         </div>
       );
     }
@@ -277,8 +318,8 @@ export default function VehicleDetails() {
                 {financialData.depreciationData.depreciationPercentage > 60
                   ? "Consider selling soon"
                   : financialData.depreciationData.depreciationPercentage > 40
-                  ? "Moderate depreciation"
-                  : "Good condition"}
+                    ? "Moderate depreciation"
+                    : "Good condition"}
               </div>
             </div>
           </div>
@@ -379,8 +420,8 @@ export default function VehicleDetails() {
                     item.status === "good"
                       ? "bg-green-100 text-green-800"
                       : item.status === "warning"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
                   }`}
                 >
                   {item.condition}
@@ -582,10 +623,15 @@ export default function VehicleDetails() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-black">
-                {vehicleDetails?.dto.registrationNumber}
+                {isLoading && <SkeletonShimmer className="h-6 w-36 mb-2" />}
+                {vehicleDetails && vehicleDetails?.dto.registrationNumber}
               </h1>
               <p className="text-black/60">
-                {vehicleDetails?.dto.model} • {vehicleDetails?.dto.manufacturer}
+                {isLoading && <SkeletonShimmer className="h-4 w-20" />}
+                {vehicleDetails &&
+                  vehicleDetails?.dto.manufacturer +
+                    " • " +
+                    vehicleDetails?.dto.model}
               </p>
             </div>
           </div>
@@ -597,20 +643,19 @@ export default function VehicleDetails() {
         </div>
 
         {/* Tabs Navigation */}
-        <div className="bg-white border border-black/20 rounded-xl shadow-sm">
+        <div className="bg-white ">
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6" aria-label="Tabs">
+            <nav className="flex space-x-8" aria-label="Tabs">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
+                  className={`py-3 px-1 border-b-2 font-bold text-base flex items-center gap-2 transition-colors ${
                     activeTab === tab.id
                       ? "border-[#004953] text-[#004953]"
                       : "border-transparent text-black/60 hover:text-black hover:border-gray-300"
                   }`}
                 >
-                  <span className="text-lg">{tab.icon}</span>
                   {tab.label}
                 </button>
               ))}
