@@ -41,7 +41,11 @@ interface UseWebSocketReturn {
 
 /**
  * Custom hook for WebSocket connection to IoT backend
- * Handles connection, reconnection, and vehicle subscriptions
+ * Handles connection, reconnection, and vehicle subscriptions.
+ *
+ * Common close code 1006 (abnormal closure) usually means: server unreachable,
+ * TLS/SSL failure, or reverse proxy (nginx) not forwarding WebSocket correctly.
+ * Check: wss URL, nginx location /ws proxy_pass, and IoT backend WS server running.
  */
 export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketReturn {
   const {
@@ -125,24 +129,28 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       };
 
       ws.onerror = (event) => {
-        console.error('WebSocket error:', event);
+        // Event is opaque; actual cause usually appears in onclose (e.g. 1006)
         setError('WebSocket connection error');
         setIsConnecting(false);
         onError?.(event);
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket disconnected', event.code, event.reason);
+        // 1006 = abnormal closure (no close frame: server unreachable, TLS, or proxy)
+        const message =
+          event.code === 1006
+            ? 'Connection lost (will retry)'
+            : event.reason || `Connection closed (${event.code})`;
+        setError(event.code !== 1000 ? message : null);
         setIsConnected(false);
         setIsConnecting(false);
         wsRef.current = null;
 
         onDisconnect?.();
 
-        // Auto-reconnect if enabled and not a manual disconnect
         if (autoReconnect && shouldReconnectRef.current && event.code !== 1000) {
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('Attempting to reconnect WebSocket...');
+            setError(null);
             connect();
           }, reconnectInterval);
         }
