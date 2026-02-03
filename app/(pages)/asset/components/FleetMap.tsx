@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   MapContainer,
   TileLayer,
   Marker,
-  Popup,
   useMap,
   Polyline,
 } from "react-leaflet";
@@ -14,7 +13,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useVehicleTripsQuery } from "../query";
 import { useTripSummaryQuery } from "../../trips/query";
-import { Trip } from "@/app/types";
+import { useWebSocket, VehicleLocationUpdate } from "@/hooks/useWebSocket";
 
 // Fix Leaflet default icon paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -102,6 +101,34 @@ export default function FleetMap() {
     return [];
   }, [tripSummary]);
 
+  const vehicleIds = useMemo(
+    () => locations.map((l) => l.vehicleId),
+    [locations],
+  );
+
+  const handleLocationUpdate = useCallback((update: VehicleLocationUpdate) => {
+    setLocations((prev) =>
+      prev.map((l) =>
+        l.vehicleId === update.vehicleId
+          ? {
+              ...l,
+              latitude: update.location.latitude,
+              longitude: update.location.longitude,
+              heading: update.location.heading ?? l.heading,
+              speed: update.location.speed ?? l.speed,
+              updatedAt: update.timestamp.toISOString(),
+            }
+          : l,
+      ),
+    );
+  }, []);
+
+  const { isConnected } = useWebSocket({
+    vehicleIds,
+    onMessage: handleLocationUpdate,
+    autoReconnect: true,
+  });
+
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -116,9 +143,10 @@ export default function FleetMap() {
     };
 
     fetchLocations();
-    const interval = setInterval(fetchLocations, 10000); // Poll every 10s
+    const pollInterval = isConnected ? 30000 : 10000;
+    const interval = setInterval(fetchLocations, pollInterval);
     return () => clearInterval(interval);
-  }, []);
+  }, [isConnected]);
 
   const defaultCenter: [number, number] = [-6.7924, 39.2083]; // Dar es Salaam
 
