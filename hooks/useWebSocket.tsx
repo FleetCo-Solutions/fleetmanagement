@@ -66,19 +66,23 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const subscribedVehiclesRef = useRef<Set<string>>(new Set());
   const shouldReconnectRef = useRef(true);
+  const connectingRef = useRef(false);
 
   /**
    * Connect to WebSocket server
+   * Uses a ref for "already connecting" guard so connect identity stays stable
+   * and the mount effect doesn't disconnect immediately after connecting.
    */
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       return; // Already connected
     }
 
-    if (isConnecting) {
+    if (connectingRef.current) {
       return; // Already connecting
     }
 
+    connectingRef.current = true;
     setIsConnecting(true);
     setError(null);
 
@@ -87,6 +91,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
       ws.onopen = () => {
         console.log('WebSocket connected');
+        connectingRef.current = false;
         setIsConnected(true);
         setIsConnecting(false);
         setError(null);
@@ -130,12 +135,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
       ws.onerror = (event) => {
         // Event is opaque; actual cause usually appears in onclose (e.g. 1006)
+        connectingRef.current = false;
         setError('WebSocket connection error');
         setIsConnecting(false);
         onError?.(event);
       };
 
       ws.onclose = (event) => {
+        connectingRef.current = false;
         // 1006 = abnormal closure (no close frame: server unreachable, TLS, or proxy)
         const message =
           event.code === 1006
@@ -159,10 +166,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       wsRef.current = ws;
     } catch (err) {
       console.error('Failed to create WebSocket connection:', err);
+      connectingRef.current = false;
       setError(err instanceof Error ? err.message : 'Failed to connect');
       setIsConnecting(false);
     }
-  }, [isConnecting, autoReconnect, reconnectInterval, onMessage, onError, onConnect, onDisconnect]);
+  }, [autoReconnect, reconnectInterval, onMessage, onError, onConnect, onDisconnect]);
 
   /**
    * Subscribe to a specific vehicle

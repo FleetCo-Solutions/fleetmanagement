@@ -107,6 +107,12 @@ export default function FleetMap() {
   );
 
   const handleLocationUpdate = useCallback((update: VehicleLocationUpdate) => {
+    const safeTimestamp =
+      update.timestamp instanceof Date &&
+      !Number.isNaN(update.timestamp.getTime())
+        ? update.timestamp.toISOString()
+        : new Date().toISOString();
+
     setLocations((prev) =>
       prev.map((l) =>
         l.vehicleId === update.vehicleId
@@ -116,7 +122,7 @@ export default function FleetMap() {
               longitude: update.location.longitude,
               heading: update.location.heading ?? l.heading,
               speed: update.location.speed ?? l.speed,
-              updatedAt: update.timestamp.toISOString(),
+              updatedAt: safeTimestamp,
             }
           : l,
       ),
