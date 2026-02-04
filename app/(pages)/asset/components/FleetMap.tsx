@@ -113,20 +113,41 @@ export default function FleetMap() {
         ? update.timestamp.toISOString()
         : new Date().toISOString();
 
-    setLocations((prev) =>
-      prev.map((l) =>
-        l.vehicleId === update.vehicleId
-          ? {
-              ...l,
-              latitude: update.location.latitude,
-              longitude: update.location.longitude,
-              heading: update.location.heading ?? l.heading,
-              speed: update.location.speed ?? l.speed,
-              updatedAt: safeTimestamp,
-            }
-          : l,
-      ),
-    );
+    const heading = update.location.heading ?? 0;
+    const speed = update.location.speed ?? 0;
+    const status = speed > 0 ? "moving" : "idle";
+
+    setLocations((prev) => {
+      const existing = prev.find((l) => l.vehicleId === update.vehicleId);
+      if (existing) {
+        return prev.map((l) =>
+          l.vehicleId === update.vehicleId
+            ? {
+                ...l,
+                latitude: update.location.latitude,
+                longitude: update.location.longitude,
+                heading: update.location.heading ?? l.heading,
+                speed: update.location.speed ?? l.speed,
+                updatedAt: safeTimestamp,
+              }
+            : l,
+        );
+      }
+      const newLocation: VehicleLocation = {
+        id: `ws-${update.vehicleId}`,
+        vehicleId: update.vehicleId,
+        registrationNumber: `Vehicle ${update.vehicleId.slice(0, 8)}`,
+        model: "-",
+        manufacturer: "-",
+        latitude: update.location.latitude,
+        longitude: update.location.longitude,
+        heading,
+        speed,
+        status,
+        updatedAt: safeTimestamp,
+      };
+      return [...prev, newLocation];
+    });
   }, []);
 
   const { isConnected } = useWebSocket({
