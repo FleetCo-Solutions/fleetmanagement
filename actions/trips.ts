@@ -197,16 +197,19 @@ export async function deleteTrip(id: string) {
 export async function tripSummary(id: string) {
   try {
     const headersList = await headers();
-    const response = await fetch(
-      `${process.env.COODINATE_URL}/trips/366c8117-0319-4349-a36a-60fdf78781fa/summary`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: headersList.get("cookie") || "",
-        },
+    const baseUrl =
+      process.env.COODINATE_URL || process.env.NEXT_PUBLIC_IOT_BACKEND_URL;
+    if (!baseUrl) {
+      throw new Error("COODINATE_URL or NEXT_PUBLIC_IOT_BACKEND_URL is not set");
+    }
+    const response = await fetch(`${baseUrl}/api/trips/${id}/summary`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: headersList.get("cookie") || "",
       },
-    );
+      cache: "no-store",
+    });
 
     const result = await response.json();
 
@@ -223,16 +226,14 @@ export async function tripSummary(id: string) {
 export async function tripMachineLearning(id: string) {
   try {
     const headersList = await headers();
-    const response = await fetch(
-      `${process.env.ML_URL}/v1/trips/366c8117-0319-4349-a36a-60fdf78781fa/summary`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: headersList.get("cookie") || "",
-        },
+    const response = await fetch(`${process.env.ML_URL}/v1/trips/${id}/summary`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: headersList.get("cookie") || "",
       },
-    );
+      cache: "no-store",
+    });
 
     const result = await response.json();
 
@@ -240,7 +241,6 @@ export async function tripMachineLearning(id: string) {
       throw new Error(result.message || "Failed to get trip machine learning");
     }
 
-    return result;
     return result;
   } catch (error) {
     throw new Error((error as Error).message);

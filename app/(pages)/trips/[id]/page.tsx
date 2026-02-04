@@ -167,6 +167,7 @@ export default function TripDetail() {
       <TripMapDrawer
         isOpen={isMapOpen}
         onClose={() => setIsMapOpen(false)}
+        tripId={id}
         startLocation={trip?.startLocation || ""}
         endLocation={trip?.endLocation || ""}
       />
