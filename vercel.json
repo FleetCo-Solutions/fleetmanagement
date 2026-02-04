@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/jobs/check-expiring-licenses",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}

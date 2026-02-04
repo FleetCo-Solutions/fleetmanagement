@@ -1,14 +1,16 @@
-'use client'
-import React, { useState } from 'react';
-import UsersTab from './components/UsersTab';
-import RolesTab from './components/RolesTab';
+"use client";
+import React, { useState } from "react";
+import UsersTab from "./components/UsersTab";
+import RolesTab from "./components/RolesTab";
+import NotificationsTab from "./components/NotificationsTab";
 
 const UserManagement = () => {
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState("users");
 
   const tabs = [
-    { id: 'users', label: 'Users', icon: '👥' },
-    { id: 'roles', label: 'Roles', icon: '🔐' },
+    { id: "users", label: "Users", icon: "👥" },
+    { id: "roles", label: "Roles", icon: "🔐" },
+    { id: "notifications", label: "Notifications", icon: "🔔" },
   ];
 
   return (
@@ -24,8 +26,8 @@ const UserManagement = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
                     activeTab === tab.id
-                      ? 'border-[#004953] text-[#004953]'
-                      : 'border-transparent text-black/60 hover:text-black hover:border-gray-300'
+                      ? "border-[#004953] text-[#004953]"
+                      : "border-transparent text-black/60 hover:text-black hover:border-gray-300"
                   }`}
                 >
                   <span className="text-lg">{tab.icon}</span>
@@ -38,12 +40,13 @@ const UserManagement = () => {
 
         {/* Tab Content */}
         <div className="flex-1">
-          {activeTab === 'users' && <UsersTab />}
-          {activeTab === 'roles' && <RolesTab />}
+          {activeTab === "users" && <UsersTab />}
+          {activeTab === "roles" && <RolesTab />}
+          {activeTab === "notifications" && <NotificationsTab />}
         </div>
       </div>
     </div>
   );
 };
 
-export default UserManagement; 
+export default UserManagement;

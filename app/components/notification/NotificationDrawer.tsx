@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useNotificationsQuery, useMarkAsReadMutation } from "./query";
 import NotificationList from "./NotificationList";
 import NotificationSearch from "./NotificationSearch";
@@ -10,7 +10,6 @@ const NotificationDrawer = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  const drawerRef = useRef<HTMLDivElement>(null);
 
   const { data: notificationsData, isLoading } = useNotificationsQuery();
   const markAsReadMutation = useMarkAsReadMutation();
@@ -26,17 +25,6 @@ const NotificationDrawer = () => {
   });
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
 
   return (
     <>
@@ -60,7 +48,7 @@ const NotificationDrawer = () => {
           />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+          <span className="absolute top-3 right-3 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
             {unreadCount}
           </span>
         )}
@@ -74,12 +62,12 @@ const NotificationDrawer = () => {
         />
       )}
 
-      {/* Right Drawer - Increased size to 500px */}
+      {/* Right Drawer */}
       <div
-        ref={drawerRef}
         className={`fixed top-0 right-0 h-full w-full sm:w-[500px] bg-white shadow-2xl z-[101] transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        } ${isOpen ? "overflow-hidden" : ""}`}
+        style={isOpen ? { overflow: "hidden" } : {}}
       >
         <div className="flex flex-col h-full">
           {/* Header */}

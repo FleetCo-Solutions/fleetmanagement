@@ -1,5 +1,10 @@
 import { getDepartments } from "@/actions/departments";
 import {
+  getNotificationGroups,
+  createNotificationGroup,
+  updateNotificationGroup,
+} from "@/actions/notificationGroups";
+import {
   getRoles,
   addRole,
   updateRole,
@@ -211,6 +216,36 @@ export const useDeleteRole = () => {
     mutationFn: async (id: string) => await deleteRole(id),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["Roles"] });
+    },
+  });
+};
+
+export const useNotificationGroupsQuery = () => {
+  return useQuery({
+    queryKey: ["NotificationGroups"],
+    queryFn: async () => await getNotificationGroups(),
+  });
+};
+
+export const useCreateNotificationGroup = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["createNotificationGroup"],
+    mutationFn: async (data: any) => await createNotificationGroup(data),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["NotificationGroups"] });
+    },
+  });
+};
+
+export const useUpdateNotificationGroup = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateNotificationGroup"],
+    mutationFn: async ({ groupId, data }: { groupId: string; data: any }) =>
+      await updateNotificationGroup(groupId, data),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["NotificationGroups"] });
     },
   });
 };
