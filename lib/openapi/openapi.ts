@@ -13,6 +13,7 @@ import { registerEmergencyContactRoutes } from "./routes/emergency-contact.route
 import { registerCompanyRoutes } from "./routes/company.routes";
 import { registerAuditLogsRoutes } from "./routes/audit-logs.routes";
 import { registerRBACRoutes } from "./routes/rbac.routes";
+import { registerJobsRoutes } from "./routes/jobs.routes";
 
 /**
  * Create and configure the OpenAPI registry
@@ -51,6 +52,7 @@ function createOpenAPIRegistry(): OpenAPIRegistry {
   registerCompanyRoutes(registry);
   registerAuditLogsRoutes(registry);
   registerRBACRoutes(registry);
+  registerJobsRoutes(registry);
 
   return registry;
 }
@@ -114,6 +116,7 @@ export function generateOpenAPISpec() {
         description: "Audit logging and tracking endpoints",
       },
       { name: "RBAC", description: "Role-Based Access Control endpoints" },
+      { name: "Jobs", description: "Background jobs and maintenance tasks" },
     ],
   });
 }
