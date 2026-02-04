@@ -42,14 +42,9 @@ export interface CurrentLocation extends Location {
   status?: "moving" | "stopped" | "idle";
 }
 
-/** Single-route mode: one polyline (legacy or when only one source is available). */
-export type SingleRouteMode = "ideal" | "actual";
-
 export interface TripRouteMapProps {
   startLocation: Location;
   endLocation: Location;
-  /** @deprecated Use idealRoute + actualPath. Single route (e.g. legacy or fallback). */
-  route?: [number, number][];
   /** Planned/ideal route from routing API (follows roads). */
   idealRoute?: [number, number][];
   /** Actual path from GPS (trip locations). */
@@ -184,7 +179,6 @@ const MAX_POINTS_FOR_BOUNDS = 200;
 export default function TripRouteMap({
   startLocation,
   endLocation,
-  route: legacyRoute,
   idealRoute,
   actualPath,
   currentLocation,
@@ -197,12 +191,6 @@ export default function TripRouteMap({
   const hasDualRoutes = Boolean(
     idealRoute?.length && actualPath?.length && showRouteLegend
   );
-  const singleRoute = React.useMemo((): [number, number][] | null => {
-    if (idealRoute?.length) return idealRoute;
-    if (actualPath?.length) return actualPath;
-    if (legacyRoute?.length) return legacyRoute;
-    return null;
-  }, [idealRoute, actualPath, legacyRoute]);
 
   const animatedLocation = useSmoothPosition(
     currentLocation || { lat: 0, lng: 0, heading: 0 },
@@ -234,17 +222,8 @@ export default function TripRouteMap({
           : actualPath;
       points.push(...sample);
     }
-    if (points.length === 2 && singleRoute?.length) {
-      points.push(...singleRoute);
-    }
     return L.latLngBounds(points);
-  }, [
-    startLocation,
-    endLocation,
-    idealRoute,
-    actualPath,
-    singleRoute,
-  ]);
+  }, [startLocation, endLocation, idealRoute, actualPath]);
 
   return (
     <div className="h-full w-full relative">
@@ -391,19 +370,6 @@ export default function TripRouteMap({
             opacity={0.9}
           />
         )}
-
-        {/* Single route (legacy prop only; when ideal/actual not both provided) */}
-        {legacyRoute &&
-          legacyRoute.length > 0 &&
-          !idealRoute?.length &&
-          !actualPath?.length && (
-            <Polyline
-              positions={legacyRoute}
-              color="#004953"
-              weight={4}
-              opacity={0.8}
-            />
-          )}
       </MapContainer>
     </div>
   );
