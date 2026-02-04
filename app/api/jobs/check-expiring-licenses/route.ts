@@ -8,20 +8,27 @@ import { auth } from "@/app/auth";
  * 1. Authenticated system users (for manual testing)
  * 2. External cron services (using CRON_SECRET)
  */
-export async function POST(req: Request) {
+async function handleJob(req: Request) {
   try {
-    // Check authentication - either session or cron secret
+    // Check authentication - either session, cron secret header, or secret query param
+    const { searchParams } = new URL(req.url);
+    const querySecret = searchParams.get("secret");
     const authHeader = req.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
 
     let isAuthorized = false;
 
-    // Option 1: Cron secret authentication (for external cron services)
-    if (authHeader && cronSecret) {
-      const token = authHeader.replace("Bearer ", "");
-      if (token === cronSecret) {
+    // Option 1: Cron secret authentication (Header or Query Param)
+    if (cronSecret) {
+      if (querySecret === cronSecret) {
         isAuthorized = true;
-        console.log("[API] Authenticated via CRON_SECRET");
+        console.log("[API] Authenticated via secret query parameter");
+      } else if (authHeader) {
+        const token = authHeader.replace("Bearer ", "");
+        if (token === cronSecret) {
+          isAuthorized = true;
+          console.log("[API] Authenticated via CRON_SECRET header");
+        }
       }
     }
 
@@ -80,27 +87,13 @@ export async function POST(req: Request) {
   }
 }
 
-/**
- * GET endpoint for checking job status/info
- */
-export async function GET() {
-  return NextResponse.json({
-    endpoint: "/api/jobs/check-expiring-licenses",
-    description: "Manually trigger driver license expiry check",
-    authentication: {
-      methods: [
-        "Session-based (for logged-in users)",
-        "Bearer token (CRON_SECRET for external cron)",
-      ],
-    },
-    usage: {
-      manual: "POST to this endpoint while logged in",
-      cron: "POST with header: Authorization: Bearer <CRON_SECRET>",
-    },
-    configuration: {
-      thresholds: [30, 15, 7, -5],
-      description:
-        "Notifications sent at 30, 15, 7 days before and 5 days after expiry",
-    },
-  });
+export async function POST(req: Request) {
+  return handleJob(req);
+}
+
+export async function GET(req: Request) {
+  // If no auth header and not logged in, we could return info,
+  // but for simplicity let's just use the shared handler.
+  // Vercel Cron will send the Authorization header.
+  return handleJob(req);
 }
