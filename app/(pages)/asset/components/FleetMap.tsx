@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -106,49 +106,82 @@ export default function FleetMap() {
     [locations],
   );
 
-  const handleLocationUpdate = useCallback((update: VehicleLocationUpdate) => {
-    const safeTimestamp =
-      update.timestamp instanceof Date &&
-      !Number.isNaN(update.timestamp.getTime())
-        ? update.timestamp.toISOString()
-        : new Date().toISOString();
+  const enrichmentRequestedRef = useRef<Set<string>>(new Set());
 
-    const heading = update.location.heading ?? 0;
-    const speed = update.location.speed ?? 0;
-    const status = speed > 0 ? "moving" : "idle";
+  const enrichVehicleFromApi = useCallback((vehicleId: string) => {
+    if (enrichmentRequestedRef.current.has(vehicleId)) return;
+    enrichmentRequestedRef.current.add(vehicleId);
 
-    setLocations((prev) => {
-      const existing = prev.find((l) => l.vehicleId === update.vehicleId);
-      if (existing) {
-        return prev.map((l) =>
-          l.vehicleId === update.vehicleId
-            ? {
-                ...l,
-                latitude: update.location.latitude,
-                longitude: update.location.longitude,
-                heading: update.location.heading ?? l.heading,
-                speed: update.location.speed ?? l.speed,
-                updatedAt: safeTimestamp,
-              }
-            : l,
+    fetch(`/api/vehicles/${vehicleId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { dto?: { registrationNumber?: string; model?: string; manufacturer?: string } } | null) => {
+        if (!data?.dto) return;
+        const { registrationNumber, model, manufacturer } = data.dto;
+        setLocations((prev) =>
+          prev.map((l) =>
+            l.vehicleId === vehicleId
+              ? {
+                  ...l,
+                  registrationNumber: registrationNumber ?? l.registrationNumber,
+                  model: model ?? l.model,
+                  manufacturer: manufacturer ?? l.manufacturer,
+                }
+              : l,
+          ),
         );
-      }
-      const newLocation: VehicleLocation = {
-        id: `ws-${update.vehicleId}`,
-        vehicleId: update.vehicleId,
-        registrationNumber: `Vehicle ${update.vehicleId.slice(0, 8)}`,
-        model: "-",
-        manufacturer: "-",
-        latitude: update.location.latitude,
-        longitude: update.location.longitude,
-        heading,
-        speed,
-        status,
-        updatedAt: safeTimestamp,
-      };
-      return [...prev, newLocation];
-    });
+      })
+      .catch(() => {
+        enrichmentRequestedRef.current.delete(vehicleId);
+      });
   }, []);
+
+  const handleLocationUpdate = useCallback(
+    (update: VehicleLocationUpdate) => {
+      const safeTimestamp =
+        update.timestamp instanceof Date &&
+        !Number.isNaN(update.timestamp.getTime())
+          ? update.timestamp.toISOString()
+          : new Date().toISOString();
+
+      const heading = update.location.heading ?? 0;
+      const speed = update.location.speed ?? 0;
+      const status = speed > 0 ? "moving" : "idle";
+
+      setLocations((prev) => {
+        const existing = prev.find((l) => l.vehicleId === update.vehicleId);
+        if (existing) {
+          return prev.map((l) =>
+            l.vehicleId === update.vehicleId
+              ? {
+                  ...l,
+                  latitude: update.location.latitude,
+                  longitude: update.location.longitude,
+                  heading: update.location.heading ?? l.heading,
+                  speed: update.location.speed ?? l.speed,
+                  updatedAt: safeTimestamp,
+                }
+              : l,
+          );
+        }
+        const newLocation: VehicleLocation = {
+          id: `ws-${update.vehicleId}`,
+          vehicleId: update.vehicleId,
+          registrationNumber: `Vehicle ${update.vehicleId.slice(0, 8)}`,
+          model: "-",
+          manufacturer: "-",
+          latitude: update.location.latitude,
+          longitude: update.location.longitude,
+          heading,
+          speed,
+          status,
+          updatedAt: safeTimestamp,
+        };
+        enrichVehicleFromApi(update.vehicleId);
+        return [...prev, newLocation];
+      });
+    },
+    [enrichVehicleFromApi],
+  );
 
   const { isConnected } = useWebSocket({
     vehicleIds,
