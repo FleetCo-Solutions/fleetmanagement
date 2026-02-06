@@ -42,12 +42,17 @@ export interface CurrentLocation extends Location {
   status?: "moving" | "stopped" | "idle";
 }
 
-interface TripRouteMapProps {
+export interface TripRouteMapProps {
   startLocation: Location;
   endLocation: Location;
-  route: [number, number][]; // Array of [lat, lng]
+  /** Planned/ideal route from routing API (follows roads). */
+  idealRoute?: [number, number][];
+  /** Actual path from GPS (trip locations). */
+  actualPath?: [number, number][];
   currentLocation?: CurrentLocation;
   violations?: Violation[];
+  /** Show legend and layer toggles when both ideal and actual are provided. */
+  showRouteLegend?: boolean;
 }
 
 // Custom SVG Icons
@@ -169,31 +174,87 @@ const useSmoothPosition = (
   return currentPos;
 };
 
+const MAX_POINTS_FOR_BOUNDS = 200;
+
 export default function TripRouteMap({
   startLocation,
   endLocation,
-  route,
+  idealRoute,
+  actualPath,
   currentLocation,
   violations = [],
+  showRouteLegend = true,
 }: TripRouteMapProps) {
-  // Use the hook to get the interpolated position
+  const [showIdeal, setShowIdeal] = React.useState(true);
+  const [showActual, setShowActual] = React.useState(true);
+
+  const hasDualRoutes = Boolean(
+    idealRoute?.length && actualPath?.length && showRouteLegend
+  );
+
   const animatedLocation = useSmoothPosition(
     currentLocation || { lat: 0, lng: 0, heading: 0 },
     2900,
-  ); // 2900 to finish slightly before next 3000ms update
+  );
 
-  // Calculate bounds to fit the route (static) only, to avoid resetting zoom when vehicle moves
   const bounds = React.useMemo(() => {
-    const points = [
+    const points: [number, number][] = [
       [startLocation.lat, startLocation.lng],
       [endLocation.lat, endLocation.lng],
-      ...route,
     ];
-    return L.latLngBounds(points as [number, number][]);
-  }, [startLocation, endLocation, route]);
+    if (idealRoute?.length) {
+      const sample =
+        idealRoute.length > MAX_POINTS_FOR_BOUNDS
+          ? idealRoute.filter(
+              (_, i) =>
+                i % Math.ceil(idealRoute.length / MAX_POINTS_FOR_BOUNDS) === 0
+            )
+          : idealRoute;
+      points.push(...sample);
+    }
+    if (actualPath?.length) {
+      const sample =
+        actualPath.length > MAX_POINTS_FOR_BOUNDS
+          ? actualPath.filter(
+              (_, i) =>
+                i % Math.ceil(actualPath.length / MAX_POINTS_FOR_BOUNDS) === 0
+            )
+          : actualPath;
+      points.push(...sample);
+    }
+    return L.latLngBounds(points);
+  }, [startLocation, endLocation, idealRoute, actualPath]);
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full relative">
+      {hasDualRoutes && (
+        <div className="absolute top-3 left-3 z-[400] flex flex-col gap-1.5 rounded-lg bg-white/95 shadow-md border border-gray-200 p-2 text-sm">
+          <span className="font-medium text-gray-700 px-1">Route</span>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showIdeal}
+              onChange={(e) => setShowIdeal(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            <span
+              className="w-3 h-0.5 rounded border-2 border-dashed border-[#004953] bg-transparent"
+              style={{ borderStyle: "dashed" }}
+            />
+            <span className="text-gray-700">Planned route</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showActual}
+              onChange={(e) => setShowActual(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            <span className="w-3 h-1 rounded bg-emerald-500" />
+            <span className="text-gray-700">Actual path</span>
+          </label>
+        </div>
+      )}
       <MapContainer
         center={[startLocation.lat, startLocation.lng]}
         zoom={13}
@@ -289,8 +350,26 @@ export default function TripRouteMap({
           </Marker>
         ))}
 
-        {/* Route Line */}
-        <Polyline positions={route} color="#004953" weight={4} opacity={0.8} />
+        {/* Planned/ideal route (dashed) */}
+        {idealRoute && idealRoute.length > 0 && showIdeal && (
+          <Polyline
+            positions={idealRoute}
+            color="#004953"
+            weight={4}
+            opacity={0.85}
+            dashArray="10, 10"
+          />
+        )}
+
+        {/* Actual path (solid) */}
+        {actualPath && actualPath.length > 0 && showActual && (
+          <Polyline
+            positions={actualPath}
+            color="#059669"
+            weight={5}
+            opacity={0.9}
+          />
+        )}
       </MapContainer>
     </div>
   );
