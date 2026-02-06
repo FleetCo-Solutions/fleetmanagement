@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -11,9 +11,7 @@ import {
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useVehicleTripsQuery } from "../query";
-import { useTripSummaryQuery } from "../../trips/query";
-import { useWebSocket, VehicleLocationUpdate } from "@/hooks/useWebSocket";
+import { useFleetMapLogic, VehicleLocation } from "./useFleetMapLogic";
 
 // Fix Leaflet default icon paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -25,20 +23,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
-
-interface VehicleLocation {
-  id: string; // location id
-  vehicleId: string;
-  registrationNumber: string;
-  model: string;
-  manufacturer: string;
-  latitude: number;
-  longitude: number;
-  heading: number;
-  speed: number;
-  status: string;
-  updatedAt: string;
-}
 
 const createVehicleIcon = (heading: number = 0, status: string) => {
   const color =
@@ -79,173 +63,30 @@ const MapBounds = ({ locations }: { locations: VehicleLocation[] }) => {
 };
 
 export default function FleetMap() {
-  const [locations, setLocations] = useState<VehicleLocation[]>([]);
-  const [selectedVehicle, setSelectedVehicle] =
-    useState<VehicleLocation | null>(null);
-  const [viewMode, setViewMode] = useState<"details" | "trips">("details");
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
-
-  // Queries
-  const { data: tripsData } = useVehicleTripsQuery(
-    selectedVehicle?.vehicleId || "",
-  );
-  const { data: tripSummary } = useTripSummaryQuery(selectedTripId || "");
-
-  // Reset view when vehicle selection changes
-  useEffect(() => {
-    setViewMode("details");
-    setSelectedTripId(null);
-  }, [selectedVehicle]);
-
-  const routeCoordinates = useMemo(() => {
-    if (tripSummary?.data?.route) {
-      return tripSummary.data.route.map(
-        (r) => [r.latitude, r.longitude] as [number, number],
-      );
-    }
-    return [];
-  }, [tripSummary]);
-
-  const vehicleIds = useMemo(
-    () => locations.map((l) => l.vehicleId),
-    [locations],
-  );
-
-  const enrichmentRequestedRef = useRef<Set<string>>(new Set());
-
-  const enrichVehicleFromApi = useCallback((vehicleId: string) => {
-    if (enrichmentRequestedRef.current.has(vehicleId)) return;
-    enrichmentRequestedRef.current.add(vehicleId);
-
-    fetch(`/api/vehicles/${vehicleId}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { dto?: { registrationNumber?: string; model?: string; manufacturer?: string } } | null) => {
-        if (!data?.dto) return;
-        const { registrationNumber, model, manufacturer } = data.dto;
-        setLocations((prev) =>
-          prev.map((l) =>
-            l.vehicleId === vehicleId
-              ? {
-                  ...l,
-                  registrationNumber: registrationNumber ?? l.registrationNumber,
-                  model: model ?? l.model,
-                  manufacturer: manufacturer ?? l.manufacturer,
-                }
-              : l,
-          ),
-        );
-      })
-      .catch(() => {
-        enrichmentRequestedRef.current.delete(vehicleId);
-      });
-  }, []);
-
-  const handleLocationUpdate = useCallback(
-    (update: VehicleLocationUpdate) => {
-      const safeTimestamp =
-        update.timestamp instanceof Date &&
-        !Number.isNaN(update.timestamp.getTime())
-          ? update.timestamp.toISOString()
-          : new Date().toISOString();
-
-      const heading = update.location.heading ?? 0;
-      const speed = update.location.speed ?? 0;
-      const status = speed > 0 ? "moving" : "idle";
-
-      setLocations((prev) => {
-        const existing = prev.find((l) => l.vehicleId === update.vehicleId);
-        if (existing) {
-          return prev.map((l) =>
-            l.vehicleId === update.vehicleId
-              ? {
-                  ...l,
-                  latitude: update.location.latitude,
-                  longitude: update.location.longitude,
-                  heading: update.location.heading ?? l.heading,
-                  speed: update.location.speed ?? l.speed,
-                  updatedAt: safeTimestamp,
-                }
-              : l,
-          );
-        }
-        const newLocation: VehicleLocation = {
-          id: `ws-${update.vehicleId}`,
-          vehicleId: update.vehicleId,
-          registrationNumber: `Vehicle ${update.vehicleId.slice(0, 8)}`,
-          model: "-",
-          manufacturer: "-",
-          latitude: update.location.latitude,
-          longitude: update.location.longitude,
-          heading,
-          speed,
-          status,
-          updatedAt: safeTimestamp,
-        };
-        enrichVehicleFromApi(update.vehicleId);
-        return [...prev, newLocation];
-      });
-    },
-    [enrichVehicleFromApi],
-  );
-
-  const { isConnected } = useWebSocket({
-    vehicleIds,
-    onMessage: handleLocationUpdate,
-    autoReconnect: true,
-  });
-
-  // Initial load: fetch locations once on mount
-  useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const res = await fetch("/api/vehicles/locations");
-        if (res.ok) {
-          const data = await res.json();
-          setLocations(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch locations", error);
-      }
-    };
-
-    fetchLocations();
-  }, []);
-
-  // Fallback polling: only when WebSocket is disconnected
-  useEffect(() => {
-    if (isConnected) {
-      return; 
-    }
-
-    const fetchLocations = async () => {
-      try {
-        const res = await fetch("/api/vehicles/locations");
-        if (res.ok) {
-          const data = await res.json();
-          setLocations(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch locations", error);
-      }
-    };
-
-    // Poll every 10 seconds when WebSocket is disconnected
-    const interval = setInterval(fetchLocations, 10000);
-    return () => clearInterval(interval);
-  }, [isConnected]);
-
-  const defaultCenter: [number, number] = [-6.7924, 39.2083]; // Dar es Salaam
+  const {
+    locations,
+    selectedVehicle,
+    setSelectedVehicle,
+    viewMode,
+    setViewMode,
+    selectedTripId,
+    setSelectedTripId,
+    tripsData,
+    routeCoordinates,
+  } = useFleetMapLogic();
 
   return (
-    <div className="h-full w-full relative">
+    <div className="relative w-full h-screen">
       <MapContainer
-        center={defaultCenter}
+        center={[37.8716, 25.3881]}
         zoom={13}
-        style={{ height: "100%", width: "100%" }}
-        scrollWheelZoom={true}
+        scrollWheelZoom={false}
+        className="w-full h-full"
       >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
         <MapBounds locations={locations} />
 
         {/* Route Polyline */}
