@@ -71,7 +71,9 @@ const MapBounds = ({ locations }: { locations: VehicleLocation[] }) => {
       map.fitBounds(bounds, { padding: [50, 50] });
       hasInitialized.current = true;
     }
-  }, [map, locations]);
+    // Explicitly omit locations from dependencies to prevent re-centering
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map]);
 
   return null;
 };
@@ -192,6 +194,7 @@ export default function FleetMap() {
     autoReconnect: true,
   });
 
+  // Initial load: fetch locations once on mount
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -206,8 +209,28 @@ export default function FleetMap() {
     };
 
     fetchLocations();
-    const pollInterval = isConnected ? 30000 : 10000;
-    const interval = setInterval(fetchLocations, pollInterval);
+  }, []);
+
+  // Fallback polling: only when WebSocket is disconnected
+  useEffect(() => {
+    if (isConnected) {
+      return; 
+    }
+
+    const fetchLocations = async () => {
+      try {
+        const res = await fetch("/api/vehicles/locations");
+        if (res.ok) {
+          const data = await res.json();
+          setLocations(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch locations", error);
+      }
+    };
+
+    // Poll every 10 seconds when WebSocket is disconnected
+    const interval = setInterval(fetchLocations, 10000);
     return () => clearInterval(interval);
   }, [isConnected]);
 
