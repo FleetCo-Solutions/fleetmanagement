@@ -60,13 +60,16 @@ const createVehicleIcon = (heading: number = 0, status: string) => {
 
 const MapBounds = ({ locations }: { locations: VehicleLocation[] }) => {
   const map = useMap();
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (locations.length > 0) {
+    // Only auto-fit bounds on initial load, not on subsequent updates
+    if (locations.length > 0 && !hasInitialized.current) {
       const bounds = L.latLngBounds(
         locations.map((l) => [l.latitude, l.longitude]),
       );
       map.fitBounds(bounds, { padding: [50, 50] });
+      hasInitialized.current = true;
     }
   }, [map, locations]);
 
