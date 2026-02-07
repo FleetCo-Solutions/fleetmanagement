@@ -47,12 +47,14 @@ const MapBounds = ({ locations }: { locations: VehicleLocation[] }) => {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    // Only auto-fit bounds on initial load, not on subsequent updates
+    // Only auto-center on initial load, not on subsequent updates
     if (locations.length > 0 && !hasInitialized.current) {
-      const bounds = L.latLngBounds(
-        locations.map((l) => [l.latitude, l.longitude]),
-      );
-      map.fitBounds(bounds, { padding: [50, 50] });
+      // Calculate average position of all vehicles
+      const avgLat = locations.reduce((sum, l) => sum + l.latitude, 0) / locations.length;
+      const avgLng = locations.reduce((sum, l) => sum + l.longitude, 0) / locations.length;
+      
+      // Center map on average position
+      map.setView([avgLat, avgLng], 13);
       hasInitialized.current = true;
     }
     // Explicitly omit locations from dependencies to prevent re-centering
