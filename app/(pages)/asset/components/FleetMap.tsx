@@ -47,7 +47,7 @@ const MapBounds = ({ locations }: { locations: VehicleLocation[] }) => {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    // Only auto-center on initial load, not on subsequent updates
+    // Only auto-center on initial load when locations first become available
     if (locations.length > 0 && !hasInitialized.current) {
       // Calculate average position of all vehicles
       const avgLat = locations.reduce((sum, l) => sum + l.latitude, 0) / locations.length;
@@ -57,9 +57,7 @@ const MapBounds = ({ locations }: { locations: VehicleLocation[] }) => {
       map.setView([avgLat, avgLng], 13);
       hasInitialized.current = true;
     }
-    // Explicitly omit locations from dependencies to prevent re-centering
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map]);
+  }, [locations, map]);
 
   return null;
 };
