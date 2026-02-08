@@ -445,7 +445,7 @@ export const trips = pgTable(
   },
 );
 
-export const tripsRelations = relations(trips, ({ one }) => ({
+export const tripsRelations = relations(trips, ({ one, many }) => ({
   vehicle: one(vehicles, {
     fields: [trips.vehicleId],
     references: [vehicles.id],
@@ -460,6 +460,7 @@ export const tripsRelations = relations(trips, ({ one }) => ({
     references: [drivers.id],
     relationName: "substituteDriver",
   }),
+  documents: many(tripDocuments),
 }));
 
 //Relationships
@@ -468,6 +469,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   emergencyContacts: many(emergencyContacts), // user -> multiple emergencyContacts
   maintenanceRequests: many(maintenanceRecords), // user -> multiple maintenance requests
   roles: many(userRoles),
+  documents: many(userDocuments),
 }));
 
 // Relation: A driver has many emergency contacts
@@ -520,6 +522,7 @@ export const driversRelation = relations(drivers, ({ many, one }) => ({
   tripsAsSubstitute: many(trips, { relationName: "substituteDriver" }),
   assignments: many(vehicleAssignments),
   roles: many(driverRoles),
+  documents: many(driverDocuments),
 }));
 
 // Update vehicles relations to include assignments
@@ -532,6 +535,7 @@ export const vehiclesRelation = relations(vehicles, ({ many, one }) => ({
     fields: [vehicles.id],
     references: [vehicleLocations.vehicleId],
   }),
+  documents: many(vehicleDocuments),
 }));
 
 // New Relations
@@ -735,16 +739,23 @@ export const notifications = pgTable(
   }),
 );
 
-export const notificationPreferences = pgTable(
-  "notification_preferences",
+// Notification Topics
+export const notificationTopics = pgTable(
+  "notification_topics",
   {
-    userId: uuid("user_id").notNull(),
-    actorType: actorTypeEnum("actor_type").notNull(),
-    channel: notificationChannelEnum("channel").notNull(),
-    enabled: boolean("enabled").default(true).notNull(),
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 100 }).notNull().unique(), // e.g. "document.expiry"
+    name: varchar("name", { length: 100 }).notNull(),
+    description: varchar("description", { length: 255 }),
+    defaultChannels: jsonb("default_channels").default(["in_app"]).notNull(), // Active channels: ['in_app', 'email']
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.userId, table.actorType, table.channel] }),
+    slugIdx: index("notification_topic_slug_idx").on(table.slug),
   }),
 );
 
@@ -761,28 +772,36 @@ export const notificationGroups = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => ({
     companyIdx: index("notification_group_company_idx").on(table.companyId),
   }),
 );
 
-// Group Subscriptions (Topics defined by Strings for now)
-export const notificationGroupTypes = pgTable(
-  "notification_group_types",
+// Notification Topic Subscriptions
+export const notificationTopicSubscriptions = pgTable(
+  "notification_topic_subscriptions",
   {
     groupId: uuid("group_id")
       .references(() => notificationGroups.id, { onDelete: "cascade" })
       .notNull(),
-    type: varchar("type", { length: 100 }).notNull(), // e.g. "violation.overspeed"
-    sendEmail: boolean("send_email").default(false).notNull(), // Control email delivery per topic
+    topicId: uuid("topic_id")
+      .references(() => notificationTopics.id, { onDelete: "cascade" })
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.groupId, table.type] }),
-    groupIdx: index("notification_group_type_idx").on(table.groupId),
-    typeIdx: index("notification_group_type_string_idx").on(table.type),
+    pk: primaryKey({ columns: [table.groupId, table.topicId] }),
+    groupIdx: index("notif_topic_sub_group_idx").on(table.groupId),
+    topicIdx: index("notif_topic_sub_topic_idx").on(table.topicId),
   }),
 );
+
+// Group Subscriptions (Topics defined by Strings - LEGACY, to be removed)
 
 // Group Members (Users)
 export const notificationGroupUsers = pgTable(
@@ -802,27 +821,6 @@ export const notificationGroupUsers = pgTable(
   }),
 );
 
-// Notification Rules (e.g. Speed > 80)
-export const notificationRules = pgTable(
-  "notification_rules",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    companyId: uuid("company_id")
-      .references(() => companies.id, { onDelete: "cascade" })
-      .notNull(),
-    name: varchar("name", { length: 100 }).notNull(),
-    type: varchar("type", { length: 50 }).notNull(), // OVERSPEED, GEOFENCE, EXPIRY
-    criteria: jsonb("criteria").notNull(), // { limit: 80, duration: 5 }
-    enabled: boolean("enabled").default(true).notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (table) => ({
-    companyIdx: index("notification_rules_company_idx").on(table.companyId),
-  }),
-);
-
 export const notificationGroupsRelations = relations(
   notificationGroups,
   ({ one, many }) => ({
@@ -830,8 +828,29 @@ export const notificationGroupsRelations = relations(
       fields: [notificationGroups.companyId],
       references: [companies.id],
     }),
-    types: many(notificationGroupTypes),
+    topicSubscriptions: many(notificationTopicSubscriptions),
     users: many(notificationGroupUsers),
+  }),
+);
+
+export const notificationTopicSubscriptionsRelations = relations(
+  notificationTopicSubscriptions,
+  ({ one }) => ({
+    group: one(notificationGroups, {
+      fields: [notificationTopicSubscriptions.groupId],
+      references: [notificationGroups.id],
+    }),
+    topic: one(notificationTopics, {
+      fields: [notificationTopicSubscriptions.topicId],
+      references: [notificationTopics.id],
+    }),
+  }),
+);
+
+export const notificationTopicsRelations = relations(
+  notificationTopics,
+  ({ many }) => ({
+    subscriptions: many(notificationTopicSubscriptions),
   }),
 );
 
@@ -845,16 +864,6 @@ export const notificationGroupUsersRelations = relations(
     user: one(users, {
       fields: [notificationGroupUsers.userId],
       references: [users.id],
-    }),
-  }),
-);
-
-export const notificationGroupTypesRelations = relations(
-  notificationGroupTypes,
-  ({ one }) => ({
-    group: one(notificationGroups, {
-      fields: [notificationGroupTypes.groupId],
-      references: [notificationGroups.id],
     }),
   }),
 );
@@ -913,3 +922,149 @@ export const vehicleLocationsRelations = relations(
     }),
   }),
 );
+
+export const vehicleDocuments = pgTable(
+  "vehicle_documents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    vehicleId: uuid("vehicle_id")
+      .references(() => vehicles.id, { onDelete: "cascade" })
+      .notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: varchar("description", { length: 1000 }),
+    storagePath: varchar("storage_path", {
+      length: 255,
+    }).notNull(),
+    storageUrl: varchar("storage_url", {
+      length: 1000,
+    }).notNull(),
+    expiryDate: timestamp("expiry_date", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => ({
+    vehicleIdx: index("vehicle_document_vehicle_idx").on(table.vehicleId),
+    expiryIdx: index("vehicle_document_expiry_idx").on(table.expiryDate),
+  }),
+);
+
+export const vehicleDocumentsRelations = relations(
+  vehicleDocuments,
+  ({ one }) => ({
+    vehicle: one(vehicles, {
+      fields: [vehicleDocuments.vehicleId],
+      references: [vehicles.id],
+    }),
+  }),
+);
+
+export const driverDocuments = pgTable(
+  "driver_documents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    driverId: uuid("driver_id")
+      .references(() => drivers.id, { onDelete: "cascade" })
+      .notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: varchar("description", { length: 1000 }),
+    storagePath: varchar("storage_path", {
+      length: 255,
+    }).notNull(),
+    storageUrl: varchar("storage_url", {
+      length: 1000,
+    }).notNull(),
+    expiryDate: timestamp("expiry_date", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => ({
+    driverIdx: index("driver_document_driver_idx").on(table.driverId),
+    expiryIdx: index("driver_document_expiry_idx").on(table.expiryDate),
+  }),
+);
+
+export const driverDocumentsRelations = relations(
+  driverDocuments,
+  ({ one }) => ({
+    driver: one(drivers, {
+      fields: [driverDocuments.driverId],
+      references: [drivers.id],
+    }),
+  }),
+);
+
+export const tripDocuments = pgTable(
+  "trip_documents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tripId: uuid("trip_id")
+      .references(() => trips.id, { onDelete: "cascade" })
+      .notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: varchar("description", { length: 1000 }),
+    storagePath: varchar("storage_path", {
+      length: 255,
+    }).notNull(),
+    storageUrl: varchar("storage_url", {
+      length: 1000,
+    }).notNull(),
+    expiryDate: timestamp("expiry_date", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => ({
+    tripIdx: index("trip_document_trip_idx").on(table.tripId),
+    expiryIdx: index("trip_document_expiry_idx").on(table.expiryDate),
+  }),
+);
+
+export const tripDocumentsRelations = relations(tripDocuments, ({ one }) => ({
+  trip: one(trips, {
+    fields: [tripDocuments.tripId],
+    references: [trips.id],
+  }),
+}));
+
+export const userDocuments = pgTable(
+  "user_documents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: varchar("description", { length: 1000 }),
+    storagePath: varchar("storage_path", {
+      length: 255,
+    }).notNull(),
+    storageUrl: varchar("storage_url", {
+      length: 1000,
+    }).notNull(),
+    expiryDate: timestamp("expiry_date", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => ({
+    userIdx: index("user_document_user_idx").on(table.userId),
+    expiryIdx: index("user_document_expiry_idx").on(table.expiryDate),
+  }),
+);
+
+export const userDocumentsRelations = relations(userDocuments, ({ one }) => ({
+  user: one(users, {
+    fields: [userDocuments.userId],
+    references: [users.id],
+  }),
+}));
