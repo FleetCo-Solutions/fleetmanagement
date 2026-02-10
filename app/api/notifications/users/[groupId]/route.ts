@@ -2,8 +2,9 @@ import { NextRequest } from "next/server";
 import { getGroupUsers } from "./get";
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { groupId: string } },
+  _request: NextRequest,
+  { params }: { params: Promise<{ groupId: string }> },
 ) {
-  return getGroupUsers(params.groupId);
+  const { groupId } = await params;
+  return getGroupUsers(groupId);
 }

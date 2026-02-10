@@ -747,7 +747,7 @@ export const notificationTopics = pgTable(
     slug: varchar("slug", { length: 100 }).notNull().unique(), // e.g. "document.expiry"
     name: varchar("name", { length: 100 }).notNull(),
     description: varchar("description", { length: 255 }),
-    defaultChannels: jsonb("default_channels").default(["in_app"]).notNull(), // Active channels: ['in_app', 'email']
+    defaultChannels: jsonb("default_channels").$type<string[]>().default(["in_app"]).notNull(), // Active channels: ['in_app', 'email']
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

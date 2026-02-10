@@ -4,7 +4,7 @@ import { sendUserCredentialsEmail } from "@/app/lib/mail";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
-import { notify } from "@/lib/notifications/notifier";
+import { postNotification } from "../notifications/post";
 
 export interface IPostUser {
   firstName: string;
@@ -69,14 +69,13 @@ export default async function postUser(
       });
 
       // Send welcome notification
-      await notify({
+      await postNotification({
         userId: result.id,
         actorType: "user",
         type: "system.welcome",
         title: "Welcome to FleetCo",
         message: "Your account has been created successfully. Welcome aboard!",
-        link: "/profile",
-        channels: ["in_app", "email"],
+        link: "/profile"
       });
     }
 

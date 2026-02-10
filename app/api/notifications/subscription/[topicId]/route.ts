@@ -2,8 +2,9 @@ import { NextRequest } from "next/server";
 import { getTopicSubscriptions } from "./get";
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { topicId: string } },
+  _request: NextRequest,
+  { params }: { params: Promise<{ topicId: string }> },
 ) {
-  return getTopicSubscriptions(params.topicId);
+  const { topicId } = await params;
+  return getTopicSubscriptions(topicId);
 }

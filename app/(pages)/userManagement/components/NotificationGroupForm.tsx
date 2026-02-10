@@ -191,7 +191,7 @@ export default function NotificationGroupForm({
               Loading topics...
             </p>
           )}
-          {topics.map((topic: any) => {
+          {topics?.map((topic: any) => {
             const isSelected = selectedTopicIds.includes(topic.id);
 
             return (

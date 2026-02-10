@@ -4,8 +4,8 @@ import { trips } from "@/app/db/schema";
 import { eq, and, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, verifyToken } from "@/lib/auth/jwt";
-// import { notify } from "@/lib/notifications/notifier";
 import { parseTripDateTime } from "@/lib/utils/date-timezone";
+import { postNotification } from "../../notifications/post";
 
 /**
  * Trip update request body
@@ -325,17 +325,16 @@ export async function putTrip(request: NextRequest, id: string) {
 
     if (updatedTrip.length > 0 && body.status === "cancelled") {
       // Notify driver if trip was cancelled
-      // if (updatedTrip[0].mainDriverId) {
-      //   await notify({
-      //     userId: updatedTrip[0].mainDriverId,
-      //     actorType: "driver",
-      //     type: "trip.cancelled",
-      //     title: "Trip Cancelled",
-      //     message: `Your trip from ${updatedTrip[0].startLocation} to ${updatedTrip[0].endLocation} has been cancelled.`,
-      //     link: `/trips/${updatedTrip[0].id}`,
-      //     channels: ["in_app", "push"],
-      //   });
-      // }
+      if (updatedTrip[0].mainDriverId) {
+        await postNotification({
+          userId: updatedTrip[0].mainDriverId,
+          actorType: "driver",
+          type: "trip.cancelled",
+          title: "Trip Cancelled",
+          message: `Your trip from ${updatedTrip[0].startLocation} to ${updatedTrip[0].endLocation} has been cancelled.`,
+          link: `/trips/${updatedTrip[0].id}`,
+        });
+      }
     }
 
     if (updatedTrip.length === 0) {
