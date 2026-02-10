@@ -11,9 +11,10 @@ import TripDetailsTab from "./components/TripDetailsTab";
 import TripTimelineTab from "./components/TripTimelineTab";
 import TripViolationsTab from "./components/TripViolationsTab";
 import TripMapDrawer from "./components/TripMapDrawer";
+import DocumentsTab from "./components/DocumentsTab";
 import { SkeletonShimmer } from "@/app/components/universalTableSkeleton";
 
-type TabType = "details" | "timeline" | "violations";
+type TabType = "details" | "timeline" | "violations" | "documents";
 
 export default function TripDetail() {
   const params = useParams();
@@ -59,6 +60,8 @@ export default function TripDetail() {
             violations={tripMachineLearningResponse?.trip_violations || []}
           />
         );
+      case "documents":
+        return <DocumentsTab tripId={id} />;
       default:
         return null;
     }
@@ -139,22 +142,24 @@ export default function TripDetail() {
       <div className="space-y-6">
         {/* Tabs Navigation */}
         <div className="flex gap-10 border-b border-gray-200 overflow-x-auto scrolbar-hide">
-          {(["details", "timeline", "violations"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`pb-4 text-base font-bold transition-all relative whitespace-nowrap ${
-                activeTab === tab
-                  ? "text-[#004953]"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              {activeTab === tab && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#004953] rounded-t-full" />
-              )}
-            </button>
-          ))}
+          {(["details", "timeline", "violations", "documents"] as const).map(
+            (tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`pb-4 text-base font-bold transition-all relative whitespace-nowrap ${
+                  activeTab === tab
+                    ? "text-[#004953]"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {activeTab === tab && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#004953] rounded-t-full" />
+                )}
+              </button>
+            ),
+          )}
         </div>
 
         {/* Tab Content */}

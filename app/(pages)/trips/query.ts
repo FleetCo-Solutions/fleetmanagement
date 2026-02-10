@@ -18,6 +18,13 @@ import {
   NewTripDetails,
   FrankTripDetails,
 } from "@/app/types";
+import {
+  getTripDocuments,
+  getTripDocumentsSummary,
+  uploadTripDocument,
+  updateTripDocument,
+  deleteTripDocument,
+} from "@/actions/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useTripsQuery = () => {
@@ -95,6 +102,71 @@ export const useDeleteTrip = () => {
     mutationFn: async (id: string) => await deleteTrip(id),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["Trips"] });
+    },
+  });
+};
+
+export const useTripDocumentsQuery = (tripId: string) => {
+  return useQuery({
+    queryKey: ["tripDocuments", tripId],
+    queryFn: () => getTripDocuments(tripId),
+    enabled: !!tripId,
+  });
+};
+
+export const useTripDocumentsSummaryQuery = (tripId: string) => {
+  return useQuery({
+    queryKey: ["tripDocumentsSummary", tripId],
+    queryFn: () => getTripDocumentsSummary(tripId),
+    enabled: !!tripId,
+  });
+};
+
+export const useUploadTripDocumentMutation = (tripId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (formData: FormData) => uploadTripDocument(tripId, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["tripDocuments", tripId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["tripDocumentsSummary", tripId],
+      });
+    },
+  });
+};
+
+export const useUpdateTripDocumentMutation = (tripId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ docId, formData }: { docId: string; formData: FormData }) =>
+      updateTripDocument(tripId, docId, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["tripDocuments", tripId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["tripDocumentsSummary", tripId],
+      });
+    },
+  });
+};
+
+export const useDeleteTripDocumentMutation = (tripId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (docId: string) => deleteTripDocument(tripId, docId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["tripDocuments", tripId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["tripDocumentsSummary", tripId],
+      });
     },
   });
 };

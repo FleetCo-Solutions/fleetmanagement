@@ -17,10 +17,12 @@ import {
 } from "recharts";
 import { vehicleData } from "./components/vehicleData";
 import VehicleEditForm from "./components/VehicleEditForm";
+import DocumentsTab from "./components/DocumentsTab";
 import { useVehicleDetailsQuery, useUpdateVehicle } from "../query";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { SkeletonShimmer } from "@/app/components/universalTableSkeleton";
+import VehicleDetailsLoading from "./components/vehicleDetailsLoading";
 
 export default function VehicleDetails() {
   const params = useParams();
@@ -35,7 +37,7 @@ export default function VehicleDetails() {
     { id: "finance", label: "Finance" },
     { id: "maintenance", label: "Maintenance" },
     { id: "trips", label: "Trips" },
-    { id: "compliance", label: "Compliance" },
+    { id: "documents", label: "Documents" },
   ];
 
   // Enhanced financial data for Finance tab
@@ -104,52 +106,6 @@ export default function VehicleDetails() {
     },
   ];
 
-  // Tanzanian compliance requirements
-  const complianceData = [
-    {
-      document: "Vehicle Registration Certificate",
-      status: "Valid",
-      expiry: "2024-06-15",
-      type: "critical",
-    },
-    {
-      document: "Third Party Insurance",
-      status: "Valid",
-      expiry: "2024-12-31",
-      type: "critical",
-    },
-    {
-      document: "Roadworthiness Certificate",
-      status: "Valid",
-      expiry: "2024-08-20",
-      type: "critical",
-    },
-    {
-      document: "TIN Certificate",
-      status: "Valid",
-      expiry: "N/A",
-      type: "important",
-    },
-    {
-      document: "Business License",
-      status: "Valid",
-      expiry: "2024-12-31",
-      type: "important",
-    },
-    {
-      document: "Driver License",
-      status: "Valid",
-      expiry: "2025-03-15",
-      type: "important",
-    },
-    {
-      document: "Emission Test Certificate",
-      status: "Valid",
-      expiry: "2024-09-10",
-      type: "important",
-    },
-  ];
-
   // Trip data for map visualization
   const tripData = [
     {
@@ -183,53 +139,7 @@ export default function VehicleDetails() {
 
   const renderOverviewTab = () => {
     if (isLoading || !vehicleDetails) {
-      return (
-        <div className="p-5 border rounded-xl border-gray-200">
-          <div className="flex gap-6">
-            <SkeletonShimmer className="h-8 w-20" />
-            <SkeletonShimmer className="h-8 w-20" />
-            <SkeletonShimmer className="h-8 w-20" />
-            <SkeletonShimmer className="h-8 w-20" />
-          </div>
-          <div className="grid grid-cols-2 gap-6 py-8">
-            <div className="flex flex-col gap-1">
-              <SkeletonShimmer className="h-8 w-40" />
-              <SkeletonShimmer className="h-12" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <SkeletonShimmer className="h-8 w-40" />
-              <SkeletonShimmer className="h-12" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <SkeletonShimmer className="h-8 w-40" />
-              <SkeletonShimmer className="h-12" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <SkeletonShimmer className="h-8 w-40" />
-              <SkeletonShimmer className="h-12" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <SkeletonShimmer className="h-8 w-40" />
-              <SkeletonShimmer className="h-12" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <SkeletonShimmer className="h-8 w-40" />
-              <SkeletonShimmer className="h-12" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <SkeletonShimmer className="h-8 w-40" />
-              <SkeletonShimmer className="h-12" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <SkeletonShimmer className="h-8 w-40" />
-              <SkeletonShimmer className="h-12" />
-            </div>
-          </div>
-          <div className="flex justify-end">
-            <SkeletonShimmer className="h-10 w-40" />
-          </div>
-        </div>
-      );
+      return <VehicleDetailsLoading />;
     }
 
     return (
@@ -540,69 +450,7 @@ export default function VehicleDetails() {
     </div>
   );
 
-  const renderComplianceTab = () => (
-    <div className="space-y-6">
-      {/* Document Status */}
-      <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
-        <h3 className="text-xl font-bold text-black mb-4">
-          Tanzanian Compliance Documents
-        </h3>
-        <div className="space-y-3">
-          {complianceData.map((doc, index) => (
-            <div
-              key={index}
-              className={`flex items-center justify-between p-4 rounded-lg border-l-4 ${
-                doc.type === "critical"
-                  ? "bg-red-50 border-red-400"
-                  : "bg-blue-50 border-blue-400"
-              }`}
-            >
-              <div>
-                <div className="font-semibold text-black">{doc.document}</div>
-                <div className="text-sm text-gray-700">
-                  {doc.expiry !== "N/A"
-                    ? `Expires: ${new Date(doc.expiry).toLocaleDateString()}`
-                    : "No expiry"}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`px-2 py-1 rounded text-xs font-semibold ${
-                    doc.status === "Valid"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {doc.status}
-                </span>
-                {doc.type === "critical" && (
-                  <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
-                    Critical
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Compliance Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white border border-black/20 rounded-xl p-4 shadow-sm">
-          <div className="text-2xl font-bold text-green-600">6</div>
-          <div className="text-sm text-gray-700">Valid Documents</div>
-        </div>
-        <div className="bg-white border border-black/20 rounded-xl p-4 shadow-sm">
-          <div className="text-2xl font-bold text-yellow-600">1</div>
-          <div className="text-sm text-gray-700">Expiring Soon</div>
-        </div>
-        <div className="bg-white border border-black/20 rounded-xl p-4 shadow-sm">
-          <div className="text-2xl font-bold text-red-600">0</div>
-          <div className="text-sm text-gray-700">Expired</div>
-        </div>
-      </div>
-    </div>
-  );
+  const renderDocumentsTab = () => <DocumentsTab vehicleId={vehicleId} />;
 
   return (
     <div className="bg-white w-full h-full flex items-center justify-center">
@@ -669,7 +517,7 @@ export default function VehicleDetails() {
           {activeTab === "finance" && renderFinanceTab()}
           {activeTab === "maintenance" && renderMaintenanceTab()}
           {activeTab === "trips" && renderTripsTab()}
-          {activeTab === "compliance" && renderComplianceTab()}
+          {activeTab === "documents" && renderDocumentsTab()}
         </div>
       </div>
     </div>

@@ -23,6 +23,7 @@ import ErrorTemplate from "@/app/components/error/errorTemplate";
 import { useDriverMachineLearningDataQuery } from "../query";
 import OverviewSkeleton from "@/app/components/cards/overviewSkeleton";
 import DriverViolationsTab from "../components/DriverViolationsTab";
+import DocumentsTab from "./components/DocumentsTab";
 
 export default function DriverProfile() {
   const params = useParams();
@@ -144,7 +145,13 @@ export default function DriverProfile() {
   // ... (historyColumns remain same)
 
   const [activeTab, setActiveTab] = useState<
-    "profile" | "emergency" | "trips" | "vehicle" | "roles" | "violations"
+    | "profile"
+    | "emergency"
+    | "trips"
+    | "vehicle"
+    | "roles"
+    | "violations"
+    | "documents"
   >("profile");
 
   const [isEditing, setIsEditing] = useState(false);
@@ -244,6 +251,7 @@ export default function DriverProfile() {
               { key: "vehicle", label: "Vehicle History" },
               { key: "violations", label: "Violations" },
               { key: "roles", label: "Roles & Permissions" },
+              { key: "documents", label: "Documents" },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -255,7 +263,8 @@ export default function DriverProfile() {
                       | "trips"
                       | "vehicle"
                       | "roles"
-                      | "violations",
+                      | "violations"
+                      | "documents",
                   )
                 }
                 className={`pb-3 px-1 text-lg font-semibold transition-colors ${
@@ -450,6 +459,8 @@ export default function DriverProfile() {
         {activeTab === "roles" && driverDetails && (
           <DriverRolesTab driverData={driverDetails.dto} />
         )}
+
+        {activeTab === "documents" && <DocumentsTab driverId={driverId} />}
       </div>
     </div>
   );

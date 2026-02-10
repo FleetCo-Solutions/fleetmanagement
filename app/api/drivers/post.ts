@@ -4,7 +4,7 @@ import { drivers, roles, driverRoles } from "@/app/db/schema";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
-import { notify } from "@/lib/notifications/notifier";
+// import { notify } from "@/lib/notifications/notifier";
 import { eq, and } from "drizzle-orm";
 
 interface IPostDriver {
@@ -88,16 +88,16 @@ export default async function postDriver(
       });
 
       // Send welcome notification to driver
-      await notify({
-        userId: driver.id,
-        actorType: "driver",
-        type: "system.welcome",
-        title: "Welcome to FleetCo",
-        message:
-          "Your driver account has been created. You can now log in to the mobile app.",
-        link: "/profile",
-        channels: ["in_app", "push"],
-      });
+      // await notify({
+      //   userId: driver.id,
+      //   actorType: "driver",
+      //   type: "system.welcome",
+      //   title: "Welcome to FleetCo",
+      //   message:
+      //     "Your driver account has been created. You can now log in to the mobile app.",
+      //   link: "/profile",
+      //   channels: ["in_app", "push"],
+      // });
     }
 
     return NextResponse.json(
