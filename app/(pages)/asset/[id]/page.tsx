@@ -18,6 +18,7 @@ import {
 import { vehicleData } from "./components/vehicleData";
 import VehicleEditForm from "./components/VehicleEditForm";
 import DocumentsTab from "./components/DocumentsTab";
+import VehicleTripsTab from "./components/VehicleTripsTab";
 import { useVehicleDetailsQuery, useUpdateVehicle } from "../query";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
@@ -395,60 +396,7 @@ export default function VehicleDetails() {
     </div>
   );
 
-  const renderTripsTab = () => (
-    <div className="space-y-6">
-      {/* Trip List */}
-      <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
-        <h3 className="text-xl font-bold text-black mb-4">Trip History</h3>
-        <div className="space-y-3">
-          {tripData.map((trip) => (
-            <div
-              key={trip.id}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <div>
-                  <div className="font-semibold text-black">
-                    {trip.start} → {trip.end}
-                  </div>
-                  <div className="text-sm text-gray-700">
-                    {trip.date} • {trip.duration}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="font-semibold text-black">
-                  {trip.distance} km
-                </div>
-                <div className="text-sm text-gray-700 capitalize">
-                  {trip.status}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Map Visualization Placeholder */}
-      <div className="bg-white border border-black/20 rounded-xl p-6 shadow-sm">
-        <h3 className="text-xl font-bold text-black mb-4">
-          Route Visualization
-        </h3>
-        <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl mb-2">🗺️</div>
-            <div className="text-gray-600">
-              Interactive Map with Route Paths
-            </div>
-            <div className="text-sm text-gray-500 mt-1">
-              Shows clear path from destination to arrival
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const renderTripsTab = () => <VehicleTripsTab vehicleId={vehicleId} />;
 
   const renderDocumentsTab = () => <DocumentsTab vehicleId={vehicleId} />;
 

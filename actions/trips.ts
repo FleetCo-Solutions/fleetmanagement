@@ -226,7 +226,7 @@ export async function tripSummary(id: string) {
 export async function tripMachineLearning(id: string) {
   try {
     const headersList = await headers();
-    const response = await fetch(`${process.env.ML_URL}/v1/trips/${id}/summary`, {
+    const response = await fetch(`${process.env.ML_URL}/v1/trips/366c8117-0319-4349-a36a-60fdf78781fa/summary`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
