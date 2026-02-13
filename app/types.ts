@@ -1,6 +1,27 @@
 // Import Drizzle-generated types from schema
 export type {} from "@/app/db/schema";
 
+// Document type applicability enum
+export type DocumentApplicability =
+  | "driver"
+  | "vehicle"
+  | "trip"
+  | "user"
+  | "all";
+
+export interface DocumentType {
+  id: string;
+  companyId: string | null;
+  name: string;
+  slug: string;
+  description: string | null;
+  appliesTo: DocumentApplicability;
+  requiresExpiry: boolean;
+  createdAt: Date;
+  updatedAt: Date | null;
+  deletedAt: Date | null;
+}
+
 // Custom form types for components
 export interface UserFormData {
   email: string;
@@ -149,8 +170,6 @@ export interface Driver {
   lastName: string;
   phone: string;
   alternativePhone: string | null;
-  licenseNumber: string;
-  licenseExpiry: string;
   status: "active" | "inactive" | "suspended";
   passwordHash: string;
   role: "main" | "substitute" | null;
@@ -160,6 +179,8 @@ export interface Driver {
   updatedAt: Date | null;
   deletedAt: Date | null;
   vehicle?: tempVehicle | null;
+  tripCount?: number;
+  documentCount?: number;
 }
 
 export interface IndividualDriver {
@@ -191,8 +212,6 @@ export interface DriverProfile {
   lastName: string;
   phone: string;
   alternativePhone: string | null;
-  licenseNumber: string;
-  licenseExpiry: string;
   status: "active" | "inactive" | "suspended";
 }
 
@@ -259,8 +278,6 @@ export interface DriverDetails {
   firstName: string;
   lastName: string;
   phone: string;
-  LicenseNumber: string;
-  licenseExpiryDate: Date;
 }
 
 export interface tempVehicle {
@@ -331,8 +348,6 @@ export interface VehicleDriver {
   lastName: string;
   phone: string;
   alternativePhone: string | null;
-  licenseNumber: string;
-  licenseExpiry: string;
   status: "active" | "inactive" | "suspended";
   passwordHash: string;
   role: "main" | "substitute" | null;
@@ -623,8 +638,6 @@ export interface TripMainDriver {
   lastName: string;
   phone: string;
   alternativePhone: string | null;
-  licenseNumber: string;
-  licenseExpiry: string;
   status: "active" | "inactive" | "suspended";
   passwordHash: string;
   role: "main" | "substitute" | null;
@@ -678,41 +691,41 @@ export interface AuditLogsResponse {
 
 export interface TripSummary {
   success: boolean;
-  data:    Data;
+  data: Data;
 }
 
 export interface Data {
-  tripId:          string;
-  vehicleId:       string;
-  startTime:       Date;
-  endTime:         Date;
-  locationCount:   number;
+  tripId: string;
+  vehicleId: string;
+  startTime: Date;
+  endTime: Date;
+  locationCount: number;
   totalDistanceKm: number;
   averageSpeedKmh: number;
-  maxSpeedKmh:     number;
+  maxSpeedKmh: number;
   durationMinutes: number;
-  eventsCount:     number;
-  violations:      Violation[];
-  fuelUsedLiters:  number;
-  route:           Route[];
+  eventsCount: number;
+  violations: Violation[];
+  fuelUsedLiters: number;
+  route: Route[];
 }
 
 export interface Route {
-  latitude:  number;
+  latitude: number;
   longitude: number;
-  time?:     Date;
-  speed:     number;
-  heading?:  number;
+  time?: Date;
+  speed: number;
+  heading?: number;
 }
 
 export interface Violation {
-  eventId:        string;
-  vehicleId:      string;
-  eventType:      string;
-  eventTime:      Date;
-  sourceType:     string;
-  location:       Route;
-  severity:       number;
+  eventId: string;
+  vehicleId: string;
+  eventType: string;
+  eventTime: Date;
+  sourceType: string;
+  location: Route;
+  severity: number;
   additionalData: AdditionalData;
 }
 
@@ -720,14 +733,13 @@ export interface AdditionalData {
   additionalProp1: AdditionalProp1;
 }
 
-export interface AdditionalProp1 {
-}
+export interface AdditionalProp1 {}
 
 export interface NewTripDetails {
-  timestamp:  Date;
+  timestamp: Date;
   statusCode: string;
-  message:    string;
-  dto:        NewTripDetailsDto;
+  message: string;
+  dto: NewTripDetailsDto;
 }
 
 export interface NewTripDetailsDto {
@@ -735,65 +747,63 @@ export interface NewTripDetailsDto {
 }
 
 export interface NewTripDetailsContent {
-  id:                  string;
-  companyId:           string;
-  vehicleId:           string;
-  mainDriverId:        string;
-  substituteDriverId:  null;
-  startLocation:       string;
-  endLocation:         string;
-  startTime:           Date;
-  endTime:             Date;
-  status:              string;
-  distanceKm:          null;
-  fuelUsed:            null;
-  durationMinutes:     null;
-  notes:               null;
-  actualStartTime:     Date;
-  actualEndTime:       null;
+  id: string;
+  companyId: string;
+  vehicleId: string;
+  mainDriverId: string;
+  substituteDriverId: null;
+  startLocation: string;
+  endLocation: string;
+  startTime: Date;
+  endTime: Date;
+  status: string;
+  distanceKm: null;
+  fuelUsed: null;
+  durationMinutes: null;
+  notes: null;
+  actualStartTime: Date;
+  actualEndTime: null;
   actualStartLocation: ActualLocation;
-  actualEndLocation:   ActualLocation;
-  createdAt:           Date;
-  updatedAt:           Date;
-  deletedAt:           null;
-  vehicle:             Vehicle;
-  mainDriver:          MainDriver;
-  substituteDriver:    null;
+  actualEndLocation: ActualLocation;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: null;
+  vehicle: Vehicle;
+  mainDriver: MainDriver;
+  substituteDriver: null;
 }
 
 export interface ActualLocation {
-  address:   string;
-  latitude:  number;
+  address: string;
+  latitude: number;
   longitude: number;
 }
 
 export interface MainDriver {
-  id:               string;
-  companyId:        string;
-  firstName:        string;
-  lastName:         string;
-  phone:            string;
+  id: string;
+  companyId: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
   alternativePhone: string;
-  licenseNumber:    string;
-  licenseExpiry:    Date;
-  status:           string;
-  passwordHash:     string;
-  role:             string;
-  vehicleId:        string;
-  lastLogin:        Date;
-  createdAt:        Date;
-  updatedAt:        Date;
-  deletedAt:        null;
+  status: string;
+  passwordHash: string;
+  role: string;
+  vehicleId: string;
+  lastLogin: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: null;
 }
 
 export interface TripDetailsVehicle {
-  id:                 string;
-  companyId:          string;
+  id: string;
+  companyId: string;
   registrationNumber: string;
-  model:              string;
-  manufacturer:       string;
-  vin:                string;
-  color:              string;
+  model: string;
+  manufacturer: string;
+  vin: string;
+  color: string;
 }
 export interface FrankTripDetails {
   trip_id: string;
@@ -850,44 +860,44 @@ export interface DriverSafetyScore {
 }
 
 export interface FrankDriverDetails {
-  driver_id:          string;
-  safety_score:       SafetyScore;
-  violations:         Violation[];
+  driver_id: string;
+  safety_score: SafetyScore;
+  violations: Violation[];
   violations_summary: ViolationsSummary;
 }
 
 export interface SafetyScore {
-  driver_id:    string;
-  score:        number;
-  trip_count:   number;
+  driver_id: string;
+  score: number;
+  trip_count: number;
   last_updated: Date;
 }
 
 export interface Violation {
-  id:             null;
-  trip_id:        string;
-  driver_id:      string;
-  vehicle_id:     string;
+  id: null;
+  trip_id: string;
+  driver_id: string;
+  vehicle_id: string;
   violation_type: string;
-  severity:       number;
-  timestamp:      Date;
-  latitude:       number;
-  longitude:      number;
-  metadata:       Metadata | null;
+  severity: number;
+  timestamp: Date;
+  latitude: number;
+  longitude: number;
+  metadata: Metadata | null;
 }
 
 export interface Metadata {
   actual_speed: number;
-  limit:        number;
+  limit: number;
 }
 
 export interface ViolationsSummary {
   total_count: number;
-  by_type:     ByType;
+  by_type: ByType;
   by_severity: { [key: string]: number };
 }
 
 export interface ByType {
-  SPEEDING:      number;
+  SPEEDING: number;
   HARSH_BRAKING: number;
 }
