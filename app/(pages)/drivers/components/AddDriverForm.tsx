@@ -12,8 +12,6 @@ export type AddDriverFormValues = {
   lastName: string;
   phone: string;
   alternativePhone?: string;
-  licenseNumber: string;
-  licenseExpiry: string; // ISO date string
   status?: "active" | "inactive" | "suspended";
 };
 
@@ -40,8 +38,6 @@ export default function AddDriverForm({
       alternativePhone: initialValues
         ? initialValues.alternativePhone || ""
         : "",
-      licenseNumber: initialValues ? initialValues.licenseNumber : "",
-      licenseExpiry: initialValues ? initialValues.licenseExpiry : "",
       status: (initialValues ? initialValues.status : "active") as
         | "active"
         | "inactive"
@@ -68,7 +64,7 @@ export default function AddDriverForm({
   const onSubmit = async (values: AddDriverFormValues) => {
     console.log(
       initialValues ? "Update driver payload:" : "Add driver payload:",
-      values
+      values,
     );
 
     if (initialValues?.id) {
@@ -82,8 +78,6 @@ export default function AddDriverForm({
             lastName: values.lastName,
             phone: values.phone,
             alternativePhone: values.alternativePhone || null,
-            licenseNumber: values.licenseNumber,
-            licenseExpiry: values.licenseExpiry,
             status: values.status || initialValues.status || "active",
           },
         }),
@@ -94,7 +88,7 @@ export default function AddDriverForm({
             return data.message || "Driver updated successfully!";
           },
           error: (err) => err.message || "Failed to update driver.",
-        }
+        },
       );
     } else {
       // Add new driver
@@ -216,45 +210,6 @@ export default function AddDriverForm({
             )}
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            License Number
-          </label>
-          <input
-            {...register("licenseNumber", {
-              required: "License number is required",
-            })}
-            type="text"
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004953] ${
-              errors.licenseNumber ? "border-red-300" : "border-gray-300"
-            }`}
-            placeholder="Enter license number"
-          />
-          {errors.licenseNumber && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.licenseNumber.message}
-            </p>
-          )}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            License Expiry Date
-          </label>
-          <input
-            {...register("licenseExpiry", {
-              required: "Expiry date is required",
-            })}
-            type="date"
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004953] ${
-              errors.licenseExpiry ? "border-red-300" : "border-gray-300"
-            }`}
-          />
-          {errors.licenseExpiry && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.licenseExpiry.message}
-            </p>
-          )}
-        </div>
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
@@ -273,8 +228,8 @@ export default function AddDriverForm({
           {isSubmitting
             ? "Saving..."
             : initialValues
-            ? "Update Driver"
-            : "Save Driver"}
+              ? "Update Driver"
+              : "Save Driver"}
         </button>
       </div>
     </form>
