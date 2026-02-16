@@ -31,19 +31,6 @@ const getSafetyScoreColor = (score: number) => {
   return "text-red-600";
 };
 
-const getExpiryStatusColor = (expiryDate: string) => {
-  const today = new Date();
-  const expiry = new Date(expiryDate);
-  const daysUntilExpiry = Math.ceil(
-    (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  if (daysUntilExpiry < 0) return "text-red-600"; // Expired
-  if (daysUntilExpiry <= 30) return "text-orange-600"; // Expiring soon
-  if (daysUntilExpiry <= 90) return "text-yellow-600"; // Warning
-  return "text-green-600"; // Valid
-};
-
 const getViolationsColor = (violations: number) => {
   if (violations === 0) return "text-green-600";
   if (violations <= 3) return "text-yellow-600";
@@ -72,29 +59,12 @@ export default function DriversTable() {
       accessorKey: "phone",
     },
     {
-      header: "License",
-      accessorKey: "licenseNumber",
-    },
-    {
-      header: "License Expiry",
-      accessorKey: "licenseExpiryDate",
-      cell: ({ row }) => (
-        <span
-          className={`font-semibold ${getExpiryStatusColor(
-            row.original.licenseExpiry
-          )}`}
-        >
-          {new Date(row.original.licenseExpiry).toLocaleDateString()}
-        </span>
-      ),
-    },
-    {
       header: "Status",
       accessorKey: "status",
       cell: ({ row }) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-            row.original.status
+            row.original.status,
           )}`}
         >
           {row.original.status.replace("_", " ")}
@@ -110,8 +80,10 @@ export default function DriversTable() {
     },
     {
       header: "Total Trips",
-      accessorKey: "totalTrips",
-      cell: ({ row }) => <span className="font-semibold"></span>,
+      accessorKey: "tripCount",
+      cell: ({ row }) => (
+        <span className="font-semibold">{row.original.tripCount || 0}</span>
+      ),
     },
     {
       header: "Violations",
