@@ -36,6 +36,8 @@ export default async function getDriverDetails(id: string, companyId: string) {
         : driverDetails.vehicle.registrationNumber || null
       : null;
 
+    const registrationNumber = driverDetails.vehicle?.registrationNumber || null;
+
     return NextResponse.json(
       {
         timestamp: date,
@@ -62,6 +64,7 @@ export default async function getDriverDetails(id: string, companyId: string) {
           roles: driverDetails.roles || [],
           vehicleId: driverDetails.vehicleId || null,
           vehicleName: vehicleName,
+          registrationNumber: registrationNumber,
         },
       },
       { status: 200 }

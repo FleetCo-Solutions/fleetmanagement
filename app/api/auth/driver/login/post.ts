@@ -1,5 +1,5 @@
 import { db } from "@/app/db";
-import { drivers, trips, driverRoles, roles } from "@/app/db/schema";
+import { drivers, trips, driverRoles, roles, vehicles } from "@/app/db/schema";
 import { and, eq, isNull, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateToken } from "@/lib/auth/jwt";
@@ -102,6 +102,25 @@ export async function loginDriver(
       role: primaryRole,
     });
 
+    // Get vehicle information if driver is assigned to a vehicle
+    let vehicleName = null;
+    if (driver.vehicleId) {
+      const vehicle = await db.query.vehicles.findFirst({
+        where: eq(vehicles.id, driver.vehicleId),
+        columns: {
+          manufacturer: true,
+          model: true,
+          registrationNumber: true,
+        },
+      });
+      
+      if (vehicle) {
+        vehicleName = vehicle.manufacturer && vehicle.model
+          ? `${vehicle.manufacturer} ${vehicle.model}`
+          : vehicle.registrationNumber || null;
+      }
+    }
+
     return NextResponse.json(
       {
         timestamp: new Date(),
@@ -113,6 +132,8 @@ export async function loginDriver(
           phoneNumber: driver.phone,
           role: driver.role!,
           companyId: driver.companyId!,
+          vehicleId: driver.vehicleId || null,
+          vehicleName: vehicleName,
         },
       },
       { status: 200 }
