@@ -113,10 +113,6 @@ const TripDetailsTab: React.FC<TripDetailsTabProps> = ({ isLoading, trip }) => {
             <DetailItem label="Role" value={trip.mainDriver?.role || "N/A"} />
             <DetailItem label="Phone" value={trip.mainDriver?.phone || "N/A"} />
             <DetailItem
-              label="License Number"
-              value={trip.mainDriver?.licenseNumber || "N/A"}
-            />
-            <DetailItem
               label="Status"
               value={trip.mainDriver?.status || "N/A"}
             />
