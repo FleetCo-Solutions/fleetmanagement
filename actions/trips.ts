@@ -225,8 +225,16 @@ export async function tripSummary(id: string) {
 
 export async function tripMachineLearning(id: string) {
   try {
+    const mlUrl = process.env.ML_URL;
+    
+    // Check if ML_URL is configured
+    if (!mlUrl) {
+      console.warn('ML_URL not configured, skipping machine learning data');
+      return null;
+    }
+
     const headersList = await headers();
-    const response = await fetch(`${process.env.ML_URL}/v1/trips/${id}/summary`, {
+    const response = await fetch(`${mlUrl}/v1/trips/${id}/summary`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -235,14 +243,17 @@ export async function tripMachineLearning(id: string) {
       cache: "no-store",
     });
 
-    const result = await response.json();
-
+    // Check response status before parsing JSON
     if (!response.ok) {
-      throw new Error(result.message || "Failed to get trip machine learning");
+      const errorText = await response.text();
+      console.error(`ML API error (${response.status}):`, errorText);
+      throw new Error(`ML API returned ${response.status}: ${errorText.substring(0, 100)}`);
     }
 
+    const result = await response.json();
     return result;
   } catch (error) {
+    console.error('Machine learning API error:', error);
     throw new Error((error as Error).message);
   }
 }
