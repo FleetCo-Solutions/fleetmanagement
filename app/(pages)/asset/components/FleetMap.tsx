@@ -80,7 +80,7 @@ export default function FleetMap() {
       <MapContainer
         center={[37.8716, 25.3881]}
         zoom={13}
-        scrollWheelZoom={false}
+        scrollWheelZoom={true}
         className="w-full h-full"
       >
         <TileLayer
