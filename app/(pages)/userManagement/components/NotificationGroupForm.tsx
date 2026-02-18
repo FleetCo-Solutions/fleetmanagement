@@ -7,32 +7,14 @@ import {
   useCreateNotificationGroup,
   useUpdateNotificationGroup,
   useUserQuery,
+  useNotificationTopicsQuery,
 } from "../query";
 import { toast } from "sonner";
-
-const NOTIFICATION_TYPES = [
-  { value: "trip.assigned", label: "Trip Assigned" },
-  { value: "trip.started", label: "Trip Started" },
-  { value: "trip.completed", label: "Trip Completed" },
-  { value: "trip.cancelled", label: "Trip Cancelled" },
-  { value: "maintenance.due", label: "Maintenance Due" },
-  { value: "maintenance.overdue", label: "Maintenance Overdue" },
-  { value: "document.expiry", label: "Document Expiry" },
-  { value: "violation.overspeed", label: "Speed Violation" },
-  { value: "violation.geofence", label: "Geofence Violation" },
-];
 
 const schema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   description: z.string().optional(),
-  types: z
-    .array(
-      z.object({
-        type: z.string(),
-        sendEmail: z.boolean(),
-      }),
-    )
-    .min(1, "Select at least one topic"),
+  topicIds: z.array(z.string()).min(1, "Select at least one topic"),
   userIds: z.array(z.string()).optional(),
 });
 
@@ -54,7 +36,11 @@ export default function NotificationGroupForm({
   const { mutateAsync: updateGroup, isPending: isUpdating } =
     useUpdateNotificationGroup();
   const { data: userData } = useUserQuery();
+  const { data: topicsData, isLoading: isLoadingTopics } =
+    useNotificationTopicsQuery();
+
   const users = userData?.dto?.content || [];
+  const topics = topicsData?.success ? topicsData.data : [];
 
   const isEditMode = !!group;
   const isPending = isCreating || isUpdating;
@@ -93,7 +79,7 @@ export default function NotificationGroupForm({
     defaultValues: {
       name: "",
       description: "",
-      types: [],
+      topicIds: [],
       userIds: [],
     },
   });
@@ -104,41 +90,26 @@ export default function NotificationGroupForm({
       reset({
         name: group.name || "",
         description: group.description || "",
-        types:
-          group.types?.map((t: any) => ({
-            type: t.type,
-            sendEmail: t.sendEmail || false,
-          })) || [],
+        topicIds:
+          group.topicSubscriptions?.map((sub: any) => sub.topicId) || [],
         userIds: group.users?.map((u: any) => u.userId) || [],
       });
     }
   }, [group, reset]);
 
-  const selectedTypes = watch("types") || [];
+  const selectedTopicIds = watch("topicIds") || [];
   const selectedUserIds = watch("userIds") || [];
 
-  const handleTypeToggle = (typeValue: string) => {
-    const current = selectedTypes;
-    const exists = current.find((t) => t.type === typeValue);
-
-    if (exists) {
-      // Remove type
+  const handleTopicToggle = (topicId: string) => {
+    const current = selectedTopicIds;
+    if (current.includes(topicId)) {
       setValue(
-        "types",
-        current.filter((t) => t.type !== typeValue),
+        "topicIds",
+        current.filter((id) => id !== topicId),
       );
     } else {
-      // Add type with default sendEmail = false
-      setValue("types", [...current, { type: typeValue, sendEmail: false }]);
+      setValue("topicIds", [...current, topicId]);
     }
-  };
-
-  const handleEmailToggle = (typeValue: string) => {
-    const current = selectedTypes;
-    const updated = current.map((t) =>
-      t.type === typeValue ? { ...t, sendEmail: !t.sendEmail } : t,
-    );
-    setValue("types", updated);
   };
 
   const handleUserToggle = (userId: string) => {
@@ -209,76 +180,80 @@ export default function NotificationGroupForm({
         />
       </div>
 
-      {/* Topics with Email Toggle */}
+      {/* Topics */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Subscribe to Topics
         </label>
-        <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-100 rounded-lg p-3 bg-gray-50/50">
-          {NOTIFICATION_TYPES.map((type) => {
-            const selectedType = selectedTypes.find(
-              (t) => t.type === type.value,
-            );
-            const isSelected = !!selectedType;
-            const emailEnabled = selectedType?.sendEmail || false;
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto border border-gray-100 rounded-lg p-3 bg-gray-50/50">
+          {isLoadingTopics && (
+            <p className="text-sm text-gray-400 p-2 col-span-2 text-center">
+              Loading topics...
+            </p>
+          )}
+          {topics?.map((topic: any) => {
+            const isSelected = selectedTopicIds.includes(topic.id);
 
             return (
               <div
-                key={type.value}
-                className={`p-3 rounded-md border transition-colors ${
+                key={topic.id}
+                onClick={() => handleTopicToggle(topic.id)}
+                className={`p-3 rounded-md border transition-all cursor-pointer select-none ${
                   isSelected
-                    ? "bg-[#004953]/10 border-[#004953]/30"
-                    : "bg-white border-gray-200"
+                    ? "bg-[#004953]/10 border-[#004953]/30 shadow-sm"
+                    : "bg-white border-gray-200 hover:border-gray-300"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center space-x-2 cursor-pointer flex-1">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleTypeToggle(type.value)}
-                      className="rounded border-gray-300 text-[#004953] focus:ring-[#004953]"
-                    />
-                    <span className="text-gray-700 font-medium">
-                      {type.label}
-                    </span>
-                  </label>
-
-                  {/* Email Toggle - Only show when topic is selected */}
-                  {isSelected && (
-                    <label className="flex items-center space-x-2 cursor-pointer ml-4">
-                      <input
-                        type="checkbox"
-                        checked={emailEnabled}
-                        onChange={() => handleEmailToggle(type.value)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-600 flex items-center gap-1">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                <div className="flex items-start space-x-3">
+                  <div
+                    className={`mt-1 h-4 w-4 rounded border flex items-center justify-center transition-colors ${
+                      isSelected
+                        ? "bg-[#004953] border-[#004953]"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    {isSelected && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3 w-3 text-white"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-gray-800 font-bold text-xs uppercase tracking-tight">
+                      {topic.name}
+                    </div>
+                    {topic.description && (
+                      <div className="text-[10px] text-gray-500 leading-tight mt-0.5">
+                        {topic.description}
+                      </div>
+                    )}
+                    <div className="flex gap-1 mt-1.5">
+                      {topic.defaultChannels?.map((ch: string) => (
+                        <span
+                          key={ch}
+                          className="px-1.5 py-0.5 bg-gray-100 text-[9px] text-gray-600 rounded-sm font-medium uppercase"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                          />
-                        </svg>
-                        Send Email
-                      </span>
-                    </label>
-                  )}
+                          {ch}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
-        {errors.types && (
-          <p className="text-red-500 text-xs mt-1">{errors.types.message}</p>
+        {errors.topicIds && (
+          <p className="text-red-500 text-xs mt-1">{errors.topicIds.message}</p>
         )}
       </div>
 
@@ -289,32 +264,55 @@ export default function NotificationGroupForm({
         </label>
         <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto border border-gray-100 rounded-lg p-3 bg-gray-50/50">
           {users.length === 0 && (
-            <p className="text-sm text-gray-400 p-2">Loading users...</p>
+            <p className="text-sm text-gray-400 p-2 col-span-2 text-center">
+              Loading users...
+            </p>
           )}
-          {(users as any[]).map((user: any) => (
-            <label
-              key={user.id}
-              className={`flex items-center space-x-2 p-2 rounded-md border text-sm cursor-pointer transition-colors ${
-                selectedUserIds.includes(user.id)
-                  ? "bg-[#004953]/10 border-[#004953]/30"
-                  : "bg-white border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              <input
-                type="checkbox"
-                value={user.id}
-                checked={selectedUserIds.includes(user.id)}
-                onChange={() => handleUserToggle(user.id)}
-                className="rounded border-gray-300 text-[#004953] focus:ring-[#004953]"
-              />
-              <div className="flex flex-col">
-                <span className="text-gray-800 font-medium">
-                  {user.firstName} {user.lastName}
-                </span>
-                <span className="text-gray-500 text-xs">{user.email}</span>
+          {(users as any[]).map((user: any) => {
+            const isSelected = selectedUserIds.includes(user.id);
+            return (
+              <div
+                key={user.id}
+                onClick={() => handleUserToggle(user.id)}
+                className={`flex items-center space-x-2 p-2 rounded-md border text-sm cursor-pointer transition-all ${
+                  isSelected
+                    ? "bg-[#004953]/10 border-[#004953]/30 shadow-sm"
+                    : "bg-white border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <div
+                  className={`h-4 w-4 rounded border flex items-center justify-center transition-colors ${
+                    isSelected
+                      ? "bg-[#004953] border-[#004953]"
+                      : "border-gray-300 bg-white"
+                  }`}
+                >
+                  {isSelected && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3 w-3 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-gray-800 font-bold text-xs truncate">
+                    {user.firstName} {user.lastName}
+                  </span>
+                  <span className="text-gray-500 text-[10px] truncate">
+                    {user.email}
+                  </span>
+                </div>
               </div>
-            </label>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -330,7 +328,7 @@ export default function NotificationGroupForm({
         <button
           type="submit"
           disabled={isPending}
-          className="bg-[#004953] text-white px-6 py-2 rounded-lg hover:bg-[#003d46] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="bg-[#004953] text-white px-6 py-2 rounded-lg hover:bg-[#003d46] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-md shadow-[#004953]/20"
         >
           {isPending
             ? isEditMode

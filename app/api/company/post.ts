@@ -12,8 +12,8 @@ import { sendUserCredentialsEmail } from "@/app/lib/mail";
 import { eq, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
-import { notify } from "@/lib/notifications/notifier";
 import { auth } from "@/app/auth";
+import { postNotification } from "../notifications/post";
 
 export async function postCompany(request: NextRequest) {
   try {
@@ -119,14 +119,13 @@ export async function postCompany(request: NextRequest) {
         });
 
         // Send welcome notification to company admin
-        await notify({
+        await postNotification({
           userId: adminuser.id,
           actorType: "user",
           type: "system.welcome",
           title: "Welcome to FleetCo",
           message: `Your company ${company.name} has been registered. Welcome aboard!`,
-          link: "/dashboard",
-          channels: ["in_app", "email"],
+          link: "/dashboard"
         });
       }
       return company;

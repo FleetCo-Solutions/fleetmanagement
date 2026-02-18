@@ -146,6 +146,13 @@ export async function getCurrentDriver(
     // Ensure role is not null (default to 'substitute' if null)
     const driverRole: "main" | "substitute" = driverData.role || "substitute";
 
+    // Get vehicle name
+    const vehicleName = driverData.vehicle
+      ? driverData.vehicle.manufacturer && driverData.vehicle.model
+        ? `${driverData.vehicle.manufacturer} ${driverData.vehicle.model}`
+        : driverData.vehicle.registrationNumber || null
+      : null;
+
     // Format emergency contacts (exclude deleted ones)
     const emergencyContacts = (driverData.emergencyContacts || [])
       .filter((contact) => !contact.deleted)
@@ -172,7 +179,7 @@ export async function getCurrentDriver(
           lastName: driverData.lastName,
           phoneNumber: driverData.phone,
           vehicleId: driverData.vehicleId,
-          vehicleName: driverData.vehicle?.registrationNumber || null,
+          vehicleName: vehicleName,
           role: driverRole,
           assignedTrips,
           emergencyContacts,

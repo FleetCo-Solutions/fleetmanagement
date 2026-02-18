@@ -14,7 +14,7 @@ const NotificationDrawer = () => {
   const { data: notificationsData, isLoading } = useNotificationsQuery();
   const markAsReadMutation = useMarkAsReadMutation();
 
-  const notifications: Notification[] = notificationsData?.data || [];
+  const notifications: Notification[] = notificationsData?.dto || [];
 
   const filteredNotifications = notifications.filter((n) => {
     const matchesSearch =

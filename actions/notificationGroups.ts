@@ -4,11 +4,24 @@ import { headers } from "next/headers";
 import { db } from "@/app/db";
 import {
   notificationGroups,
-  notificationGroupTypes,
   notificationGroupUsers,
+  notificationTopics,
+  notificationTopicSubscriptions,
 } from "@/app/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { auth } from "@/app/auth";
+
+export async function getNotificationTopics() {
+  try {
+    const topics = await db.query.notificationTopics.findMany({
+      where: isNull(notificationTopics.deletedAt),
+    });
+    return { success: true, data: topics };
+  } catch (error) {
+    console.error("Error fetching notification topics:", error);
+    return { success: false, error: "Failed to fetch topics" };
+  }
+}
 
 export async function getNotificationGroups() {
   const session = await auth();
@@ -22,7 +35,11 @@ export async function getNotificationGroups() {
     const groups = await db.query.notificationGroups.findMany({
       where: eq(notificationGroups.companyId, companyId),
       with: {
-        types: true,
+        topicSubscriptions: {
+          with: {
+            topic: true,
+          },
+        },
         users: true,
       },
     });
@@ -37,7 +54,7 @@ export async function getNotificationGroups() {
 export async function createNotificationGroup(data: {
   name: string;
   description?: string;
-  types?: { type: string; sendEmail: boolean }[];
+  topicIds?: string[]; // New: list of topic IDs
   userIds?: string[];
 }) {
   const session = await auth();
@@ -57,13 +74,12 @@ export async function createNotificationGroup(data: {
       })
       .returning();
 
-    // Insert Types with sendEmail flag
-    if (data.types?.length) {
-      await db.insert(notificationGroupTypes).values(
-        data.types.map((t) => ({
+    // Insert Topic Subscriptions
+    if (data.topicIds?.length) {
+      await db.insert(notificationTopicSubscriptions).values(
+        data.topicIds.map((topicId) => ({
           groupId: newGroup.id,
-          type: t.type,
-          sendEmail: t.sendEmail,
+          topicId,
         })),
       );
     }
@@ -90,7 +106,7 @@ export async function updateNotificationGroup(
   data: {
     name: string;
     description?: string;
-    types?: { type: string; sendEmail: boolean }[];
+    topicIds?: string[];
     userIds?: string[];
   },
 ) {
@@ -124,19 +140,18 @@ export async function updateNotificationGroup(
 
     // Delete existing types and users
     await db
-      .delete(notificationGroupTypes)
-      .where(eq(notificationGroupTypes.groupId, groupId));
+      .delete(notificationTopicSubscriptions)
+      .where(eq(notificationTopicSubscriptions.groupId, groupId));
     await db
       .delete(notificationGroupUsers)
       .where(eq(notificationGroupUsers.groupId, groupId));
 
-    // Insert new types with sendEmail flag
-    if (data.types?.length) {
-      await db.insert(notificationGroupTypes).values(
-        data.types.map((t) => ({
+    // Insert new Topic Subscriptions
+    if (data.topicIds?.length) {
+      await db.insert(notificationTopicSubscriptions).values(
+        data.topicIds.map((topicId) => ({
           groupId: groupId,
-          type: t.type,
-          sendEmail: t.sendEmail,
+          topicId,
         })),
       );
     }

@@ -3,6 +3,7 @@ import {
   getNotificationGroups,
   createNotificationGroup,
   updateNotificationGroup,
+  getNotificationTopics,
 } from "@/actions/notificationGroups";
 import {
   getRoles,
@@ -35,6 +36,13 @@ import {
   updateEmergencyContact as updateAction,
   deleteEmergencyContact as deleteAction,
 } from "@/actions/emergencyContact";
+import {
+  getUserDocuments,
+  getUserDocumentsSummary,
+  uploadUserDocument,
+  updateUserDocument,
+  deleteUserDocument,
+} from "@/actions/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUserQuery = () => {
@@ -246,6 +254,77 @@ export const useUpdateNotificationGroup = () => {
       await updateNotificationGroup(groupId, data),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["NotificationGroups"] });
+    },
+  });
+};
+export const useNotificationTopicsQuery = () => {
+  return useQuery({
+    queryKey: ["NotificationTopics"],
+    queryFn: async () => await getNotificationTopics(),
+  });
+};
+
+export const useUserDocumentsQuery = (userId: string) => {
+  return useQuery({
+    queryKey: ["userDocuments", userId],
+    queryFn: () => getUserDocuments(userId),
+    enabled: !!userId,
+  });
+};
+
+export const useUserDocumentsSummaryQuery = (userId: string) => {
+  return useQuery({
+    queryKey: ["userDocumentsSummary", userId],
+    queryFn: () => getUserDocumentsSummary(userId),
+    enabled: !!userId,
+  });
+};
+
+export const useUploadUserDocumentMutation = (userId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (formData: FormData) => uploadUserDocument(userId, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["userDocuments", userId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userDocumentsSummary", userId],
+      });
+    },
+  });
+};
+
+export const useUpdateUserDocumentMutation = (userId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ docId, formData }: { docId: string; formData: FormData }) =>
+      updateUserDocument(userId, docId, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["userDocuments", userId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userDocumentsSummary", userId],
+      });
+    },
+  });
+};
+
+export const useDeleteUserDocumentMutation = (userId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (docId: string) => deleteUserDocument(userId, docId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["userDocuments", userId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userDocumentsSummary", userId],
+      });
     },
   });
 };

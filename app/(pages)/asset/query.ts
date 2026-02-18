@@ -12,6 +12,13 @@ import {
   assignDriverToVehicle,
   unassignDriverFromVehicle,
 } from "@/actions/drivers";
+import {
+  getVehicleDocuments,
+  getVehicleDocumentsSummary,
+  uploadVehicleDocument,
+  updateVehicleDocument,
+  deleteVehicleDocument,
+} from "@/actions/documents";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IPostVehicle } from "@/app/api/vehicles/post";
 import { UpdateVehiclePayload } from "@/actions/vehicles";
@@ -145,7 +152,8 @@ export const useUpdateVehicle = (vehicleId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: UpdateVehiclePayload) => updateVehicle(vehicleId, payload),
+    mutationFn: (payload: UpdateVehiclePayload) =>
+      updateVehicle(vehicleId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vehicles"] });
       queryClient.invalidateQueries({ queryKey: ["vehicle", vehicleId] });
@@ -155,3 +163,69 @@ export const useUpdateVehicle = (vehicleId: string) => {
 };
 
 export { useAssignVehicleToDriver } from "../drivers/query";
+
+export const useVehicleDocumentsQuery = (vehicleId: string) => {
+  return useQuery({
+    queryKey: ["vehicleDocuments", vehicleId],
+    queryFn: () => getVehicleDocuments(vehicleId),
+    enabled: !!vehicleId,
+  });
+};
+
+export const useVehicleDocumentsSummaryQuery = (vehicleId: string) => {
+  return useQuery({
+    queryKey: ["vehicleDocumentsSummary", vehicleId],
+    queryFn: () => getVehicleDocumentsSummary(vehicleId),
+    enabled: !!vehicleId,
+  });
+};
+
+export const useUploadVehicleDocumentMutation = (vehicleId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (formData: FormData) =>
+      uploadVehicleDocument(vehicleId, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["vehicleDocuments", vehicleId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["vehicleDocumentsSummary", vehicleId],
+      });
+    },
+  });
+};
+
+export const useUpdateVehicleDocumentMutation = (vehicleId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ docId, formData }: { docId: string; formData: FormData }) =>
+      updateVehicleDocument(vehicleId, docId, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["vehicleDocuments", vehicleId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["vehicleDocumentsSummary", vehicleId],
+      });
+    },
+  });
+};
+
+export const useDeleteVehicleDocumentMutation = (vehicleId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (docId: string) => deleteVehicleDocument(vehicleId, docId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["vehicleDocuments", vehicleId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["vehicleDocumentsSummary", vehicleId],
+      });
+    },
+  });
+};

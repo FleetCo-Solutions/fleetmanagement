@@ -1,7 +1,19 @@
 {
   "crons": [
     {
-      "path": "/api/jobs/check-expiring-licenses",
+      "path": "/api/notifications/vehicles/documents",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/notifications/drivers/documents",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/notifications/trips/documents",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/notifications/users/documents",
       "schedule": "0 6 * * *"
     }
   ]

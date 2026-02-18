@@ -32,19 +32,21 @@ export default function NotificationsTab() {
     },
     {
       header: "Subscribed Topics",
-      accessorKey: "types",
+      accessorKey: "topicSubscriptions",
       cell: ({ row }) => {
-        const emailCount =
-          row.original.types?.filter((t: any) => t.sendEmail).length || 0;
-        const totalCount = row.original.types?.length || 0;
+        const subscriptions = row.original.topicSubscriptions || [];
+        const totalCount = subscriptions.length;
+        const hasEmail = subscriptions.some((sub: any) =>
+          sub.topic?.defaultChannels?.includes("email"),
+        );
 
         return (
           <div className="flex items-center gap-2">
-            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium">
+            <span className="bg-[#004953]/5 text-[#004953] px-2 py-1 rounded-md text-xs font-medium border border-[#004953]/10">
               {totalCount} Topics
             </span>
-            {emailCount > 0 && (
-              <span className="bg-green-50 text-green-700 px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
+            {hasEmail && (
+              <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1 border border-blue-100">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-3 w-3"
@@ -59,7 +61,7 @@ export default function NotificationsTab() {
                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                   />
                 </svg>
-                {emailCount} Email
+                Email Active
               </span>
             )}
           </div>

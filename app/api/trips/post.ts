@@ -3,8 +3,8 @@ import { db } from "@/app/db";
 import { trips } from "@/app/db/schema";
 import { NextRequest, NextResponse } from "next/server";
 import { logAudit, sanitizeForAudit } from "@/lib/audit/logger";
-import { notify } from "@/lib/notifications/notifier";
 import { parseTripDateTime } from "@/lib/utils/date-timezone";
+import { postNotification } from "../notifications/post";
 
 export async function postTrip(request: NextRequest, companyId: string) {
   const date = new Date();
@@ -104,14 +104,13 @@ export async function postTrip(request: NextRequest, companyId: string) {
 
       // Send notification to the assigned driver
       if (newTrip[0].mainDriverId) {
-        await notify({
+        await postNotification({
           userId: newTrip[0].mainDriverId,
           actorType: "driver",
           type: "trip.assigned",
           title: "New Trip Assigned",
           message: `You have been assigned a new trip from ${body.startLocation} to ${body.endLocation}.`,
           link: `/trips/${newTrip[0].id}`,
-          channels: ["in_app", "push"],
         });
       }
     }

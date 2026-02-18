@@ -9,6 +9,13 @@ import {
   EmergencyContactPayload,
   IUpdateDriver,
 } from "@/app/types";
+import {
+  getDriverDocuments,
+  getDriverDocumentsSummary,
+  uploadDriverDocument,
+  updateDriverDocument,
+  deleteDriverDocument,
+} from "@/actions/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useDriverDetailsQuery = ({ id }: { id: string }) => {
@@ -110,5 +117,71 @@ export const useDriverTrips = (driverId: string) => {
       return await getDriverTrips(driverId);
     },
     enabled: !!driverId,
+  });
+};
+
+export const useDriverDocumentsQuery = (driverId: string) => {
+  return useQuery({
+    queryKey: ["driverDocuments", driverId],
+    queryFn: () => getDriverDocuments(driverId),
+    enabled: !!driverId,
+  });
+};
+
+export const useDriverDocumentsSummaryQuery = (driverId: string) => {
+  return useQuery({
+    queryKey: ["driverDocumentsSummary", driverId],
+    queryFn: () => getDriverDocumentsSummary(driverId),
+    enabled: !!driverId,
+  });
+};
+
+export const useUploadDriverDocumentMutation = (driverId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (formData: FormData) =>
+      uploadDriverDocument(driverId, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["driverDocuments", driverId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["driverDocumentsSummary", driverId],
+      });
+    },
+  });
+};
+
+export const useUpdateDriverDocumentMutation = (driverId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ docId, formData }: { docId: string; formData: FormData }) =>
+      updateDriverDocument(driverId, docId, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["driverDocuments", driverId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["driverDocumentsSummary", driverId],
+      });
+    },
+  });
+};
+
+export const useDeleteDriverDocumentMutation = (driverId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (docId: string) => deleteDriverDocument(driverId, docId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["driverDocuments", driverId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["driverDocumentsSummary", driverId],
+      });
+    },
   });
 };

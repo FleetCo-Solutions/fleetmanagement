@@ -6,6 +6,7 @@ import ProfileTab from "./ProfileEditForm";
 import SecurityTab from "./SecurityTab";
 import ActivityTab from "./ActivityTab";
 import UserRolesTab from "./UserRolesTab";
+import DocumentsTab from "./DocumentsTab";
 
 import {
   useAddEmergencyContact,
@@ -15,16 +16,17 @@ import {
 import EmergencyContactForm from "@/app/components/forms/EmergencyContactForm";
 import { EmergencyContactPayload } from "@/app/types";
 import { toast } from "sonner";
+import ErrorTemplate from "@/app/components/error/errorTemplate";
 
 export default function EditUserPage() {
   const searchParams = useSearchParams();
   const userId = searchParams.get("id");
   const [activeTab, setActiveTab] = useState<
-    "profile" | "security" | "activity" | "emergency" | "roles"
+    "profile" | "security" | "activity" | "emergency" | "roles" | "documents"
   >("profile");
 
   const { mutateAsync: addEmergencyContact } = useAddEmergencyContact(
-    userId || undefined
+    userId || undefined,
   );
   const { mutateAsync: updateEmergencyContactMutate } =
     useUpdateEmergencyContact(userId || undefined);
@@ -48,9 +50,7 @@ export default function EditUserPage() {
   if (isError || !userData) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-red-500">
-          Error loading user data: {error?.message}
-        </p>
+        <ErrorTemplate error={error as Error} />
       </div>
     );
   }
@@ -129,6 +129,16 @@ export default function EditUserPage() {
             >
               Roles & Permissions
             </button>
+            <button
+              onClick={() => setActiveTab("documents")}
+              className={`pb-4 px-2 font-medium transition-colors ${
+                activeTab === "documents"
+                  ? "border-b-2 border-[#004953] text-[#004953]"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Documents
+            </button>
           </nav>
         </div>
 
@@ -164,7 +174,7 @@ export default function EditUserPage() {
                           updateEmergencyContactMutate({
                             id: contact.id,
                             payload: contact,
-                          })
+                          }),
                         );
                       } else {
                         const payload: EmergencyContactPayload = {
@@ -198,6 +208,9 @@ export default function EditUserPage() {
 
           {/* Roles Tab */}
           {activeTab === "roles" && <UserRolesTab userData={userData.dto} />}
+
+          {/* Documents Tab */}
+          {activeTab === "documents" && <DocumentsTab userId={userId || ""} />}
         </div>
       </div>
     </div>
