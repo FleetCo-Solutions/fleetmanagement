@@ -173,22 +173,97 @@ export function useFleetMapLogic() {
     autoReconnect: true,
   });
 
-  // Initial load: fetch from local database (fast, only current locations)
+  // Helper to transform IoT/fleet response to VehicleLocation
+  const toVehicleLocation = useCallback(
+    (v: {
+      vehicleId: string;
+      id?: string;
+      location?: { latitude: number; longitude: number; speed?: number; heading?: number };
+      latitude?: number;
+      longitude?: number;
+      speed?: number;
+      heading?: number;
+      time?: string;
+      timestamp?: string;
+      updatedAt?: string;
+      registrationNumber?: string;
+      model?: string;
+      manufacturer?: string;
+      status?: string;
+    }): VehicleLocation => ({
+      id: v.id ?? v.vehicleId,
+      vehicleId: v.vehicleId,
+      registrationNumber: v.registrationNumber ?? `Vehicle ${v.vehicleId.slice(0, 8)}`,
+      model: v.model ?? "-",
+      manufacturer: v.manufacturer ?? "-",
+      latitude: v.location?.latitude ?? v.latitude ?? 0,
+      longitude: v.location?.longitude ?? v.longitude ?? 0,
+      heading: v.location?.heading ?? v.heading ?? 0,
+      speed: v.location?.speed ?? v.speed ?? 0,
+      status: v.status ?? ((v.location?.speed ?? v.speed ?? 0) > 0 ? "moving" : "idle"),
+      updatedAt: v.updatedAt ?? v.time ?? v.timestamp ?? new Date().toISOString(),
+    }),
+    [],
+  );
+
+  // Initial load: fetch from IoT backend (vehicles that have sent location data).
+  // Fleet portal /api/vehicles/locations may be empty if sync isn't configured.
+  // Merge with existing state so WebSocket updates received before fetch completes are preserved.
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const res = await fetch("/api/vehicles/locations");
+        const res = await fetch(`${IOT_BACKEND_URL}/api/analytics/vehicles`);
         if (res.ok) {
-          const data = await res.json();
-          setLocations(data);
+          const response = await res.json();
+          if (response.success && response.data?.length) {
+            const transformed = response.data.map((v: Record<string, unknown>) =>
+              toVehicleLocation(v as Parameters<typeof toVehicleLocation>[0]),
+            );
+            setLocations((prev) => {
+              const byId = new Map(prev.map((l) => [l.vehicleId, l]));
+              for (const t of transformed) {
+                byId.set(t.vehicleId, t);
+              }
+              return [...byId.values()];
+            });
+            transformed.forEach((loc: VehicleLocation) => enrichVehicleFromApi(loc.vehicleId));
+          } else {
+            const fallback = await fetch("/api/vehicles/locations");
+            if (fallback.ok) {
+              const data = await fallback.json();
+              setLocations((prev) => {
+                if (prev.length === 0) return data;
+                const byId = new Map(prev.map((l) => [l.vehicleId, l]));
+                for (const d of data) {
+                  byId.set(d.vehicleId, d);
+                }
+                return [...byId.values()];
+              });
+            }
+          }
+        } else {
+          const fallback = await fetch("/api/vehicles/locations");
+          if (fallback.ok) {
+            const data = await fallback.json();
+            setLocations(data);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch locations", error);
+        try {
+          const fallback = await fetch("/api/vehicles/locations");
+          if (fallback.ok) {
+            const data = await fallback.json();
+            setLocations(data);
+          }
+        } catch {
+          // ignore
+        }
       }
     };
 
     fetchLocations();
-  }, []);
+  }, [toVehicleLocation, enrichVehicleFromApi]);
 
   // Fallback polling: only when WebSocket is disconnected
   useEffect(() => {
