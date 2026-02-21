@@ -47,12 +47,10 @@ const MapBounds = ({ locations }: { locations: VehicleLocation[] }) => {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    console.log('[FleetMap][MapBounds] locations received:', locations.length, 'hasInitialized:', hasInitialized.current);
     // Only auto-center on initial load when locations first become available
     if (locations.length > 0 && !hasInitialized.current) {
       const avgLat = locations.reduce((sum, l) => sum + l.latitude, 0) / locations.length;
       const avgLng = locations.reduce((sum, l) => sum + l.longitude, 0) / locations.length;
-      console.log('[FleetMap][MapBounds] Auto-centering map to:', avgLat, avgLng);
       map.setView([avgLat, avgLng], 13);
       hasInitialized.current = true;
     }
@@ -74,20 +72,6 @@ export default function FleetMap() {
     routeCoordinates,
     isConnected,
   } = useFleetMapLogic();
-
-  // Log every time locations state changes
-  useEffect(() => {
-    console.log('%c[FleetMap] 📍 LOCATIONS STATE CHANGED', 'color: #8b5cf6; font-weight: bold', {
-      count: locations.length,
-      vehicles: locations.map(l => ({
-        vehicleId: l.vehicleId,
-        registrationNumber: l.registrationNumber,
-        lat: l.latitude,
-        lng: l.longitude,
-        status: l.status,
-      })),
-    });
-  }, [locations]);
 
   return (
     <div className="relative w-full h-screen">
@@ -114,9 +98,7 @@ export default function FleetMap() {
         )}
 
         <MarkerClusterGroup chunkedLoading>
-          {locations.map((loc) => {
-            console.log('[FleetMap][RENDER] Marker for:', loc.vehicleId, 'at', loc.latitude, loc.longitude);
-            return (
+          {locations.map((loc) => (
             <Marker
               key={loc.id}
               position={[loc.latitude, loc.longitude]}
@@ -127,8 +109,7 @@ export default function FleetMap() {
                 },
               }}
             ></Marker>
-            );
-          })}
+          ))}
         </MarkerClusterGroup>
       </MapContainer>
 
