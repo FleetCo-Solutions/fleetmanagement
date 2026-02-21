@@ -73,6 +73,7 @@ export default function FleetMap() {
     setSelectedTripId,
     tripsData,
     routeCoordinates,
+    isConnected,
   } = useFleetMapLogic();
 
   return (
@@ -80,7 +81,7 @@ export default function FleetMap() {
       <MapContainer
         center={[37.8716, 25.3881]}
         zoom={13}
-        scrollWheelZoom={false}
+        scrollWheelZoom={true}
         className="w-full h-full"
       >
         <TileLayer
@@ -114,6 +115,20 @@ export default function FleetMap() {
           ))}
         </MarkerClusterGroup>
       </MapContainer>
+
+      {/* WebSocket Connection Status Indicator */}
+      <div className="absolute top-4 left-4 bg-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 z-[400]">
+        <div
+          className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+          title={isConnected ? 'WebSocket connected' : 'WebSocket disconnected'}
+        />
+        <span className="text-xs text-gray-600">
+          {isConnected ? 'Live Updates' : 'Offline'}
+        </span>
+        <span className="text-xs text-gray-400 ml-2">
+          {locations.length} vehicle{locations.length !== 1 ? 's' : ''}
+        </span>
+      </div>
 
       {/* Floating Detail Panel */}
       {selectedVehicle && (

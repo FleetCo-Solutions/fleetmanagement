@@ -45,9 +45,12 @@ export function useFleetMapLogic() {
     return [];
   }, [tripSummary]);
 
+  // Track all vehicle IDs seen (for WebSocket subscription)
+  const [allVehicleIds, setAllVehicleIds] = useState<string[]>([]);
+
   const vehicleIds = useMemo(
-    () => locations.map((l) => l.vehicleId),
-    [locations],
+    () => allVehicleIds,
+    [allVehicleIds],
   );
 
   const enrichmentRequestedRef = useRef<Set<string>>(new Set());
@@ -118,6 +121,8 @@ export function useFleetMapLogic() {
 
   const handleLocationUpdate = useCallback(
     (update: VehicleLocationUpdate) => {
+      console.log('[FleetMap] WebSocket update for vehicle:', update.vehicleId);
+      
       const safeTimestamp =
         update.timestamp instanceof Date &&
         !Number.isNaN(update.timestamp.getTime())
@@ -145,6 +150,7 @@ export function useFleetMapLogic() {
               : l,
           );
         }
+        // New vehicle from WebSocket
         const newLocation: VehicleLocation = {
           id: `ws-${update.vehicleId}`,
           vehicleId: update.vehicleId,
@@ -158,6 +164,13 @@ export function useFleetMapLogic() {
           status,
           updatedAt: safeTimestamp,
         };
+        
+        // Add to vehicle IDs list
+        setAllVehicleIds((prevIds) => {
+          if (prevIds.includes(update.vehicleId)) return prevIds;
+          return [...prevIds, update.vehicleId];
+        });
+        
         enrichVehicleFromApi(update.vehicleId);
         return [...prev, newLocation];
       });
@@ -173,59 +186,134 @@ export function useFleetMapLogic() {
     autoReconnect: true,
   });
 
-  // Initial load: fetch from local database (fast, only current locations)
+  // Helper to transform IoT/fleet response to VehicleLocation
+  const toVehicleLocation = useCallback(
+    (v: {
+      vehicleId: string;
+      id?: string;
+      location?: { latitude: number; longitude: number; speed?: number; heading?: number };
+      latitude?: number;
+      longitude?: number;
+      speed?: number;
+      heading?: number;
+      time?: string;
+      timestamp?: string;
+      updatedAt?: string;
+      registrationNumber?: string;
+      model?: string;
+      manufacturer?: string;
+      status?: string;
+    }): VehicleLocation => ({
+      id: v.id ?? v.vehicleId,
+      vehicleId: v.vehicleId,
+      registrationNumber: v.registrationNumber ?? `Vehicle ${v.vehicleId.slice(0, 8)}`,
+      model: v.model ?? "-",
+      manufacturer: v.manufacturer ?? "-",
+      latitude: v.location?.latitude ?? v.latitude ?? 0,
+      longitude: v.location?.longitude ?? v.longitude ?? 0,
+      heading: v.location?.heading ?? v.heading ?? 0,
+      speed: v.location?.speed ?? v.speed ?? 0,
+      status: v.status ?? ((v.location?.speed ?? v.speed ?? 0) > 0 ? "moving" : "idle"),
+      updatedAt: v.updatedAt ?? v.time ?? v.timestamp ?? new Date().toISOString(),
+    }),
+    [],
+  );
+
+  // Initial load: fetch from IoT backend (vehicles that have sent location data)
+  // This ensures we get fresh, real-time data immediately
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const res = await fetch("/api/vehicles/locations");
+        console.log('[FleetMap] Initial load: Fetching from IoT backend');
+        const res = await fetch(`${IOT_BACKEND_URL}/api/analytics/vehicles`);
         if (res.ok) {
-          const data = await res.json();
-          setLocations(data);
+          const response = await res.json();
+          if (response.success && response.data?.length) {
+            console.log('[FleetMap] Received', response.data.length, 'vehicles from IoT backend');
+            const transformed = response.data.map((v: Record<string, unknown>) =>
+              toVehicleLocation(v as Parameters<typeof toVehicleLocation>[0]),
+            );
+            setLocations(transformed);
+            
+            // Extract all vehicle IDs for WebSocket subscription
+            const ids = transformed.map((loc: VehicleLocation) => loc.vehicleId);
+            setAllVehicleIds(ids);
+            console.log('[FleetMap] Will subscribe to', ids.length, 'vehicles');
+            
+            // Enrich vehicle data from database
+            transformed.forEach((loc: VehicleLocation) => enrichVehicleFromApi(loc.vehicleId));
+          } else {
+            console.log('[FleetMap] No data from IoT backend, trying local database');
+            // Fallback to local database if IoT backend has no data
+            const fallback = await fetch("/api/vehicles/locations");
+            if (fallback.ok) {
+              const data = await fallback.json();
+              if (data.length > 0) {
+                setLocations(data);
+                const ids = data.map((loc: VehicleLocation) => loc.vehicleId);
+                setAllVehicleIds(ids);
+              }
+            }
+          }
+        } else {
+          console.error('[FleetMap] Failed to fetch from IoT backend:', res.status);
+          // Try local database as fallback
+          const fallback = await fetch("/api/vehicles/locations");
+          if (fallback.ok) {
+            const data = await fallback.json();
+            if (data.length > 0) {
+              setLocations(data);
+              const ids = data.map((loc: VehicleLocation) => loc.vehicleId);
+              setAllVehicleIds(ids);
+            }
+          }
         }
       } catch (error) {
-        console.error("Failed to fetch locations", error);
+        console.error("[FleetMap] Failed to fetch locations", error);
       }
     };
 
     fetchLocations();
-  }, []);
+  }, [toVehicleLocation, enrichVehicleFromApi]);
 
-  // Fallback polling: only when WebSocket is disconnected
+  // Continuous polling: Keep data fresh regardless of WebSocket status
   useEffect(() => {
-    if (isConnected) {
-      return; // WebSocket is handling updates
-    }
-
     const fetchLocations = async () => {
       try {
         const res = await fetch(`${IOT_BACKEND_URL}/api/analytics/vehicles`);
         if (res.ok) {
           const response = await res.json();
-          if (response.success && response.data) {
-            const transformedData = response.data.map((vehicle: any) => ({
-              id: vehicle.vehicleId,
-              vehicleId: vehicle.vehicleId,
-              registrationNumber: `Vehicle ${vehicle.vehicleId.slice(0, 8)}`,
-              model: "-",
-              manufacturer: "-",
-              latitude: vehicle.location.latitude,
-              longitude: vehicle.location.longitude,
-              heading: vehicle.location.heading ?? 0,
-              speed: vehicle.location.speed ?? 0,
-              status: vehicle.location.speed > 0 ? "moving" : "idle",
-              updatedAt: vehicle.timestamp || vehicle.time,
-            }));
-            setLocations(transformedData);
+          if (response.success && response.data?.length) {
+            const transformed = response.data.map((v: Record<string, unknown>) =>
+              toVehicleLocation(v as Parameters<typeof toVehicleLocation>[0]),
+            );
+            
+            // Update locations, merging with existing state
+            setLocations((prev) => {
+              const byId = new Map(prev.map((l) => [l.vehicleId, l]));
+              for (const t of transformed) {
+                byId.set(t.vehicleId, t);
+              }
+              return [...byId.values()];
+            });
+            
+            // Update vehicle IDs list if new vehicles appear
+            const ids = transformed.map((loc: VehicleLocation) => loc.vehicleId);
+            setAllVehicleIds((prevIds) => {
+              const idSet = new Set([...prevIds, ...ids]);
+              return Array.from(idSet);
+            });
           }
         }
       } catch (error) {
-        console.error("Failed to fetch locations from IoT backend", error);
+        console.error("[FleetMap] Polling error:", error);
       }
     };
 
-    const polling = setInterval(fetchLocations, 10000);
+    // Poll every 30 seconds 
+    const polling = setInterval(fetchLocations, 30000);
     return () => clearInterval(polling);
-  }, [isConnected]);
+  }, [toVehicleLocation]);
 
   return {
     locations,
@@ -237,5 +325,6 @@ export function useFleetMapLogic() {
     setSelectedTripId,
     tripsData,
     routeCoordinates,
+    isConnected,
   };
 }
