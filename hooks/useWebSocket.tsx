@@ -67,8 +67,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   const subscribedVehiclesRef = useRef<Set<string>>(new Set());
   const shouldReconnectRef = useRef(true);
   const connectingRef = useRef(false);
+  const reconnectAttemptRef = useRef(0);
   const onMessageRef = useRef(onMessage);
+  const onConnectRef = useRef(onConnect);
+  const onDisconnectRef = useRef(onDisconnect);
+  const onErrorRef = useRef(onError);
   onMessageRef.current = onMessage;
+  onConnectRef.current = onConnect;
+  onDisconnectRef.current = onDisconnect;
+  onErrorRef.current = onError;
 
   /**
    * Connect to WebSocket server
@@ -94,19 +101,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
       ws.onopen = () => {
         console.log('%c[WS] ✅ CONNECTED to', 'color: #10b981; font-weight: bold', IOT_WEBSOCKET_URL);
-        console.log('[WS] Currently subscribed vehicles:', [...subscribedVehiclesRef.current]);
         connectingRef.current = false;
+        reconnectAttemptRef.current = 0; // Reset on successful connect
         setIsConnected(true);
         setIsConnecting(false);
         setError(null);
         shouldReconnectRef.current = true;
-
-        // Resubscribe to previously subscribed vehicles
-        subscribedVehiclesRef.current.forEach((vehicleId) => {
-          subscribe(vehicleId);
-        });
-
-        onConnect?.();
+        // Subscriptions are handled by the subscribe effect when isConnected becomes true
+        onConnectRef.current?.();
       };
 
       ws.onmessage = (event) => {
@@ -152,7 +154,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
         connectingRef.current = false;
         setError('WebSocket connection error');
         setIsConnecting(false);
-        onError?.(event);
+        onErrorRef.current?.(event);
       };
 
       ws.onclose = (event) => {
@@ -169,13 +171,16 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
         setIsConnecting(false);
         wsRef.current = null;
 
-        onDisconnect?.();
+        onDisconnectRef.current?.();
 
         if (autoReconnect && shouldReconnectRef.current && event.code !== 1000) {
+          const attempt = reconnectAttemptRef.current++;
+          const delay = Math.min(reconnectInterval * Math.pow(1.5, attempt), 30000);
+          console.log(`[WS] Reconnecting in ${Math.round(delay / 1000)}s (attempt ${attempt + 1})`);
           reconnectTimeoutRef.current = setTimeout(() => {
             setError(null);
             connect();
-          }, reconnectInterval);
+          }, delay);
         }
       };
 
@@ -186,7 +191,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       setError(err instanceof Error ? err.message : 'Failed to connect');
       setIsConnecting(false);
     }
-  }, [autoReconnect, reconnectInterval, onError, onConnect, onDisconnect]);
+  }, [autoReconnect, reconnectInterval]);
 
   /**
    * Subscribe to a specific vehicle
@@ -278,14 +283,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     };
   }, [connect, disconnect]);
 
-  // Subscribe to vehicles when they change
+  // Subscribe/unsubscribe to vehicles when they change
   useEffect(() => {
-    if (isConnected && vehicleIds.length > 0) {
-      vehicleIds.forEach((vehicleId) => {
-        subscribe(vehicleId);
-      });
-    }
-  }, [isConnected, vehicleIds, subscribe]);
+    if (!isConnected) return;
+    const idSet = new Set(vehicleIds);
+    // Unsubscribe from vehicles no longer in the list
+    const toUnsubscribe = [...subscribedVehiclesRef.current].filter((id) => !idSet.has(id));
+    toUnsubscribe.forEach((vehicleId) => {
+      subscribedVehiclesRef.current.delete(vehicleId);
+      unsubscribe(vehicleId);
+    });
+    // Subscribe to new vehicles
+    vehicleIds.forEach((vehicleId) => subscribe(vehicleId));
+  }, [isConnected, vehicleIds, subscribe, unsubscribe]);
 
   return {
     isConnected,
