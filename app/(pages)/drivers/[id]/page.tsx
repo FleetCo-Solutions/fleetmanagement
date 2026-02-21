@@ -327,13 +327,11 @@ export default function DriverProfile() {
                 onSave={async (data) => {
                   try {
                     // Convert Date object to string if needed, or ensure API handles it.
-                    // The form uses Date for licenseExpiry, but API expects string?
                     // Schema says varchar(15).
                     // Let's ensure we format it correctly.
                     const payload = {
                       ...data,
                       id: driverId,
-                      licenseExpiry: String(data.licenseExpiry),
                       alternativePhone: data.alternativePhone || null,
                     };
 

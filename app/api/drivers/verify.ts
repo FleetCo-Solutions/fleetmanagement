@@ -1,5 +1,4 @@
 import { getDrivers } from "./get";
-import { companyId } from "./test-config"; // I'll create this if needed, or just hardcode
 
 async function verify() {
   const cid = "14ed5a34-d1ed-436b-8923-b137e76b39d2";
