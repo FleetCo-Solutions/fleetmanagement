@@ -97,10 +97,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
     try {
       const ws = new WebSocket(IOT_WEBSOCKET_URL);
-      console.log('[WS] Attempting connection to:', IOT_WEBSOCKET_URL);
 
       ws.onopen = () => {
-        console.log('%c[WS] ✅ CONNECTED to', 'color: #10b981; font-weight: bold', IOT_WEBSOCKET_URL);
         connectingRef.current = false;
         reconnectAttemptRef.current = 0; // Reset on successful connect
         setIsConnected(true);
@@ -112,25 +110,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       };
 
       ws.onmessage = (event) => {
-        console.log('[WS] RAW MESSAGE received:', event.data.slice(0, 300));
         try {
           const data = JSON.parse(event.data);
-          console.log('[WS] Parsed message type:', data.type);
 
-          // Handle connection confirmation
           if (data.type === 'connected' || data.type === 'subscribed' || data.type === 'unsubscribed') {
-            console.log('[WS] Control message:', data.type, data);
             return;
           }
 
-          // Handle vehicle location updates
           if (data.type === 'vehicle-location-received') {
-            console.log('%c[WS] 📍 LOCATION UPDATE', 'color: #3b82f6; font-weight: bold', {
-              vehicleId: data.vehicleId,
-              lat: data.location?.latitude,
-              lng: data.location?.longitude,
-              speed: data.location?.speed,
-            });
             const update: VehicleLocationUpdate = {
               ...data,
               timestamp: new Date(data.timestamp),
@@ -149,8 +136,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       };
 
       ws.onerror = (event) => {
-        // Event is opaque; actual cause usually appears in onclose (e.g. 1006)
-        console.error('[WS] ❌ onerror fired (check onclose for code). URL was:', IOT_WEBSOCKET_URL);
         connectingRef.current = false;
         setError('WebSocket connection error');
         setIsConnecting(false);
@@ -159,9 +144,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
       ws.onclose = (event) => {
         connectingRef.current = false;
-        console.log('%c[WS] ❌ CLOSED', 'color: #ef4444; font-weight: bold', 'code:', event.code, 'reason:', event.reason || '(none)', 'wasClean:', event.wasClean);
-        console.log('[WS] Close code', event.code, '— 1006 = abnormal (server unreachable/TLS/proxy), 1000 = normal close');
-        // 1006 = abnormal closure (no close frame: server unreachable, TLS, or proxy)
         const message =
           event.code === 1006
             ? 'Connection lost (will retry)'
@@ -176,7 +158,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
         if (autoReconnect && shouldReconnectRef.current && event.code !== 1000) {
           const attempt = reconnectAttemptRef.current++;
           const delay = Math.min(reconnectInterval * Math.pow(1.5, attempt), 30000);
-          console.log(`[WS] Reconnecting in ${Math.round(delay / 1000)}s (attempt ${attempt + 1})`);
           reconnectTimeoutRef.current = setTimeout(() => {
             setError(null);
             connect();
@@ -202,15 +183,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     subscribedVehiclesRef.current.add(vehicleId);
 
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log('[WS] 📡 Sending SUBSCRIBE for vehicle:', vehicleId);
       wsRef.current.send(
         JSON.stringify({
           type: 'subscribe',
           vehicleId,
         })
       );
-    } else {
-      console.log('[WS] Subscribe queued (not connected yet) for vehicle:', vehicleId, '— will send on reconnect');
     }
   }, []);
 
