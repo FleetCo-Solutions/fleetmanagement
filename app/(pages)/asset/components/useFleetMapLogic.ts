@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useVehicleTripsQuery } from "../query";
 import { useTripSummaryQuery } from "../../trips/query";
 import { useWebSocket, VehicleLocationUpdate } from "@/hooks/useWebSocket";
-import { IOT_BACKEND_URL } from "@/lib/api/config";
 
 export interface VehicleLocation {
   id: string; // location id
@@ -241,16 +240,14 @@ export function useFleetMapLogic() {
   // This ensures we get fresh, real-time data immediately
   useEffect(() => {
     const fetchLocations = async () => {
-      const url = `${IOT_BACKEND_URL}/api/analytics/vehicles`;
+      const url = `/api/vehicle-tracking?action=locations`;
       console.log('%c[FleetMap] ═══════════════════════════════════', 'color: #6366f1; font-weight: bold');
       console.log('%c[FleetMap] INITIAL LOAD START', 'color: #6366f1; font-weight: bold');
-      console.log('[FleetMap] IOT_BACKEND_URL:', IOT_BACKEND_URL);
-      console.log('[FleetMap] Fetching from:', url);
+      console.log('[FleetMap] Fetching via Next.js server-side route:', url);
 
       try {
         const res = await fetch(url);
         console.log('[FleetMap] Response status:', res.status, res.statusText);
-        console.log('[FleetMap] Response ok:', res.ok);
 
         const rawText = await res.text();
         console.log('[FleetMap] Raw response body:', rawText.slice(0, 500));
@@ -279,58 +276,18 @@ export function useFleetMapLogic() {
 
           setLocations(transformed);
 
-          // Extract all vehicle IDs for WebSocket subscription
           const ids = transformed.map((loc: VehicleLocation) => loc.vehicleId);
           setAllVehicleIds(ids);
           console.log('[FleetMap] Set allVehicleIds for WS subscription:', ids);
 
-          // Enrich vehicle data from database
           transformed.forEach((loc: VehicleLocation) => enrichVehicleFromApi(loc.vehicleId));
         } else if (res.ok && response.success && !response.data?.length) {
-          console.warn('[FleetMap] IoT backend returned 0 vehicles - trying local DB fallback');
-          const fallback = await fetch("/api/vehicles/locations");
-          console.log('[FleetMap] Local DB fallback status:', fallback.status);
-          if (fallback.ok) {
-            const data = await fallback.json();
-            console.log('[FleetMap] Local DB returned', data.length, 'locations');
-            console.log('[FleetMap] Local DB first item:', JSON.stringify(data[0], null, 2));
-            if (data.length > 0) {
-              setLocations(data);
-              const ids = data.map((loc: VehicleLocation) => loc.vehicleId);
-              setAllVehicleIds(ids);
-            } else {
-              console.warn('[FleetMap] Local DB also empty - no vehicles will show');
-            }
-          }
+          console.warn('[FleetMap] Route returned 0 vehicles — IoT backend may have no data yet');
         } else {
-          console.error('[FleetMap] IoT backend error - status:', res.status, 'response:', response);
-          const fallback = await fetch("/api/vehicles/locations");
-          if (fallback.ok) {
-            const data = await fallback.json();
-            console.log('[FleetMap] Fallback DB returned', data.length, 'locations');
-            if (data.length > 0) {
-              setLocations(data);
-              const ids = data.map((loc: VehicleLocation) => loc.vehicleId);
-              setAllVehicleIds(ids);
-            }
-          }
+          console.error('[FleetMap] Route error:', res.status, response?.message);
         }
       } catch (error) {
         console.error('[FleetMap] FETCH EXCEPTION:', error);
-        console.error('[FleetMap] This usually means the IoT backend URL is wrong or CORS is blocking the request');
-        // Still try local DB
-        try {
-          const fallback = await fetch("/api/vehicles/locations");
-          if (fallback.ok) {
-            const data = await fallback.json();
-            console.log('[FleetMap] Exception fallback - local DB returned', data.length, 'locations');
-            if (data.length > 0) {
-              setLocations(data);
-              const ids = data.map((loc: VehicleLocation) => loc.vehicleId);
-              setAllVehicleIds(ids);
-            }
-          }
-        } catch { /* ignore */ }
       }
       console.log('%c[FleetMap] INITIAL LOAD END', 'color: #6366f1; font-weight: bold');
     };
@@ -338,15 +295,15 @@ export function useFleetMapLogic() {
     fetchLocations();
   }, [toVehicleLocation, enrichVehicleFromApi]);
 
-  // Continuous polling: Keep data fresh regardless of WebSocket status
+  // Continuous polling via server-side route (avoids CORS)
   useEffect(() => {
     const fetchLocations = async () => {
-      console.log('[FleetMap] [POLL] Polling IoT backend...');
+      console.log('[FleetMap] [POLL] Polling via server-side route...');
       try {
-        const res = await fetch(`${IOT_BACKEND_URL}/api/analytics/vehicles`);
+        const res = await fetch(`/api/vehicle-tracking?action=locations`);
         if (res.ok) {
           const response = await res.json();
-          console.log('[FleetMap] [POLL] IoT backend returned', response.data?.length ?? 0, 'vehicles');
+          console.log('[FleetMap] [POLL] Route returned', response.data?.length ?? 0, 'vehicles');
           if (response.success && response.data?.length) {
             const transformed = response.data.map((v: Record<string, unknown>) =>
               toVehicleLocation(v as Parameters<typeof toVehicleLocation>[0]),
@@ -369,7 +326,7 @@ export function useFleetMapLogic() {
             });
           }
         } else {
-          console.warn('[FleetMap] [POLL] IoT backend non-ok response:', res.status);
+          console.warn('[FleetMap] [POLL] Route non-ok response:', res.status);
         }
       } catch (error) {
         console.error('[FleetMap] [POLL] Error:', error);
