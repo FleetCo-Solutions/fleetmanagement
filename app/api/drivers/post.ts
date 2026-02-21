@@ -12,29 +12,21 @@ interface IPostDriver {
   lastName: string;
   phone: string;
   alternativePhone: string;
-  licenseNumber: string;
-  licenseExpiry: string;
 }
 
 export default async function postDriver(
   request: NextRequest,
-  companyId: string
+  companyId: string,
 ) {
   try {
     const body = (await request.json()) as IPostDriver;
 
-    if (
-      !body.firstName ||
-      !body.lastName ||
-      !body.licenseNumber ||
-      !body.licenseExpiry ||
-      !body.phone
-    ) {
+    if (!body.firstName || !body.lastName || !body.phone) {
       return NextResponse.json(
         {
           message: "Missing required fields",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -47,9 +39,7 @@ export default async function postDriver(
           phone: body.phone,
           alternativePhone: body.alternativePhone,
           passwordHash: await bcrypt.hash("Welcome@123", 12),
-          licenseNumber: body.licenseNumber,
-          licenseExpiry: body.licenseExpiry,
-          companyId: companyId, // Auto-assign companyId from session
+          companyId: companyId,
         })
         .returning();
 
@@ -95,18 +85,18 @@ export default async function postDriver(
         title: "Welcome to FleetCo",
         message:
           "Your driver account has been created. You can now log in to the mobile app.",
-        link: "/profile"
+        link: "/profile",
       });
     }
 
     return NextResponse.json(
       { message: "Driver Created Successfully", data: driver },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     return NextResponse.json(
       { message: "Failed to create Driver: " + (error as Error).message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -67,6 +67,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   const subscribedVehiclesRef = useRef<Set<string>>(new Set());
   const shouldReconnectRef = useRef(true);
   const connectingRef = useRef(false);
+  const onMessageRef = useRef(onMessage);
+  onMessageRef.current = onMessage;
 
   /**
    * Connect to WebSocket server
@@ -120,7 +122,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
               ...data,
               timestamp: new Date(data.timestamp),
             };
-            onMessage?.(update);
+            onMessageRef.current?.(update);
           }
 
           // Handle errors
@@ -170,7 +172,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       setError(err instanceof Error ? err.message : 'Failed to connect');
       setIsConnecting(false);
     }
-  }, [autoReconnect, reconnectInterval, onMessage, onError, onConnect, onDisconnect]);
+  }, [autoReconnect, reconnectInterval, onError, onConnect, onDisconnect]);
 
   /**
    * Subscribe to a specific vehicle

@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 export async function putDriver(
   id: string,
   payload: IUpdateDriver,
-  companyId: string
+  companyId: string,
 ) {
   try {
     // 1. Verify driver belongs to user's company before updating
@@ -20,7 +20,7 @@ export async function putDriver(
     if (!existing) {
       return NextResponse.json(
         { message: "Driver not found or access denied" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -33,8 +33,6 @@ export async function putDriver(
           lastName: payload.lastName,
           phone: payload.phone,
           alternativePhone: payload.alternativePhone,
-          licenseNumber: payload.licenseNumber,
-          licenseExpiry: payload.licenseExpiry,
           status: payload.status,
           updatedAt: new Date(),
         })
@@ -51,7 +49,7 @@ export async function putDriver(
             payload.roleIds.map((roleId) => ({
               driverId: id,
               roleId: roleId,
-            }))
+            })),
           );
         }
       }
@@ -64,13 +62,13 @@ export async function putDriver(
         message: "Driver updated successfully",
         dto: result,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error updating driver:", error);
     return NextResponse.json(
       { message: "Failed to update driver: " + (error as Error).message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

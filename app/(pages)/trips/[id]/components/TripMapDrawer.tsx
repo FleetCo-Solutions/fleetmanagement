@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Location } from "../../components/tripRouteMap";
 import { useTripSummaryQuery } from "../../query";
@@ -12,6 +12,28 @@ const TripRouteMap = dynamic(() => import("../../components/tripRouteMap"), {
 });
 
 const MAX_ACTUAL_PATH_POINTS = 500;
+
+/** Geocode address to coordinates using Nominatim (OpenStreetMap). */
+async function geocodeAddress(
+  address: string
+): Promise<{ lat: number; lng: number } | null> {
+  if (!address?.trim()) return null;
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        address
+      )}&limit=1`,
+      { headers: { "User-Agent": "FleetManagementApp/1.0" } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const first = data?.[0];
+    if (!first?.lat || !first?.lon) return null;
+    return { lat: parseFloat(first.lat), lng: parseFloat(first.lon) };
+  } catch {
+    return null;
+  }
+}
 
 interface TripMapDrawerProps {
   isOpen: boolean;
@@ -56,6 +78,15 @@ const TripMapDrawer: React.FC<TripMapDrawerProps> = ({
     return simplifyPolyline(points, MAX_ACTUAL_PATH_POINTS);
   }, [routeFromSummary]);
 
+  const [geocodedStart, setGeocodedStart] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [geocodedEnd, setGeocodedEnd] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+
   const startCoords: Location = useMemo(() => {
     const first = routeFromSummary?.[0];
     if (first)
@@ -64,12 +95,18 @@ const TripMapDrawer: React.FC<TripMapDrawerProps> = ({
         lng: first.longitude,
         name: startLocationName,
       };
+    if (geocodedStart)
+      return {
+        lat: geocodedStart.lat,
+        lng: geocodedStart.lng,
+        name: startLocationName,
+      };
     return {
       lat: -6.757278,
       lng: 39.244472,
       name: startLocationName,
     };
-  }, [routeFromSummary, startLocationName]);
+  }, [routeFromSummary, startLocationName, geocodedStart]);
 
   const endCoords: Location = useMemo(() => {
     const last = routeFromSummary?.[routeFromSummary.length - 1];
@@ -79,22 +116,68 @@ const TripMapDrawer: React.FC<TripMapDrawerProps> = ({
         lng: last.longitude,
         name: endLocationName,
       };
+    if (geocodedEnd)
+      return {
+        lat: geocodedEnd.lat,
+        lng: geocodedEnd.lng,
+        name: endLocationName,
+      };
     return {
       lat: -1.066959,
       lng: 30.657144,
       name: endLocationName,
     };
-  }, [routeFromSummary, endLocationName]);
+  }, [routeFromSummary, endLocationName, geocodedEnd]);
 
-  const [idealRoute, setIdealRoute] = React.useState<[number, number][]>([]);
+  const [idealRoute, setIdealRoute] = useState<[number, number][]>([]);
   const idealRouteFetched = React.useRef(false);
+
+  // Geocode addresses when we have no actual route (e.g. newly created trip).
+  useEffect(() => {
+    if (
+      !isOpen ||
+      !tripId ||
+      !startLocationName?.trim() ||
+      !endLocationName?.trim() ||
+      routeFromSummary?.length
+    ) {
+      setGeocodedStart(null);
+      setGeocodedEnd(null);
+      return;
+    }
+    let cancelled = false;
+    Promise.all([
+      geocodeAddress(startLocationName),
+      geocodeAddress(endLocationName),
+    ]).then(([start, end]) => {
+      if (!cancelled && start) setGeocodedStart(start);
+      if (!cancelled && end) setGeocodedEnd(end);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isOpen,
+    tripId,
+    startLocationName,
+    endLocationName,
+    routeFromSummary?.length,
+  ]);
+
+  // Fetch ideal route when we have valid start/end coords (from actual path or geocoding).
+  // For new trips: wait for geocoding. For trips with GPS data: use first/last route points.
+  const hasValidCoords =
+    routeFromSummary?.length ||
+    (geocodedStart !== null && geocodedEnd !== null);
 
   useEffect(() => {
     if (
       !isOpen ||
       !tripId ||
-      actualPath.length < 2 ||
-      idealRouteFetched.current
+      !hasValidCoords ||
+      idealRouteFetched.current ||
+      !startLocationName?.trim() ||
+      !endLocationName?.trim()
     )
       return;
     const start = {
@@ -114,7 +197,7 @@ const TripMapDrawer: React.FC<TripMapDrawerProps> = ({
   }, [
     isOpen,
     tripId,
-    actualPath.length,
+    hasValidCoords,
     startCoords.lat,
     startCoords.lng,
     endCoords.lat,
@@ -156,10 +239,11 @@ const TripMapDrawer: React.FC<TripMapDrawerProps> = ({
     );
   }, [violationsFromSummary]);
 
-  const isLoading = isSummaryLoading || (actualPath.length >= 2 && isRoutingLoading);
   const hasActualPath = actualPath.length > 0;
   const hasIdealRoute = idealRoute.length > 0;
   const showDualRoutes = hasActualPath && hasIdealRoute;
+  const isLoading =
+    isSummaryLoading || (hasValidCoords && isRoutingLoading && !hasIdealRoute);
 
   return (
     <>
@@ -225,7 +309,7 @@ const TripMapDrawer: React.FC<TripMapDrawerProps> = ({
               </div>
             )}
 
-            {!hasActualPath && !isLoading && (
+            {!hasActualPath && !hasIdealRoute && !isLoading && (
               <div className="absolute inset-0 z-[300] flex items-center justify-center bg-gray-50/90 rounded-lg">
                 <p className="text-center text-gray-600 px-4">
                   No route data for this trip yet. Complete the trip or ensure

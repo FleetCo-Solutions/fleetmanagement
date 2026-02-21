@@ -48,6 +48,8 @@ export const useTripSummaryQuery = (id: string) => {
     queryKey: ["TripSummary", id],
     queryFn: async () => await tripSummary(id),
     enabled: !!id,
+    retry: false, // Don't retry on 404 errors for trips without location data
+    staleTime: 5000, // Cache for 5 seconds to prevent rapid re-requests
   });
 };
 

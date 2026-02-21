@@ -34,14 +34,6 @@ export const DriverSchema = z.object({
     .max(20)
     .nullable()
     .openapi({ description: "Alternative phone number" }),
-  licenseNumber: z
-    .string()
-    .max(50)
-    .openapi({ description: "Driver license number", example: "DL123456" }),
-  licenseExpiry: z
-    .string()
-    .date()
-    .openapi({ description: "License expiry date", example: "2025-12-31" }),
   vehicleId: z
     .string()
     .uuid()
@@ -92,15 +84,6 @@ export const CreateDriverRequestSchema = z.object({
     .max(20)
     .optional()
     .openapi({ description: "Alternative phone number" }),
-  licenseNumber: z
-    .string()
-    .min(1)
-    .max(50)
-    .openapi({ description: "Driver license number", example: "DL123456" }),
-  licenseExpiry: z.string().date().openapi({
-    description: "License expiry date (YYYY-MM-DD)",
-    example: "2025-12-31",
-  }),
 });
 
 /**
@@ -161,7 +144,7 @@ export const SimpleDriversListResponseSchema = z.object({
       lastName: z.string(),
       phone: z.string(),
       status: z.string(),
-    })
+    }),
   ),
 });
 
@@ -219,8 +202,6 @@ export const DriverDetailResponseSchema = z.object({
       lastName: z.string(),
       phone: z.string(),
       alternativePhone: z.string().nullable(),
-      licenseNumber: z.string(),
-      licenseExpiry: z.string(),
       status: z.string(),
     }),
     activity: z.object({
@@ -232,7 +213,8 @@ export const DriverDetailResponseSchema = z.object({
       description: "Assigned vehicle ID",
     }),
     vehicleName: z.string().nullable().openapi({
-      description: "Assigned vehicle name (manufacturer + model or registration number)",
+      description:
+        "Assigned vehicle name (manufacturer + model or registration number)",
     }),
   }),
 });

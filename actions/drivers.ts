@@ -14,8 +14,6 @@ export interface AddDriverPayload {
   lastName: string;
   phone: string;
   alternativePhone?: string;
-  licenseNumber: string;
-  licenseExpiry: string;
   status?: "active" | "inactive" | "suspended";
 }
 
@@ -37,7 +35,7 @@ export async function getDrivers(): Promise<IDriver> {
           Cookie: headersList.get("cookie") || "",
         },
         cache: "no-store",
-      }
+      },
     );
 
     const result = await response.json();
@@ -64,7 +62,7 @@ export async function getDriversList(): Promise<DriversList> {
           Cookie: headersList.get("cookie") || "",
         },
         cache: "no-store",
-      }
+      },
     );
 
     const result = await response.json();
@@ -91,7 +89,7 @@ export async function getDriverDetails(id: string): Promise<IndividualDriver> {
           Cookie: headersList.get("cookie") || "",
         },
         cache: "no-store",
-      }
+      },
     );
 
     const result = await response.json();
@@ -118,7 +116,7 @@ export async function assignDriverToVehicle(payload: AssignDriverPayload) {
           Cookie: headersList.get("cookie") || "",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
 
     const result = await response.json();
@@ -152,7 +150,7 @@ export async function unassignDriverFromVehicle(payload: {
           Cookie: headersList.get("cookie") || "",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
     const result = await response.json();
 
@@ -180,7 +178,7 @@ export async function getDriverDashboard() {
           Cookie: headersList.get("cookie") || "",
         },
         cache: "no-store",
-      }
+      },
     );
 
     const result = await response.json();
@@ -207,13 +205,15 @@ export async function getDriverMachineLearningData(id: string) {
           Cookie: headersList.get("cookie") || "",
         },
         cache: "no-store",
-      }
+      },
     );
 
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.message || "Failed to fetch driver machine learning data");
+      throw new Error(
+        result.message || "Failed to fetch driver machine learning data",
+      );
     }
 
     return result;
@@ -234,7 +234,7 @@ export async function addDriver(driverData: AddDriverPayload) {
           Cookie: headersList.get("cookie") || "",
         },
         body: JSON.stringify(driverData),
-      }
+      },
     );
 
     const result = await response.json();
@@ -264,7 +264,7 @@ export async function updateDriver(id: string, driverData: IUpdateDriver) {
           Cookie: headersList.get("cookie") || "",
         },
         body: JSON.stringify(driverData),
-      }
+      },
     );
 
     const result = await response.json();
@@ -293,7 +293,7 @@ export async function getDriverVehicleHistory(id: string) {
           "Content-Type": "application/json",
           Cookie: headersList.get("cookie") || "",
         },
-      }
+      },
     );
     const result = await response.json();
 
@@ -318,7 +318,7 @@ export async function getDriverTrips(id: string) {
           Cookie: headersList.get("cookie") || "",
         },
         cache: "no-store",
-      }
+      },
     );
     const result = await response.json();
 

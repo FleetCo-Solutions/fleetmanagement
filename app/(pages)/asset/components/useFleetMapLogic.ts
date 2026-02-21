@@ -275,6 +275,7 @@ export function useFleetMapLogic() {
 
     fetchLocations();
   }, [toVehicleLocation, enrichVehicleFromApi]);
+  }, [toVehicleLocation, enrichVehicleFromApi]);
 
   // Continuous polling: Keep data fresh regardless of WebSocket status
   useEffect(() => {

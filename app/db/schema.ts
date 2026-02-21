@@ -63,6 +63,38 @@ export const notificationChannelEnum = pgEnum("notification_channel", [
   "in_app",
 ]);
 
+export const documentApplicabilityEnum = pgEnum("document_applicability", [
+  "driver",
+  "vehicle",
+  "trip",
+  "user",
+  "all",
+]);
+
+export const documentTypes = pgTable(
+  "document_types",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id").references(() => companies.id, {
+      onDelete: "cascade",
+    }),
+    name: varchar("name", { length: 100 }).notNull(),
+    slug: varchar("slug", { length: 100 }).notNull(),
+    description: varchar("description", { length: 255 }),
+    appliesTo: documentApplicabilityEnum("applies_to").default("all").notNull(),
+    requiresExpiry: boolean("requires_expiry").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => ({
+    companyIdx: index("doc_type_company_idx").on(table.companyId),
+    slugIdx: index("doc_type_slug_idx").on(table.slug),
+  }),
+);
+
 export const users = pgTable(
   "users",
   {
@@ -200,8 +232,6 @@ export const drivers = pgTable(
     lastName: varchar("lastName", { length: 50 }).notNull(),
     phone: varchar("phoneNumber", { length: 20 }).unique().notNull(),
     alternativePhone: varchar("alternativePhone", { length: 20 }).unique(),
-    licenseNumber: varchar("licenseNumber", { length: 29 }).unique().notNull(),
-    licenseExpiry: varchar("licenseExpiry", { length: 15 }).notNull(),
     status: userStatusEnum("status").default("active").notNull(),
     passwordHash: varchar("passwordHash", { length: 255 })
       .default("Welcome@123")
@@ -217,7 +247,6 @@ export const drivers = pgTable(
   },
   (driver) => {
     return {
-      licenseNumberIdx: index("licenseNumberIdx").on(driver.licenseNumber),
       companyIdx: index("drivers_company_idx").on(driver.companyId),
     };
   },
@@ -747,7 +776,10 @@ export const notificationTopics = pgTable(
     slug: varchar("slug", { length: 100 }).notNull().unique(), // e.g. "document.expiry"
     name: varchar("name", { length: 100 }).notNull(),
     description: varchar("description", { length: 255 }),
-    defaultChannels: jsonb("default_channels").$type<string[]>().default(["in_app"]).notNull(), // Active channels: ['in_app', 'email']
+    defaultChannels: jsonb("default_channels")
+      .$type<string[]>()
+      .default(["in_app"])
+      .notNull(), // Active channels: ['in_app', 'email']
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -939,6 +971,7 @@ export const vehicleDocuments = pgTable(
       length: 1000,
     }).notNull(),
     expiryDate: timestamp("expiry_date", { withTimezone: true }),
+    documentTypeId: uuid("document_type_id").references(() => documentTypes.id),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -948,6 +981,9 @@ export const vehicleDocuments = pgTable(
   (table) => ({
     vehicleIdx: index("vehicle_document_vehicle_idx").on(table.vehicleId),
     expiryIdx: index("vehicle_document_expiry_idx").on(table.expiryDate),
+    documentTypeIdx: index("vehicle_document_type_idx").on(
+      table.documentTypeId,
+    ),
   }),
 );
 
@@ -957,6 +993,10 @@ export const vehicleDocumentsRelations = relations(
     vehicle: one(vehicles, {
       fields: [vehicleDocuments.vehicleId],
       references: [vehicles.id],
+    }),
+    documentType: one(documentTypes, {
+      fields: [vehicleDocuments.documentTypeId],
+      references: [documentTypes.id],
     }),
   }),
 );
@@ -977,6 +1017,7 @@ export const driverDocuments = pgTable(
       length: 1000,
     }).notNull(),
     expiryDate: timestamp("expiry_date", { withTimezone: true }),
+    documentTypeId: uuid("document_type_id").references(() => documentTypes.id),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -986,6 +1027,7 @@ export const driverDocuments = pgTable(
   (table) => ({
     driverIdx: index("driver_document_driver_idx").on(table.driverId),
     expiryIdx: index("driver_document_expiry_idx").on(table.expiryDate),
+    documentTypeIdx: index("driver_document_type_idx").on(table.documentTypeId),
   }),
 );
 
@@ -995,6 +1037,10 @@ export const driverDocumentsRelations = relations(
     driver: one(drivers, {
       fields: [driverDocuments.driverId],
       references: [drivers.id],
+    }),
+    documentType: one(documentTypes, {
+      fields: [driverDocuments.documentTypeId],
+      references: [documentTypes.id],
     }),
   }),
 );
@@ -1015,6 +1061,7 @@ export const tripDocuments = pgTable(
       length: 1000,
     }).notNull(),
     expiryDate: timestamp("expiry_date", { withTimezone: true }),
+    documentTypeId: uuid("document_type_id").references(() => documentTypes.id),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1024,6 +1071,7 @@ export const tripDocuments = pgTable(
   (table) => ({
     tripIdx: index("trip_document_trip_idx").on(table.tripId),
     expiryIdx: index("trip_document_expiry_idx").on(table.expiryDate),
+    documentTypeIdx: index("trip_document_type_idx").on(table.documentTypeId),
   }),
 );
 
@@ -1031,6 +1079,10 @@ export const tripDocumentsRelations = relations(tripDocuments, ({ one }) => ({
   trip: one(trips, {
     fields: [tripDocuments.tripId],
     references: [trips.id],
+  }),
+  documentType: one(documentTypes, {
+    fields: [tripDocuments.documentTypeId],
+    references: [documentTypes.id],
   }),
 }));
 
@@ -1050,6 +1102,7 @@ export const userDocuments = pgTable(
       length: 1000,
     }).notNull(),
     expiryDate: timestamp("expiry_date", { withTimezone: true }),
+    documentTypeId: uuid("document_type_id").references(() => documentTypes.id),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1059,6 +1112,7 @@ export const userDocuments = pgTable(
   (table) => ({
     userIdx: index("user_document_user_idx").on(table.userId),
     expiryIdx: index("user_document_expiry_idx").on(table.expiryDate),
+    documentTypeIdx: index("user_document_type_idx").on(table.documentTypeId),
   }),
 );
 
@@ -1067,4 +1121,15 @@ export const userDocumentsRelations = relations(userDocuments, ({ one }) => ({
     fields: [userDocuments.userId],
     references: [users.id],
   }),
+  documentType: one(documentTypes, {
+    fields: [userDocuments.documentTypeId],
+    references: [documentTypes.id],
+  }),
+}));
+
+export const documentTypesRelations = relations(documentTypes, ({ many }) => ({
+  driverDocuments: many(driverDocuments),
+  vehicleDocuments: many(vehicleDocuments),
+  tripDocuments: many(tripDocuments),
+  userDocuments: many(userDocuments),
 }));
