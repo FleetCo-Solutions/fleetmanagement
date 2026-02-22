@@ -1,6 +1,12 @@
 import { getAuthenticatedUser } from "@/lib/auth/utils";
 import { db } from "@/app/db";
-import { drivers, vehicles, trips, driverDocuments } from "@/app/db/schema";
+import {
+  drivers,
+  vehicles,
+  trips,
+  driverDocuments,
+  documentTypes,
+} from "@/app/db/schema";
 import { eq, and, isNull, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -45,6 +51,26 @@ export async function getDrivers(companyId: string) {
           FROM ${driverDocuments}
           WHERE ${driverDocuments.driverId} = ${drivers.id}
           AND ${driverDocuments.deletedAt} IS NULL
+        )`,
+        licenseNumber: sql<string | null>`(
+          SELECT d.title
+          FROM ${driverDocuments} d
+          JOIN ${documentTypes} t ON d.document_type_id = t.id
+          WHERE d.driver_id = ${drivers.id}
+          AND t.slug = 'license'
+          AND d.deleted_at IS NULL
+          ORDER BY d.created_at DESC
+          LIMIT 1
+        )`,
+        licenseExpiry: sql<string | null>`(
+          SELECT d.expiry_date
+          FROM ${driverDocuments} d
+          JOIN ${documentTypes} t ON d.document_type_id = t.id
+          WHERE d.driver_id = ${drivers.id}
+          AND t.slug = 'license'
+          AND d.deleted_at IS NULL
+          ORDER BY d.created_at DESC
+          LIMIT 1
         )`,
       })
       .from(drivers)

@@ -7,6 +7,7 @@ import {
 } from "../query";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { useDocumentTypesQuery } from "@/app/hooks/useDocumentTypesQuery";
 
 export default function AddDocumentModal({
   isOpen,
@@ -19,15 +20,19 @@ export default function AddDocumentModal({
   driverId: string;
   editingDoc?: any;
 }) {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, setValue } = useForm();
   const { mutateAsync: uploadDoc, isPending: isUploading } =
     useUploadDriverDocumentMutation(driverId);
   const { mutateAsync: updateDoc, isPending: isUpdating } =
     useUpdateDriverDocumentMutation(driverId);
+  const { data: docTypesRes, isLoading: isTypesLoading } =
+    useDocumentTypesQuery("driver");
+  const documentTypes = docTypesRes?.dto || [];
 
   useEffect(() => {
     if (editingDoc) {
       reset({
+        documentTypeId: editingDoc.documentTypeId || "",
         title: editingDoc.title,
         description: editingDoc.description || "",
         expiryDate: editingDoc.expiryDate
@@ -36,6 +41,7 @@ export default function AddDocumentModal({
       });
     } else {
       reset({
+        documentTypeId: "",
         title: "",
         description: "",
         expiryDate: "",
@@ -45,7 +51,13 @@ export default function AddDocumentModal({
 
   const onSubmit = async (data: any) => {
     try {
+      if (!data.documentTypeId) {
+        toast.error("Please select a document type");
+        return;
+      }
+
       const formData = new FormData();
+      formData.append("documentTypeId", data.documentTypeId);
       formData.append("title", data.title);
       formData.append("description", data.description || "");
       formData.append("expiryDate", data.expiryDate || "");
@@ -107,11 +119,39 @@ export default function AddDocumentModal({
         >
           <div>
             <label className="block text-sm font-bold text-black mb-1">
-              Document Title
+              Document Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              {...register("documentTypeId", {
+                required: true,
+                onChange: (e) => {
+                  const selectedType = documentTypes.find(
+                    (t: any) => t.id === e.target.value,
+                  );
+                  if (selectedType && !editingDoc) {
+                    setValue("title", selectedType.name);
+                  }
+                },
+              })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#004953] outline-none transition-all text-black"
+              disabled={isTypesLoading}
+            >
+              <option value="">Select Document Type</option>
+              {documentTypes.map((type: any) => (
+                <option key={type.id} value={type.id}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-black mb-1">
+              Document Title <span className="text-red-500">*</span>
             </label>
             <input
               {...register("title", { required: true })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#004953] outline-none transition-all"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#004953] outline-none transition-all text-black"
               placeholder="e.g. Driver License"
             />
           </div>
@@ -122,7 +162,7 @@ export default function AddDocumentModal({
             </label>
             <textarea
               {...register("description")}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#004953] outline-none transition-all"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#004953] outline-none transition-all text-black"
               placeholder="Brief details about the document..."
               rows={2}
             />
@@ -136,7 +176,7 @@ export default function AddDocumentModal({
               <input
                 type="date"
                 {...register("expiryDate")}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#004953] outline-none transition-all"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#004953] outline-none transition-all text-black"
               />
             </div>
             <div>

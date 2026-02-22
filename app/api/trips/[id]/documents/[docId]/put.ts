@@ -21,6 +21,7 @@ export async function updateTripDocument(
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const expiryDate = formData.get("expiryDate") as string;
+    const documentTypeId = formData.get("documentTypeId") as string;
 
     // 1. Get existing document
     const oldDoc = await db.query.tripDocuments.findFirst({
@@ -39,6 +40,8 @@ export async function updateTripDocument(
     if (description !== undefined) updateData.description = description || null;
     if (expiryDate !== undefined)
       updateData.expiryDate = expiryDate ? new Date(expiryDate) : null;
+    if (documentTypeId !== undefined)
+      updateData.documentTypeId = documentTypeId || null;
 
     // 2. If new file provided, replace in Supabase Storage
     if (file) {

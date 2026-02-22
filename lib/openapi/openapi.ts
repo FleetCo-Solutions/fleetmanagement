@@ -14,6 +14,9 @@ import { registerCompanyRoutes } from "./routes/company.routes";
 import { registerAuditLogsRoutes } from "./routes/audit-logs.routes";
 import { registerRBACRoutes } from "./routes/rbac.routes";
 import { registerJobsRoutes } from "./routes/jobs.routes";
+import { registerDashboardRoutes } from "./routes/dashboard.routes";
+import { registerDocumentsRoutes } from "./routes/documents.routes";
+import { registerNotificationsRoutes } from "./routes/notifications.routes";
 
 /**
  * Create and configure the OpenAPI registry
@@ -53,6 +56,9 @@ function createOpenAPIRegistry(): OpenAPIRegistry {
   registerAuditLogsRoutes(registry);
   registerRBACRoutes(registry);
   registerJobsRoutes(registry);
+  registerDashboardRoutes(registry);
+  registerDocumentsRoutes(registry);
+  registerNotificationsRoutes(registry);
 
   return registry;
 }
@@ -117,6 +123,12 @@ export function generateOpenAPISpec() {
       },
       { name: "RBAC", description: "Role-Based Access Control endpoints" },
       { name: "Jobs", description: "Background jobs and maintenance tasks" },
+      { name: "Dashboard", description: "Analytics and summary insights" },
+      {
+        name: "Documents",
+        description: "Document tracking and management for entities",
+      },
+      { name: "Notifications", description: "System notifications and alerts" },
     ],
   });
 }

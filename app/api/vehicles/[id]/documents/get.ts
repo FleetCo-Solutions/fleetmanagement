@@ -17,6 +17,9 @@ export async function getVehicleDocuments(
     const documents = await db.query.vehicleDocuments.findMany({
       where: eq(vehicleDocuments.vehicleId, vehicleId),
       orderBy: [desc(vehicleDocuments.createdAt)],
+      with: {
+        documentType: true,
+      },
     });
 
     return NextResponse.json({ success: true, data: documents });

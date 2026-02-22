@@ -14,6 +14,9 @@ export async function getTripDocuments(request: NextRequest, tripId: string) {
     const documents = await db.query.tripDocuments.findMany({
       where: eq(tripDocuments.tripId, tripId),
       orderBy: [desc(tripDocuments.createdAt)],
+      with: {
+        documentType: true,
+      },
     });
 
     return NextResponse.json({ success: true, data: documents });
