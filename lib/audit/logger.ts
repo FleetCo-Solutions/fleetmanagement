@@ -50,7 +50,13 @@ export type AuditAction =
   // System user actions
   | "system_user.created"
   | "system_user.updated"
-  | "system_user.deleted";
+  | "system_user.deleted"
+  // Device actions
+  | "device.created"
+  | "device.updated"
+  | "device.deleted"
+  | "device.assigned"
+  | "device.unassigned";
 
 /**
  * Parameters for audit logging
@@ -135,7 +141,7 @@ export async function logAudit(params: AuditLogParams): Promise<void> {
  * @returns Sanitized object with sensitive fields removed
  */
 export function sanitizeForAudit(
-  data: Record<string, any>
+  data: Record<string, any>,
 ): Record<string, any> {
   const sensitiveFields = [
     "passwordHash",
