@@ -14,6 +14,9 @@ export async function getUserDocuments(request: NextRequest, userId: string) {
     const documents = await db.query.userDocuments.findMany({
       where: eq(userDocuments.userId, userId),
       orderBy: [desc(userDocuments.createdAt)],
+      with: {
+        documentType: true,
+      },
     });
 
     return NextResponse.json({ success: true, data: documents });

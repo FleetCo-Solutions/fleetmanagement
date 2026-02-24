@@ -72,6 +72,34 @@ export default function DriversTable() {
       ),
     },
     {
+      header: "License No.",
+      accessorKey: "licenseNumber",
+      cell: ({ row }) => (
+        <span className="font-semibold text-gray-700">
+          {row.original.licenseNumber || "N/A"}
+        </span>
+      ),
+    },
+    {
+      header: "Expiry Date",
+      accessorKey: "licenseExpiry",
+      cell: ({ row }) => {
+        const expiry = row.original.licenseExpiry;
+        if (!expiry) return <span className="text-gray-400">N/A</span>;
+
+        const expiryDate = new Date(expiry);
+        const isExpired = expiryDate < new Date();
+
+        return (
+          <span
+            className={`font-semibold ${isExpired ? "text-red-600" : "text-gray-700"}`}
+          >
+            {expiryDate.toLocaleDateString()}
+          </span>
+        );
+      },
+    },
+    {
       header: "Safety Score",
       accessorKey: "safetyScore",
       cell: ({ row }) => (

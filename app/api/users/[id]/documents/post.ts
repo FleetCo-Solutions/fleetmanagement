@@ -17,6 +17,7 @@ export async function uploadUserDocument(request: NextRequest, userId: string) {
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const expiryDate = formData.get("expiryDate") as string;
+    const documentTypeId = formData.get("documentTypeId") as string;
 
     if (!file) {
       return NextResponse.json(
@@ -57,6 +58,7 @@ export async function uploadUserDocument(request: NextRequest, userId: string) {
         storagePath: filePath,
         storageUrl: urlData.publicUrl,
         expiryDate: expiryDate ? new Date(expiryDate) : null,
+        documentTypeId: documentTypeId || null,
       })
       .returning();
 

@@ -127,8 +127,13 @@ export default function DocumentsTab({ userId }: { userId: string }) {
               className={`flex items-center justify-between p-4 rounded-lg border-l-4 ${getStatusColor(doc.expiryDate)}`}
             >
               <div className="flex-1">
-                <div className="font-semibold text-black flex items-center gap-2">
-                  {doc.title}
+                <div className="font-semibold text-black flex flex-wrap items-center gap-2">
+                  <span>{doc.title}</span>
+                  {doc.documentType && (
+                    <span className="px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold bg-[#004953]/10 text-[#004953] rounded-full border border-[#004953]/20">
+                      {doc.documentType.name}
+                    </span>
+                  )}
                 </div>
                 <div className="text-sm text-gray-700 mt-1">
                   {doc.expiryDate

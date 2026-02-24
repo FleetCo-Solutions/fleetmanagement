@@ -181,6 +181,8 @@ export interface Driver {
   vehicle?: tempVehicle | null;
   tripCount?: number;
   documentCount?: number;
+  licenseNumber?: string | null;
+  licenseExpiry?: string | null;
 }
 
 export interface IndividualDriver {

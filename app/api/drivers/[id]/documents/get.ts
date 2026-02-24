@@ -17,6 +17,9 @@ export async function getDriverDocuments(
     const documents = await db.query.driverDocuments.findMany({
       where: eq(driverDocuments.driverId, driverId),
       orderBy: [desc(driverDocuments.createdAt)],
+      with: {
+        documentType: true,
+      },
     });
 
     return NextResponse.json({ success: true, data: documents });
