@@ -57,6 +57,13 @@ export const actorTypeEnum = pgEnum("actor_type", [
   "driver",
 ]);
 
+export const deviceStatusEnum = pgEnum("device_status", [
+  "active",
+  "inactive",
+  "maintenance",
+  "decommissioned",
+]);
+
 export const notificationChannelEnum = pgEnum("notification_channel", [
   "email",
   "push",
@@ -252,6 +259,43 @@ export const drivers = pgTable(
   },
 );
 
+// ─── Devices ──────────────────────────────────────────────────────────────────
+// GPS/IoT tracker device registry, company-scoped.
+// The IMEI here is the same value used as flespi_ident on vehicles.
+export const devices = pgTable(
+  "devices",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .references(() => companies.id, { onDelete: "cascade" })
+      .notNull(),
+    deviceName: varchar("device_name", { length: 100 }).notNull(),
+    model: varchar("model", { length: 100 }).notNull(),
+    // IMEI is the primary hardware identifier and mirrors flespi_ident on vehicles
+    imei: varchar("imei", { length: 20 }).unique().notNull(),
+    serialNumber: varchar("serial_number", { length: 100 }),
+    simCardNumber: varchar("sim_card_number", { length: 20 }),
+    simProvider: varchar("sim_provider", { length: 50 }),
+    firmwareVersion: varchar("firmware_version", { length: 50 }),
+    purchaseDate: timestamp("purchase_date", { withTimezone: true }),
+    warrantyExpiryDate: timestamp("warranty_expiry_date", {
+      withTimezone: true,
+    }),
+    status: deviceStatusEnum("status").default("active").notNull(),
+    notes: varchar("notes", { length: 500 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (t) => ({
+    companyIdx: index("devices_company_idx").on(t.companyId),
+    imeiIdx: index("devices_imei_idx").on(t.imei),
+    statusIdx: index("devices_status_idx").on(t.status),
+  }),
+);
+
 export const vehicles = pgTable(
   "vehicles",
   {
@@ -267,6 +311,10 @@ export const vehicles = pgTable(
     // Flespi integration: the Teltonika device IMEI / flespi ident string
     // Nullable — not every vehicle has a GPS tracker
     flespiIdent: varchar("flespi_ident", { length: 50 }).unique(),
+    // Link to the devices registry (set when a device is assigned)
+    deviceId: uuid("device_id").references(() => devices.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("createdAt", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -279,6 +327,7 @@ export const vehicles = pgTable(
       flespiIdentIdx: index("vehicles_flespi_ident_idx").on(
         vehicle.flespiIdent,
       ),
+      deviceIdx: index("vehicles_device_idx").on(vehicle.deviceId),
     };
   },
 );
@@ -514,6 +563,45 @@ export const assignmentStatusEnum = pgEnum("assignment_status", [
   "completed",
 ]);
 
+// ─── Device ↔ Vehicle Assignments ─────────────────────────────────────────────
+// Full history of which device was mounted on which vehicle and when.
+export const deviceVehicleAssignments = pgTable(
+  "device_vehicle_assignments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    deviceId: uuid("device_id")
+      .references(() => devices.id, { onDelete: "cascade" })
+      .notNull(),
+    vehicleId: uuid("vehicle_id")
+      .references(() => vehicles.id, { onDelete: "cascade" })
+      .notNull(),
+    assignedAt: timestamp("assigned_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    unassignedAt: timestamp("unassigned_at", { withTimezone: true }),
+    notes: varchar("notes", { length: 255 }),
+  },
+  (t) => ({
+    deviceIdx: index("dva_device_idx").on(t.deviceId),
+    vehicleIdx: index("dva_vehicle_idx").on(t.vehicleId),
+    assignedAtIdx: index("dva_assigned_at_idx").on(t.assignedAt),
+  }),
+);
+
+export const deviceVehicleAssignmentsRelations = relations(
+  deviceVehicleAssignments,
+  ({ one }) => ({
+    device: one(devices, {
+      fields: [deviceVehicleAssignments.deviceId],
+      references: [devices.id],
+    }),
+    vehicle: one(vehicles, {
+      fields: [deviceVehicleAssignments.vehicleId],
+      references: [vehicles.id],
+    }),
+  }),
+);
+
 export const vehicleAssignments = pgTable("vehicle_assignments", {
   id: uuid("id").defaultRandom().primaryKey(),
   driverId: uuid("driver_id")
@@ -560,17 +648,34 @@ export const driversRelation = relations(drivers, ({ many, one }) => ({
   documents: many(driverDocuments),
 }));
 
-// Update vehicles relations to include assignments
+// Update vehicles relations to include assignments and device
 export const vehiclesRelation = relations(vehicles, ({ many, one }) => ({
   drivers: many(drivers),
   maintenanceRecords: many(maintenanceRecords),
   trips: many(trips),
   assignments: many(vehicleAssignments),
+  deviceAssignments: many(deviceVehicleAssignments),
+  device: one(devices, {
+    fields: [vehicles.deviceId],
+    references: [devices.id],
+  }),
   location: one(vehicleLocations, {
     fields: [vehicles.id],
     references: [vehicleLocations.vehicleId],
   }),
   documents: many(vehicleDocuments),
+}));
+
+export const devicesRelation = relations(devices, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [devices.companyId],
+    references: [companies.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [devices.id],
+    references: [vehicles.deviceId],
+  }),
+  assignments: many(deviceVehicleAssignments),
 }));
 
 // New Relations
