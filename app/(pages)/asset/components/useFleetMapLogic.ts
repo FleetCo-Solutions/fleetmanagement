@@ -45,6 +45,65 @@ export function useFleetMapLogic() {
     return [];
   }, [tripSummary]);
 
+  const [snappedRouteCoordinates, setSnappedRouteCoordinates] = useState<[number, number][]>([]);
+
+  useEffect(() => {
+    if (routeCoordinates.length < 2) {
+      setSnappedRouteCoordinates([]);
+      return;
+    }
+
+    const snapToRoads = async () => {
+      try {
+        // OSRM match API supports up to 100 waypoints
+        const MAX_POINTS = 100;
+        let points = routeCoordinates;
+        if (points.length > MAX_POINTS) {
+          const step = Math.ceil(points.length / MAX_POINTS);
+          const sampled: [number, number][] = [];
+          for (let i = 0; i < points.length; i += step) sampled.push(points[i]);
+          if (sampled[sampled.length - 1] !== points[points.length - 1]) {
+            sampled.push(points[points.length - 1]);
+          }
+          points = sampled;
+        }
+
+        // OSRM expects lon,lat — our coordinates are [lat, lng]
+        const coordStr = points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+        const radiuses = points.map(() => "25").join(";");
+
+        const res = await fetch(
+          `https://router.project-osrm.org/match/v1/driving/${coordStr}?overview=full&geometries=geojson&radiuses=${radiuses}`
+        );
+
+        if (!res.ok) {
+          setSnappedRouteCoordinates(routeCoordinates);
+          return;
+        }
+
+        const data = await res.json();
+
+        if (data.code === "Ok" && data.matchings?.length > 0) {
+          const snapped: [number, number][] = [];
+          for (const matching of data.matchings) {
+            for (const [lng, lat] of matching.geometry.coordinates) {
+              snapped.push([lat, lng]);
+            }
+          }
+          setSnappedRouteCoordinates(snapped);
+        } else {
+          // Fallback to raw GPS points if matching fails
+          setSnappedRouteCoordinates(routeCoordinates);
+        }
+      } catch {
+        // Fallback to raw GPS points on network error
+        setSnappedRouteCoordinates(routeCoordinates);
+      }
+    };
+
+    snapToRoads();
+  }, [routeCoordinates]);
+
   // Track all vehicle IDs seen (for WebSocket subscription)
   const [allVehicleIds, setAllVehicleIds] = useState<string[]>([]);
 
@@ -316,7 +375,7 @@ export function useFleetMapLogic() {
     selectedTripId,
     setSelectedTripId,
     tripsData,
-    routeCoordinates,
+    routeCoordinates: snappedRouteCoordinates,
     isConnected,
   };
 }
