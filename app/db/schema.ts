@@ -264,6 +264,9 @@ export const vehicles = pgTable(
     manufacturer: varchar("manufacturer", { length: 30 }).notNull(),
     vin: varchar("vin", { length: 20 }).unique().notNull(),
     color: varchar("color", { length: 20 }).notNull(),
+    // Flespi integration: the Teltonika device IMEI / flespi ident string
+    // Nullable — not every vehicle has a GPS tracker
+    flespiIdent: varchar("flespi_ident", { length: 50 }).unique(),
     createdAt: timestamp("createdAt", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -273,6 +276,9 @@ export const vehicles = pgTable(
   (vehicle) => {
     return {
       companyIdx: index("vehicles_company_idx").on(vehicle.companyId),
+      flespiIdentIdx: index("vehicles_flespi_ident_idx").on(
+        vehicle.flespiIdent,
+      ),
     };
   },
 );
@@ -1133,3 +1139,67 @@ export const documentTypesRelations = relations(documentTypes, ({ many }) => ({
   tripDocuments: many(tripDocuments),
   userDocuments: many(userDocuments),
 }));
+
+// ─── Flespi Telemetry ─────────────────────────────────────────────────────────
+// Stores each raw message pushed by the flespi HTTP stream.
+// vehicleId is nullable: data is stored even if the ident isn't mapped yet.
+export const vehicleTelemetry = pgTable(
+  "vehicle_telemetry",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    // Business-level vehicle reference (resolved from flespiIdent at ingest time)
+    vehicleId: uuid("vehicle_id").references(() => vehicles.id, {
+      onDelete: "set null",
+    }),
+    companyId: uuid("company_id").references(() => companies.id, {
+      onDelete: "set null",
+    }),
+    // Raw device identifier from flespi (Teltonika IMEI or custom ident)
+    flespiIdent: varchar("flespi_ident", { length: 50 }).notNull(),
+    // Timestamps
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull(), // device timestamp
+    serverRecordedAt: timestamp("server_recorded_at", { withTimezone: true }), // flespi server timestamp
+    // Position
+    latitude: doublePrecision("latitude"),
+    longitude: doublePrecision("longitude"),
+    speed: real("speed"), // km/h
+    direction: real("direction"), // degrees (0–360)
+    altitude: real("altitude"), // meters
+    hdop: real("hdop"), // GPS dilution of precision
+    satellites: real("satellites"),
+    positionValid: boolean("position_valid"),
+    // Engine / motion
+    ignition: boolean("ignition"),
+    movement: boolean("movement"),
+    mileage: doublePrecision("mileage"), // total odometer from device
+    // Power
+    externalVoltage: real("external_voltage"), // mV
+    batteryVoltage: real("battery_voltage"), // mV
+    // Network
+    gsmSignal: real("gsm_signal"), // 0–5 bars
+    // Row insertion time
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    vehicleIdx: index("telemetry_vehicle_idx").on(table.vehicleId),
+    recordedAtIdx: index("telemetry_recorded_at_idx").on(table.recordedAt),
+    identIdx: index("telemetry_flespi_ident_idx").on(table.flespiIdent),
+    companyIdx: index("telemetry_company_idx").on(table.companyId),
+  }),
+);
+
+export const vehicleTelemetryRelations = relations(
+  vehicleTelemetry,
+  ({ one }) => ({
+    vehicle: one(vehicles, {
+      fields: [vehicleTelemetry.vehicleId],
+      references: [vehicles.id],
+    }),
+    company: one(companies, {
+      fields: [vehicleTelemetry.companyId],
+      references: [companies.id],
+    }),
+  }),
+);
