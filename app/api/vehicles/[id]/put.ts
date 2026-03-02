@@ -12,7 +12,10 @@ export default async function putVehicle(
 ) {
   try {
     const body = await request.json();
-    const { registrationNumber, model, manufacturer, vin, color } = body;
+    const {
+      registrationNumber, model, manufacturer, vin, color,
+      status, imei, simCardNumber, expiryType, expiryDate
+    } = body;
 
     // Validate required fields
     if (!registrationNumber || !model || !manufacturer || !vin || !color) {
@@ -43,6 +46,11 @@ export default async function putVehicle(
         manufacturer,
         vin,
         color,
+        status,
+        imei,
+        simCardNumber,
+        expiryType,
+        expiryDate: expiryDate ? new Date(expiryDate) : null,
         updatedAt: new Date(),
       })
       .where(eq(vehicles.id, id))

@@ -4,13 +4,14 @@ import SidebarItem from "./sideBarItem";
 import { sideBarItems } from "./sideBarItems";
 import { useSession } from "next-auth/react";
 import { NavItem } from "./navData";
+import Link from "next/link";
 
 interface SideBarNavigationProps {
   authorizedItems?: NavItem[];
 }
 
 const SideBarNavigation = ({ authorizedItems }: SideBarNavigationProps) => {
-  const [collapsed, setCollapsed] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(true);
   const { data: session } = useSession();
   const userPermissions = (session?.user as any)?.permissions || [];
 
@@ -34,24 +35,45 @@ const SideBarNavigation = ({ authorizedItems }: SideBarNavigationProps) => {
 
   return (
     <div
-      className={`w-[15%] bg-[#EBEBEB] h-full border-r-[1px] border-black/10`}
+      onMouseEnter={() => setCollapsed(false)}
+      onMouseLeave={() => setCollapsed(true)}
+      className={`${collapsed ? "w-[5%]" : "w-[15%]"
+        } bg-[#004953] h-full border-r-[1px] border-white/10 transition-all duration-300 ease-in-out flex flex-col`}
     >
-      <ul
-        className={`text-black flex flex-col gap-1 py-5 font-extrabold ${
-          collapsed ? "items-center w-[30%] bg-red-900" : "items-stretch"
-        }`}
-      >
-        {displayItems.map((item, index) => (
-          <SidebarItem
-            key={index}
-            route={item.route}
-            itemName={item.itemName}
-            itemIcon={(item as any).itemIcon}
-            subItems={(item as any).children}
-            isCollapsed={collapsed}
-          />
-        ))}
-      </ul>
+      <div className="h-[10vh] flex items-center px-4 overflow-hidden border-b border-white/10 shrink-0">
+        <Link
+          href="/"
+          className="flex items-center space-x-3 transition-all duration-300"
+        >
+          <div className="min-w-[40px] h-10 bg-white rounded-xl flex items-center justify-center text-[#004953] font-extrabold text-xl shadow-lg ring-1 ring-black/5">
+            FC
+          </div>
+          {!collapsed && (
+            <span className="text-2xl font-bold text-white transition-all duration-300 whitespace-nowrap">
+              FleetCo
+            </span>
+          )}
+        </Link>
+      </div>
+
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-2">
+        <ul
+          className={`text-[#5eead4] flex flex-col gap-2.5 py-4 font-semibold ${collapsed ? "items-center" : "items-stretch"
+            }`}
+        >
+          {displayItems.map((item, index) => (
+            <SidebarItem
+              key={index}
+              route={item.route}
+              itemName={item.itemName}
+              itemIcon={(item as any).itemIcon}
+              subItems={(item as any).children}
+              isCollapsed={collapsed}
+              onItemClick={() => setCollapsed(true)}
+            />
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

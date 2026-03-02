@@ -6,6 +6,7 @@ import {
   updateVehicle,
   getVehicleDriverHistory,
   getVehicleTrips,
+  getAuditLogs,
 } from "@/actions/vehicles";
 import {
   getDriversList,
@@ -227,5 +228,13 @@ export const useDeleteVehicleDocumentMutation = (vehicleId: string) => {
         queryKey: ["vehicleDocumentsSummary", vehicleId],
       });
     },
+  });
+};
+
+export const useAuditLogsQuery = (entityType: string, entityId: string) => {
+  return useQuery({
+    queryKey: ["auditLogs", entityType, entityId],
+    queryFn: () => getAuditLogs(entityType, entityId),
+    enabled: !!entityId && !!entityType,
   });
 };

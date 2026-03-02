@@ -10,6 +10,24 @@ export interface IPostVehicle {
   model: string;
   color: string;
   manufacturer: string;
+  description?: string;
+  engineNumber?: string;
+  fuelType?: string;
+  year?: string;
+  tankCapacity?: number;
+  targetConsumption?: number;
+  inServiceDate?: string;
+  inServiceOdometer?: number;
+  estimatedServiceLifeMonths?: string;
+  estimatedServiceLifeMeter?: number;
+  estimatedResaleValue?: number;
+  outOfServiceDate?: string;
+  outOfServiceOdometer?: number;
+  imei?: string;
+  simCardNumber?: string;
+  status?: string;
+  expiryType?: string;
+  expiryDate?: string;
 }
 
 export async function postVehicle(request: NextRequest, companyId: string) {
@@ -52,6 +70,24 @@ export async function postVehicle(request: NextRequest, companyId: string) {
         model: body.model.trim(),
         manufacturer: body.manufacturer.trim(),
         vin: body.vin.trim(),
+        description: body.description?.trim(),
+        engineNumber: body.engineNumber?.trim(),
+        fuelType: body.fuelType?.trim(),
+        year: body.year?.trim(),
+        tankCapacity: body.tankCapacity,
+        targetConsumption: body.targetConsumption,
+        inServiceDate: body.inServiceDate ? new Date(body.inServiceDate) : undefined,
+        inServiceOdometer: body.inServiceOdometer,
+        estimatedServiceLifeMonths: body.estimatedServiceLifeMonths,
+        estimatedServiceLifeMeter: body.estimatedServiceLifeMeter,
+        estimatedResaleValue: body.estimatedResaleValue,
+        outOfServiceDate: body.outOfServiceDate ? new Date(body.outOfServiceDate) : undefined,
+        outOfServiceOdometer: body.outOfServiceOdometer,
+        imei: body.imei?.trim(),
+        simCardNumber: body.simCardNumber?.trim(),
+        status: body.status?.trim(),
+        expiryType: body.expiryType?.trim(),
+        expiryDate: body.expiryDate ? new Date(body.expiryDate) : null,
         companyId: companyId,
       })
       .returning()

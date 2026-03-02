@@ -6,15 +6,15 @@ interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   title?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'|'3xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full';
 }
 
-const Modal: React.FC<ModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  children, 
+const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  children,
   title,
-  size = 'md' 
+  size = 'md'
 }) => {
   if (!isOpen) return null;
 
@@ -24,19 +24,20 @@ const Modal: React.FC<ModalProps> = ({
     lg: 'max-w-lg',
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
-    '3xl': 'max-w-1/2'
+    '3xl': 'max-w-1/2',
+    'full': 'max-w-full h-full'
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop with blur */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/20 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal content */}
-      <div className={`relative bg-white rounded-xl shadow-xl w-full mx-4 ${sizeClasses[size]} max-h-[90vh] overflow-y-auto`}>
+      <div className={`relative bg-white shadow-xl w-full flex flex-col ${size === 'full' ? 'h-full' : 'mx-4 rounded-xl max-h-[90vh]'} ${sizeClasses[size]} overflow-hidden`}>
         {/* Header */}
         {title && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 sticky top-0 bg-white z-10">
@@ -51,9 +52,9 @@ const Modal: React.FC<ModalProps> = ({
             </button>
           </div>
         )}
-        
+
         {/* Body */}
-        <div className="p-6">
+        <div className="p-6 flex-1 overflow-y-auto">
           {children}
         </div>
       </div>

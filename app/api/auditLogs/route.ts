@@ -30,8 +30,17 @@ export async function GET(request: NextRequest) {
     const authenticatedUser = user as AuthenticatedUser;
 
     // Check permission
+    // Users with audit.read can see all logs; users with vehicle.read can see
+    // per-asset audit trails (when entityId is scoped to a specific vehicle)
+    const { searchParams: permCheckParams } = new URL(request.url);
+    const requestedEntityId = permCheckParams.get("entityId");
+
     const canViewAudit = await hasPermission(authenticatedUser, "audit.read");
-    if (!canViewAudit) {
+    const canViewVehicle = await hasPermission(authenticatedUser, "vehicle.read");
+
+    const isAllowed = canViewAudit || (!!requestedEntityId && canViewVehicle);
+
+    if (!isAllowed) {
       return NextResponse.json(
         {
           success: false,
@@ -50,6 +59,7 @@ export async function GET(request: NextRequest) {
 
     // Filters
     const entityType = searchParams.get("entityType");
+    const entityId = searchParams.get("entityId");
     const action = searchParams.get("action");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -66,6 +76,10 @@ export async function GET(request: NextRequest) {
 
     if (entityType) {
       conditions.push(eq(auditLogs.entityType, entityType));
+    }
+
+    if (entityId) {
+      conditions.push(eq(auditLogs.entityId, entityId));
     }
 
     if (action) {

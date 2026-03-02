@@ -2,9 +2,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { SessionProvider } from "next-auth/react";
+import { HeaderActionsProvider } from "./context/HeaderActionsContext";
 import React, { ReactNode } from "react";
 
-const Providers = ({ children }: { children: ReactNode}) => {
+const Providers = ({ children }: { children: ReactNode }) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -15,7 +16,9 @@ const Providers = ({ children }: { children: ReactNode}) => {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        {children}
+        <HeaderActionsProvider>
+          {children}
+        </HeaderActionsProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </SessionProvider>

@@ -1,5 +1,5 @@
 // Import Drizzle-generated types from schema
-export type {} from "@/app/db/schema";
+export type { } from "@/app/db/schema";
 
 // Document type applicability enum
 export type DocumentApplicability =
@@ -341,6 +341,11 @@ export interface vehicleDetails {
   updatedAt: Date | null;
   deletedAt: Date | null;
   drivers?: VehicleDriver[];
+  status?: string;
+  imei?: string;
+  simCardNumber?: string;
+  expiryType?: string;
+  expiryDate?: string | Date;
 }
 
 export interface VehicleDriver {
@@ -491,14 +496,14 @@ export interface MaintenanceData {
   lastServiceDate: string;
   nextServiceDate: string;
   serviceType:
-    | "oil_change"
-    | "brakes"
-    | "tires"
-    | "inspection"
-    | "repair"
-    | "filter_change"
-    | "battery"
-    | "cooling_system";
+  | "oil_change"
+  | "brakes"
+  | "tires"
+  | "inspection"
+  | "repair"
+  | "filter_change"
+  | "battery"
+  | "cooling_system";
   status: "good" | "due_soon" | "overdue" | "critical";
   estimatedCost: number; // TZS
   actualCost?: number; // TZS
@@ -788,6 +793,11 @@ export interface MainDriver {
   lastName: string;
   phone: string;
   alternativePhone: string;
+<<<<<<< Updated upstream
+=======
+  licenseNumber: string;
+  licenseExpiry: Date;
+>>>>>>> Stashed changes
   status: string;
   passwordHash: string;
   role: string;

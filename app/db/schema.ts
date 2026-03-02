@@ -257,6 +257,7 @@ export const vehicles = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     companyId: uuid("company_id"), // Links to admin_companies table
+    description: varchar("description", { length: 255 }),
     registrationNumber: varchar("registrationNumber", { length: 15 })
       .notNull()
       .unique(),
@@ -264,9 +265,29 @@ export const vehicles = pgTable(
     manufacturer: varchar("manufacturer", { length: 30 }).notNull(),
     vin: varchar("vin", { length: 20 }).unique().notNull(),
     color: varchar("color", { length: 20 }).notNull(),
+<<<<<<< Updated upstream
     // Flespi integration: the Teltonika device IMEI / flespi ident string
     // Nullable — not every vehicle has a GPS tracker
     flespiIdent: varchar("flespi_ident", { length: 50 }).unique(),
+=======
+    engineNumber: varchar("engineNumber", { length: 50 }),
+    fuelType: varchar("fuelType", { length: 30 }),
+    year: varchar("year", { length: 4 }),
+    tankCapacity: real("tankCapacity"),
+    targetConsumption: real("targetConsumption"),
+    inServiceDate: timestamp("inServiceDate", { withTimezone: true }),
+    inServiceOdometer: real("inServiceOdometer"),
+    estimatedServiceLifeMonths: varchar("estimatedServiceLifeMonths", { length: 10 }),
+    estimatedServiceLifeMeter: real("estimatedServiceLifeMeter"),
+    estimatedResaleValue: real("estimatedResaleValue"),
+    outOfServiceDate: timestamp("outOfServiceDate", { withTimezone: true }),
+    outOfServiceOdometer: real("outOfServiceOdometer"),
+    imei: varchar("imei", { length: 20 }),
+    simCardNumber: varchar("simCardNumber", { length: 20 }),
+    status: varchar("status", { length: 50 }),
+    expiryType: varchar("expiryType", { length: 20 }), // 'Never' or 'Specific Date'
+    expiryDate: timestamp("expiryDate", { withTimezone: true }),
+>>>>>>> Stashed changes
     createdAt: timestamp("createdAt", { withTimezone: true })
       .defaultNow()
       .notNull(),

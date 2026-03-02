@@ -1,0 +1,36 @@
+# Implementation Plan: Asset Status Audit Log
+
+This plan outlines the steps to add an audit log section to the asset management system. This will allow users to see who changed an asset's status and when, as well as who created the asset.
+
+## User Review Required
+
+> [!IMPORTANT]
+> The audit log will be displayed in the **Vehicle Details** edit page ([VehicleEditForm](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/asset/%5Bid%5D/components/VehicleEditForm.tsx#32-727)), as this is where users manage existing assets. The "Add New Asset" form will focus on the initial creation.
+
+## Proposed Changes
+
+### [Component Name] Asset Management
+
+#### [MODIFY] [VehicleEditForm.tsx](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/asset/%5Bid%5D/components/VehicleEditForm.tsx)
+- **Data Fetching**: Use the existing `auditLogs` API to fetch history for the specific vehicle.
+- **Audit Log UI**: Append a new "Audit Trail" section to the bottom of the "Vehicle Details" tab or as a dedicated section.
+- **Display Format**: Format the logs as requested:
+    - *"This asset status was last changed to '[Status]' on [Date] [Time] (EAT) by [Actor Name]"*
+    - *"This asset was created on [Date] [Time] (EAT) by [Actor Name]"*
+
+#### [MODIFY] [post.ts (API)](file:///c:/Users/HomePC/fleetmanagement/app/api/vehicles/post.ts)
+- **Creation Audit**: Ensure [logAudit](file:///c:/Users/HomePC/fleetmanagement/lib/audit/logger.ts#70-130) captures the user's name or ID correctly during the initial `vehicle.created` event. (Already partially implemented, will verify and refine if needed).
+
+### [Component Name] Database & API
+
+#### [MODIFY] [schema.ts](file:///c:/Users/HomePC/fleetmanagement/app/db/schema.ts)
+- No schema changes required as `admin_audit_logs` already exists and covers the requirements.
+
+## Verification Plan
+
+### Automated Tests
+- Verify the `auditLogs` API returns the expected data for a specific `entityId`.
+
+### Manual Verification
+- Edit a vehicle's status and verify the change appears in the audit trail.
+- Verify the actor's name is correctly displayed as *"Elidafodia Mtani"* or *"Ireneo Mkude"* as per the user's examples.

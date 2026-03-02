@@ -14,6 +14,11 @@ export interface UpdateVehiclePayload {
   manufacturer: string;
   vin: string;
   color: string;
+  status?: string;
+  imei?: string;
+  simCardNumber?: string;
+  expiryType?: string;
+  expiryDate?: string;
 }
 
 export async function getVehicles(): Promise<IVehicles> {
@@ -202,6 +207,31 @@ export async function getVehicleTrips(id: string) {
 
     if (!response.ok) {
       throw new Error(result.message || "Failed to fetch vehicle trips");
+    }
+    return result;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+}
+
+export async function getAuditLogs(entityType: string, entityId: string) {
+  try {
+    const headersList = await headers();
+    const response = await fetch(
+      `${process.env.LOCAL_BACKENDBASE_URL}/auditLogs?entityType=${entityType}&entityId=${entityId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: headersList.get("cookie") || "",
+        },
+        cache: "no-store",
+      }
+    );
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to fetch audit logs");
     }
     return result;
   } catch (error) {

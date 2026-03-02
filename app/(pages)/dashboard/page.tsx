@@ -20,18 +20,23 @@ const DashboardPage = () => {
             ))}
           </div>
           <div className="flex justify-between">
-            <SkeletonShimmer className="h-[45vh] w-[70%] rounded-lg rounded-xl"/>
-            <SkeletonShimmer className="h-[45vh] w-[26%] rounded-lg rounded-xl"/>
+            <SkeletonShimmer className="h-[45vh] w-[70%] rounded-lg rounded-xl" />
+            <SkeletonShimmer className="h-[45vh] w-[26%] rounded-lg rounded-xl" />
           </div>
           <div>
-            <UniversalTableSkeleton title="Loading Trips ... " rows={2} columns={7}/>
+            <UniversalTableSkeleton title="Loading Trips ... " rows={2} columns={7} />
           </div>
         </div>
       </div>
     );
   }
 
-  const stats = summaryData?.data?.vehicles;
+  const stats = summaryData?.data?.vehicles || {
+    total: 0,
+    available: 0,
+    outOfService: 0,
+    underMaintenance: 0,
+  };
 
   const recentTrips = summaryData?.data?.recentTrips || [];
 
