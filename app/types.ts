@@ -850,11 +850,8 @@ export interface MainDriver {
   lastName: string;
   phone: string;
   alternativePhone: string;
-<<<<<<< Updated upstream
-=======
-  licenseNumber: string;
-  licenseExpiry: Date;
->>>>>>> Stashed changes
+  licenseNumber?: string;
+  licenseExpiry?: Date;
   status: string;
   passwordHash: string;
   role: string;

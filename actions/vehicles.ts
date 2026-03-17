@@ -15,13 +15,11 @@ export interface UpdateVehiclePayload {
   manufacturer: string;
   vin: string;
   color: string;
-<<<<<<< Updated upstream
   status?: string;
   imei?: string;
   simCardNumber?: string;
   expiryType?: string;
   expiryDate?: string;
-=======
   description?: string | null;
   year?: string | null;
   odometer?: string | null;
@@ -34,7 +32,6 @@ export interface UpdateVehiclePayload {
   assetStatus?: string | null;
   assetStatusNotes?: string | null;
   assetStatusExpiry?: string | null;
->>>>>>> Stashed changes
 }
 
 import { auth } from "@/app/auth";
