@@ -24,7 +24,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+<<<<<<< Updated upstream
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+=======
+      <body className={`${sourceSans.className} antialiased`} suppressHydrationWarning={true}>
+>>>>>>> Stashed changes
         <Providers>
           {children}
           <Toaster richColors theme="dark" />

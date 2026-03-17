@@ -341,11 +341,19 @@ export interface vehicleDetails {
   updatedAt: Date | null;
   deletedAt: Date | null;
   drivers?: VehicleDriver[];
+<<<<<<< Updated upstream
   status?: string;
   imei?: string;
   simCardNumber?: string;
   expiryType?: string;
   expiryDate?: string | Date;
+=======
+  // Asset Status extensions
+  assetStatus?: AssetStatusType;
+  assetStatusNotes?: string | null;
+  assetStatusExpiry?: string | null;
+  statusHistory?: AssetStatusRecord[];
+>>>>>>> Stashed changes
 }
 
 export interface VehicleDriver {
@@ -372,44 +380,6 @@ export interface RoleFormData {
   isDefault: boolean;
 }
 
-export interface VehicleFormData {
-  vehicleRegNo: string;
-  group: string;
-  model: string;
-  manufacturer: string;
-  year: number;
-  healthRate: number;
-  costPerMonth: number;
-  lastMaintenanceDate: string;
-  fuelEfficiency: number;
-  mileage: number;
-  driverId: number;
-  status: "en route" | "available" | "out of service";
-  vin?: string;
-  color?: string;
-  fuelType?: "diesel" | "petrol" | "hybrid" | "electric";
-  engineSize?: string;
-  transmission?: "manual" | "automatic";
-}
-
-// Legacy types for backward compatibility (can be removed later)
-export interface IVehicles {
-  timestamp: Date;
-  statusCode: string;
-  message: string;
-  dto: Dto;
-}
-
-export interface Dto {
-  content: Vehicle[];
-  totalPages: number;
-  totalElements: number;
-  currentPage: number;
-  pageSize: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
-}
-
 export interface Vehicle {
   id: string;
   companyId: string | null;
@@ -418,16 +388,103 @@ export interface Vehicle {
   manufacturer: string;
   vin: string;
   color: string;
+  description: string | null;
+  year: string | null;
+  odometer: string | null;
+  simSerialNumber: string | null;
+  assetId: string | null;
+  deviceBrand: string | null;
+  deviceModel: string | null;
+  ioConfigs: string | null; // JSON string for I/O configurations
   createdAt: Date;
   updatedAt: Date | null;
   deletedAt: Date | null;
   drivers?: Driver[];
+  statusHistory?: AssetStatusRecord[];
+}
+
+export interface IVehicles {
+  timestamp: Date;
+  statusCode: string;
+  message: string;
+  dto: {
+    content: Vehicle[];
+    totalPages: number;
+    totalElements: number;
+    currentPage: number;
+    pageSize: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
+}
+
+
+export interface VehicleFormData {
+  vehicleRegNo: string;
+  description: string;
+  manufacturer: string;
+  model: string;
+  year: string;
+  odometer: string;
+  flespiIdent: string;
+  simSerialNumber: string;
+  assetId?: string;
+  vin: string;
+  color: string;
+  deviceBrand?: string;
+  deviceModel?: string;
+  ioConfigs?: string;
+  // Legacy fields
+  group?: string;
+  yearNum?: number;
+  healthRate?: number;
+  costPerMonth?: number;
+  lastMaintenanceDate?: string;
+  fuelEfficiency?: number;
+  mileage?: number;
+  driverId?: number;
+  status?: "en route" | "available" | "out of service";
+  fuelType?: "diesel" | "petrol" | "hybrid" | "electric";
+  engineSize?: string;
+  transmission?: "manual" | "automatic";
+
+  // Asset Status fields
+  assetStatus?: AssetStatusType;
+  assetStatusNotes?: string;
+  assetStatusExpiry?: string;
+}
+
+export type AssetStatusType = 
+  | "available" 
+  | "unavailable" 
+  | "under maintenance" 
+  | "sold out" 
+  | "decommissioned" 
+  | "operational - not downloading";
+
+export interface AssetStatusRecord {
+  id: string;
+  status: AssetStatusType;
+  notes: string | null;
+  expiryDate: string | null;
+  changedBy: string;
+  changedAt: string;
 }
 
 export enum Group {
   Logistics = "Logistics",
   Service = "Service",
   Transport = "Transport",
+}
+
+export type DeviceBrand = "Teltonika" | "Ruptela" | "Queclink" | "CalAmp" | "Suntech" | string;
+export type DeviceModel = "FMC130" | "HCV5" | "GV300" | "LMU-2630" | "ST310U" | string;
+
+export interface IOConfig {
+  name: string;
+  type: string;
+  status: "active" | "inactive";
+  value?: string | number;
 }
 
 export enum Status {

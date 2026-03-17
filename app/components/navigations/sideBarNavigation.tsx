@@ -10,8 +10,14 @@ interface SideBarNavigationProps {
   authorizedItems?: NavItem[];
 }
 
+<<<<<<< Updated upstream
 const SideBarNavigation = ({ authorizedItems }: SideBarNavigationProps) => {
   const [collapsed, setCollapsed] = React.useState(true);
+=======
+const SideBarNavigation = ({
+  authorizedItems,
+}: SideBarNavigationProps) => {
+>>>>>>> Stashed changes
   const { data: session } = useSession();
   const userPermissions = (session?.user as any)?.permissions || [];
 
@@ -35,6 +41,7 @@ const SideBarNavigation = ({ authorizedItems }: SideBarNavigationProps) => {
 
   return (
     <div
+<<<<<<< Updated upstream
       onMouseEnter={() => setCollapsed(false)}
       onMouseLeave={() => setCollapsed(true)}
       className={`${collapsed ? "w-[5%]" : "w-[15%]"
@@ -74,6 +81,23 @@ const SideBarNavigation = ({ authorizedItems }: SideBarNavigationProps) => {
           ))}
         </ul>
       </div>
+=======
+      className="bg-white h-full border-r-[1px] border-black/10 relative shrink-0 custom-scrollbar w-full"
+    >
+      <ul
+        className="text-black flex flex-col gap-2 py-3 font-extrabold items-stretch"
+      >
+        {displayItems.map((item, index) => (
+          <SidebarItem
+            key={index}
+            route={item.route}
+            itemName={item.itemName}
+            itemIcon={(item as any).itemIcon}
+            subItems={(item as any).children}
+          />
+        ))}
+      </ul>
+>>>>>>> Stashed changes
     </div>
   );
 };

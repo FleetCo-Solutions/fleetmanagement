@@ -1,9 +1,7 @@
 import { ReactNode } from "react";
-import SideBarNavigation from "../components/navigations/sideBarNavigation";
-import TopNavigation from "../components/navigations/topNavigation";
-import Link from "next/link";
 import { auth } from "../auth";
 import { navItems } from "../components/navigations/navData";
+import NavigationLayout from "./NavigationLayout";
 
 const WebLayout = async ({ children }: { children: ReactNode }) => {
   const session = await auth();
@@ -15,6 +13,7 @@ const WebLayout = async ({ children }: { children: ReactNode }) => {
   });
 
   return (
+<<<<<<< Updated upstream
     <div className="flex h-screen w-full overflow-hidden">
       {/* Full-height Retractable Sidebar */}
       <SideBarNavigation authorizedItems={authorizedItems} />
@@ -27,6 +26,11 @@ const WebLayout = async ({ children }: { children: ReactNode }) => {
         </div>
       </div>
     </div>
+=======
+    <NavigationLayout authorizedItems={authorizedItems}>
+      {children}
+    </NavigationLayout>
+>>>>>>> Stashed changes
   );
 };
 

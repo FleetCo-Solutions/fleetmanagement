@@ -11,6 +11,7 @@ export interface IPostVehicle {
   color: string;
   manufacturer: string;
   description?: string;
+<<<<<<< Updated upstream
   engineNumber?: string;
   fuelType?: string;
   year?: string;
@@ -28,6 +29,12 @@ export interface IPostVehicle {
   status?: string;
   expiryType?: string;
   expiryDate?: string;
+=======
+  year?: string;
+  odometer?: string;
+  simSerialNumber?: string;
+  flespiIdent?: string;
+>>>>>>> Stashed changes
 }
 
 export async function postVehicle(request: NextRequest, companyId: string) {
@@ -62,6 +69,9 @@ export async function postVehicle(request: NextRequest, companyId: string) {
       );
     }
 
+    // Autogenerate Asset ID if not provided (Format: AST-YYYY-RANDOM)
+    const assetId = `AST-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
     const [vehicle] = await db
       .insert(vehicles)
       .values({
@@ -70,6 +80,7 @@ export async function postVehicle(request: NextRequest, companyId: string) {
         model: body.model.trim(),
         manufacturer: body.manufacturer.trim(),
         vin: body.vin.trim(),
+<<<<<<< Updated upstream
         description: body.description?.trim(),
         engineNumber: body.engineNumber?.trim(),
         fuelType: body.fuelType?.trim(),
@@ -88,6 +99,14 @@ export async function postVehicle(request: NextRequest, companyId: string) {
         status: body.status?.trim(),
         expiryType: body.expiryType?.trim(),
         expiryDate: body.expiryDate ? new Date(body.expiryDate) : null,
+=======
+        description: body.description?.trim() || null,
+        year: body.year?.trim() || null,
+        odometer: body.odometer?.trim() || null,
+        simSerialNumber: body.simSerialNumber?.trim() || null,
+        flespiIdent: body.flespiIdent?.trim() || null,
+        assetId: assetId,
+>>>>>>> Stashed changes
         companyId: companyId,
       })
       .returning()

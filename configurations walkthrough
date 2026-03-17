@@ -1,0 +1,130 @@
+# Configuration System — Completion Walkthrough
+
+## What Was Built
+
+A full enterprise-grade Configuration System integrated into the existing FleetCo application at `/configurations`.
+
+---
+
+## File Structure
+
+```
+app/(pages)/configurations/
+├── layout.tsx                 ← Secondary sidebar layout wrapper
+├── page.tsx                   ← Auto-redirect to /devices
+├── components/
+│   └── ConfigUI.tsx           ← Shared component library
+├── devices/page.tsx           ← A. Device Configuration
+├── events/page.tsx            ← B. Event & Alert Configuration
+├── geofences/page.tsx         ← C. Geofence Management
+├── maintenance/page.tsx       ← D. Maintenance & Service Rules
+├── telemetry/page.tsx         ← E. Data & Telemetry Settings
+├── permissions/page.tsx       ← F. User & Permission Configuration
+├── integrations/page.tsx      ← G. Integration Settings
+└── branding/page.tsx          ← H. Branding & Localization
+
+app/data/
+└── configurationsMock.ts      ← Comprehensive mock data for all sections
+```
+
+---
+
+## Key Features by Section
+
+### A. Device Configuration (`/configurations/devices`)
+- **4 Tabs**: Device Types · Device Profiles · Assignment Rules · Firmware & OTA
+- Add/Edit Device Types with capability checkboxes (CAN Bus, Fuel, Dashcam, etc.)
+- Device Profiles: reporting intervals, transmission mode (TCP/UDP/HTTP/MQTT), APN, precision
+- Auto-assignment rules by IMEI/Serial pattern with wildcard support
+- Firmware OTA toggle per version with rollout groups (alpha/beta/stable)
+
+### B. Event & Alert Configuration (`/configurations/events`)
+- **Event Rule Builder** with threshold, duration, day/time filter, severity, escalation
+- 🧪 **"Test Configuration"** button — fires mock alert and shows success banner
+- **Notification Channels** tab — Email, SMS, In-App, Webhook, Push with enable/disable toggles
+- **Alert Routing** table — role and department-based escalation chains
+
+### C. Geofence Management (`/configurations/geofences`)
+- Create circle (lat/lng/radius), polygon, or route-based geofences
+- Trigger config: Entry, Exit, Dwell (with dwell time field)
+- KML / GeoJSON file import tab
+
+### D. Maintenance & Service Rules (`/configurations/maintenance`)
+- Mileage / Engine Hours / Date-based rule triggers
+- Configurable reminder threshold, workshop assignment
+- Auto Job Card generation toggle
+
+### E. Data & Telemetry (`/configurations/telemetry`)
+- Data retention period + raw/processed data toggles
+- **Fuel Calibration Table** — editable Voltage→Liters mapping
+- **Custom I/O Mapping** — add/remove digital/analog pin→event mappings
+- CAN Data Parsing — DBC file upload, ECU type, baud rate
+
+### F. User Permissions (`/configurations/permissions`)
+- Custom role creation with visual permission picker (grouped by resource)
+- **Permission Matrix** — side-by-side role comparison view
+- **Vehicle Group Visibility** — toggle per role / per fleet group
+
+### G. Integration Settings (`/configurations/integrations`)
+- **API Key management** — generate with scoped permissions, revoke
+- **Webhooks** — add, test (mock success response), event subscriptions
+- **Third-Party Integrations** — connect/disconnect cards (SAP ERP, Fuel Card, Insurance, Wialon)
+- **MQTT Broker** — host, port, TLS, client ID, topic pattern + test button
+
+### H. Branding & Localization (`/configurations/branding`)
+- Company name, logo upload with live preview
+- Primary brand color picker
+- Timezone, language, distance & fuel unit selectors
+- Report header/footer with **live preview panel**
+
+---
+
+## Shared UI Components ([ConfigUI.tsx](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx))
+
+| Component | Purpose |
+|---|---|
+| `ConfigTable<T>` | Generic sortable table with Edit / Clone / Delete actions |
+| [Modal](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#257-297) | Overlay modal with size variants (sm/md/lg/xl) |
+| [DeleteWarningModal](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#298-343) | Impact warning before destructive actions |
+| [TabBar](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#410-440) | Animated tab switcher for section sub-views |
+| [Toggle](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#46-76) | Accessible on/off switch |
+| [Badge](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#5-29) | Color-coded status labels |
+| [StatusPill](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#30-45) | Active/Inactive indicator with dot |
+| [SearchInput](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#77-111) | Debounced search filter |
+| [SectionHeader](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#112-160) | Title + description + search + add button |
+| [SaveBanner](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#441-456) | Floating unsaved changes banner |
+| [AuditLogPanel](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#380-409) | Chronological log with actor, action, timestamp |
+| [FormField](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx#344-368) | Labeled wrapper with optional hint text |
+
+---
+
+## Mock Data ([configurationsMock.ts](file:///c:/Users/HomePC/fleetmanagement/app/data/configurationsMock.ts))
+
+Comprehensive mock data in TypeScript for:
+- 4 Device Types, 2 Device Profiles, 2 Firmware Versions, 2 Assignment Rules
+- 3 Event Rules with channels, thresholds, time filters
+- 2 Geofences (circle + polygon)
+- 2 Maintenance Rules
+- Telemetry settings with I/O mapping
+- 2 API Keys, 1 Webhook
+- Full Branding settings
+- Audit log entries
+
+---
+
+## Verification
+
+- ✅ Dev server compiles cleanly via **Turbopack** (Next.js 15)
+- ✅ All CRUD operations work with React state (mock backend)
+- ✅ TypeScript generic constraint fixed in [ConfigUI.tsx](file:///c:/Users/HomePC/fleetmanagement/app/%28pages%29/configurations/components/ConfigUI.tsx) (`Record<string, any>`)
+- ✅ Navigation updated in [navData.ts](file:///c:/Users/HomePC/fleetmanagement/app/components/navigations/navData.ts) with 8 sub-items for Configurations
+- ✅ Auto-redirect from `/configurations` → `/configurations/devices`
+
+---
+
+## Next Steps (Backend Integration)
+
+1. Replace mock data with real API calls to `GET /api/configurations/...`
+2. Implement the [configurationsMock.ts](file:///c:/Users/HomePC/fleetmanagement/app/data/configurationsMock.ts) types in [schema.ts](file:///c:/Users/HomePC/fleetmanagement/app/db/schema.ts) as the actual DB tables
+3. Add database migrations for `device_types`, `device_profiles`, `event_rules`, `geofences`
+4. Wire "Test Configuration" to a real event simulation endpoint

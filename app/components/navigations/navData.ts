@@ -29,6 +29,14 @@ export const navItems: NavItem[] = [
     route: "/trips",
     permission: "trip.read",
   },
+  {
+    itemName: "Tracking",
+    route: "/tracking",
+    children: [
+      { subItemName: "Live Tracking", route: "/tracking/live" },
+      { subItemName: "History Replay", route: "/tracking/history" },
+    ],
+  },
   // {
   //   itemName: "Fuel",
   //   route: "/fuel",
@@ -52,5 +60,19 @@ export const navItems: NavItem[] = [
     itemName: "Audit Logs",
     route: "/auditLogs",
     permission: "audit.read",
+  },
+  {
+    itemName: "Configurations",
+    route: "/configurations",
+    children: [
+      { subItemName: "Devices", route: "/configurations/devices" },
+      { subItemName: "Events & Alerts", route: "/configurations/events" },
+      { subItemName: "Geofences", route: "/configurations/geofences" },
+      { subItemName: "Maintenance Rules", route: "/configurations/maintenance" },
+      { subItemName: "Telemetry", route: "/configurations/telemetry" },
+      { subItemName: "User Permissions", route: "/configurations/permissions" },
+      { subItemName: "Integrations", route: "/configurations/integrations" },
+      { subItemName: "Branding", route: "/configurations/branding" },
+    ],
   },
 ];

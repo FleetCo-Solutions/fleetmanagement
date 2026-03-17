@@ -38,3 +38,32 @@ body {
   transform: scale(1.1);
   box-shadow: 0 6px 12px rgba(0,0,0,0.4) !important;
 }
+
+/* Custom Hideable Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent; /* Keep it hidden by default */
+  border-radius: 20px;
+}
+
+/* Show thumb on hover */
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #004953; /* System Green */
+}
+
+/* Firefox support (limited transparency control) */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent; 
+}
+
+.custom-scrollbar:hover {
+  scrollbar-color: #004953 transparent;
+}

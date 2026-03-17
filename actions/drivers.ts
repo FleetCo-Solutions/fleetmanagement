@@ -52,26 +52,34 @@ export async function getDrivers(): Promise<IDriver> {
 
 export async function getDriversList(): Promise<DriversList> {
   try {
-    const headersList = await headers();
-    const response = await fetch(
-      `${process.env.LOCAL_BACKENDBASE_URL}/drivers/driversList`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: headersList.get("cookie") || "",
+    return {
+      timestamp: new Date(),
+      statusCode: "200",
+      message: "Drivers list fetched successfully (Mock Data)",
+      dto: [
+        {
+          id: "d1",
+          firstName: "Juma",
+          lastName: "Kassim",
+          phone: "0712345678",
+          status: "active",
         },
-        cache: "no-store",
-      },
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message || "Failed to fetch drivers list");
-    }
-
-    return result;
+        {
+          id: "d2",
+          firstName: "Sarah",
+          lastName: "Mdoe",
+          phone: "0788123456",
+          status: "active",
+        },
+        {
+          id: "d3",
+          firstName: "Alex",
+          lastName: "Kibona",
+          phone: "0755112233",
+          status: "active",
+        },
+      ],
+    };
   } catch (error) {
     throw new Error((error as Error).message);
   }

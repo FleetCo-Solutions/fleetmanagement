@@ -8,6 +8,9 @@ const VehicleStats = () => {
   const { data: summaryData, isLoading } = useDashboardSummaryQuery();
 
   const stats = summaryData?.data?.vehicles;
+
+  if (!stats) return null;
+
   return (
     <>
       {isLoading && (

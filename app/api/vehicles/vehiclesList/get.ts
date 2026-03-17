@@ -1,44 +1,9 @@
-import { db } from "@/app/db";
-import { vehicles, drivers } from "@/app/db/schema";
-import { eq, and } from "drizzle-orm";
+import { fetchVehiclesListFromDb } from "@/lib/services/vehicle-service";
 import { NextResponse } from "next/server";
 
 export async function getVehiclesList(companyId: string) {
   try {
-    // Get all vehicles for the company
-    const allVehicles = await db.query.vehicles.findMany({
-      where: eq(vehicles.companyId, companyId),
-      columns: {
-        id: true,
-        registrationNumber: true,
-        model: true,
-        manufacturer: true,
-      },
-      orderBy: (vehicles, { asc }) => [asc(vehicles.registrationNumber)],
-    });
-
-    // For each vehicle, get the assigned driver
-    const vehiclesWithDrivers = await Promise.all(
-      allVehicles.map(async (vehicle) => {
-        const assignedDriver = await db.query.drivers.findFirst({
-          where: and(
-            eq(drivers.vehicleId, vehicle.id),
-            eq(drivers.companyId, companyId)
-          ),
-          columns: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            role: true,
-          },
-        });
-
-        return {
-          ...vehicle,
-          assignedDriver: assignedDriver || null,
-        };
-      })
-    );
+    const vehiclesWithDrivers = await fetchVehiclesListFromDb(companyId);
 
     return NextResponse.json(
       {

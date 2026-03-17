@@ -17,16 +17,28 @@ import UniversalTable from "@/app/components/universalTable";
 import { ColumnDef } from "@tanstack/react-table";
 
 interface VehicleFormData {
-  registrationNumber: string;
+  vehicleRegNo: string;
   model: string;
   manufacturer: string;
   vin: string;
   color: string;
+<<<<<<< Updated upstream
   status: string;
   imei?: string;
   simCardNumber?: string;
   expiryType: string;
   expiryDate?: string;
+=======
+  description: string;
+  year: string;
+  odometer: string;
+  flespiIdent: string;
+  simSerialNumber: string;
+  assetId?: string;
+  deviceBrand?: string;
+  deviceModel?: string;
+  ioConfigs?: string;
+>>>>>>> Stashed changes
 }
 
 interface VehicleEditFormProps {
@@ -83,7 +95,11 @@ export default function VehicleEditForm({
   isLoading,
 }: VehicleEditFormProps) {
   const [activeTab, setActiveTab] = useState<
+<<<<<<< Updated upstream
     "details" | "drivers" | "history" | "trips" | "status" | "device"
+=======
+    "details" | "drivers" | "status" | "devices"
+>>>>>>> Stashed changes
   >("details");
   const { data: driversList } = useDriversListQuery();
   const { mutateAsync: assignDriverMutation } = useAssignVehicleToDriver();
@@ -103,20 +119,41 @@ export default function VehicleEditForm({
   const {
     register,
     handleSubmit,
+<<<<<<< Updated upstream
     watch,
+=======
+    setValue,
+    watch,
+    getValues,
+>>>>>>> Stashed changes
     formState: { errors, isDirty },
   } = useForm<VehicleFormData>({
     defaultValues: {
-      registrationNumber: vehicleData.dto.registrationNumber || "",
+      vehicleRegNo: vehicleData.dto.registrationNumber || "",
       model: vehicleData.dto.model || "",
       manufacturer: vehicleData.dto.manufacturer || "",
       vin: vehicleData.dto.vin || "",
       color: vehicleData.dto.color || "",
+<<<<<<< Updated upstream
       status: vehicleData.dto.status || "Available",
       imei: vehicleData.dto.imei || "",
       simCardNumber: vehicleData.dto.simCardNumber || "",
       expiryType: vehicleData.dto.expiryType || "Never",
       expiryDate: vehicleData.dto.expiryDate ? new Date(vehicleData.dto.expiryDate).toISOString().split("T")[0] : "",
+=======
+      description: vehicleData.dto.description || "",
+      year: vehicleData.dto.year || "",
+      odometer: vehicleData.dto.odometer || "",
+      flespiIdent: vehicleData.dto.flespiIdent || "",
+      simSerialNumber: vehicleData.dto.simSerialNumber || "",
+      assetId: vehicleData.dto.assetId || "",
+      deviceBrand: vehicleData.dto.deviceBrand || "",
+      deviceModel: vehicleData.dto.deviceModel || "",
+      ioConfigs: vehicleData.dto.ioConfigs || "",
+      assetStatus: vehicleData.dto.assetStatus || "available",
+      assetStatusNotes: vehicleData.dto.assetStatusNotes || "",
+      assetStatusExpiry: vehicleData.dto.assetStatusExpiry || "",
+>>>>>>> Stashed changes
     },
   });
 
@@ -326,26 +363,44 @@ export default function VehicleEditForm({
           )}
         </button>
         <button
+<<<<<<< Updated upstream
           onClick={() => setActiveTab("history")}
           className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === "history"
             ? "text-[#004953]"
             : "text-gray-500 hover:text-gray-700"
             }`}
+=======
+          onClick={() => setActiveTab("status")}
+          className={`pb-3 text-sm font-medium transition-colors relative ${
+            activeTab === "status"
+              ? "text-[#004953]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+>>>>>>> Stashed changes
         >
-          Driver History
-          {activeTab === "history" && (
+          Asset Status
+          {activeTab === "status" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#004953]" />
           )}
         </button>
         <button
+<<<<<<< Updated upstream
           onClick={() => setActiveTab("trips")}
           className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === "trips"
             ? "text-[#004953]"
             : "text-gray-500 hover:text-gray-700"
             }`}
+=======
+          onClick={() => setActiveTab("devices")}
+          className={`pb-3 text-sm font-medium transition-colors relative ${
+            activeTab === "devices"
+              ? "text-[#004953]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+>>>>>>> Stashed changes
         >
-          Trips
-          {activeTab === "trips" && (
+          Mobile Device Setting
+          {activeTab === "devices" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#004953]" />
           )}
         </button>
@@ -386,18 +441,27 @@ export default function VehicleEditForm({
                 Registration Number <span className="text-red-500">*</span>
               </label>
               <input
-                {...register("registrationNumber", {
+                {...register("vehicleRegNo", {
                   required: "Registration number is required",
                 })}
                 type="text"
+<<<<<<< Updated upstream
                 id="registrationNumber"
                 className={`block w-full px-4 py-3 border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent transition-colors ${errors.registrationNumber
                   ? "border-red-300 focus:ring-red-500"
                   : "border-gray-300"
                   }`}
+=======
+                id="vehicleRegNo"
+                className={`block w-full px-4 py-3 border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent transition-colors ${
+                  errors.vehicleRegNo
+                    ? "border-red-300 focus:ring-red-500"
+                    : "border-gray-300"
+                }`}
+>>>>>>> Stashed changes
                 placeholder="e.g., T123ABC"
               />
-              {errors.registrationNumber && (
+              {errors.vehicleRegNo && (
                 <p className="mt-2 text-sm text-red-600 flex items-center">
                   <svg
                     className="w-4 h-4 mr-1"
@@ -410,7 +474,7 @@ export default function VehicleEditForm({
                       clipRule="evenodd"
                     />
                   </svg>
-                  {errors.registrationNumber.message}
+                  {errors.vehicleRegNo.message}
                 </p>
               )}
             </div>
@@ -570,6 +634,77 @@ export default function VehicleEditForm({
                 </p>
               )}
             </div>
+
+            {/* Year */}
+            <div>
+              <label
+                htmlFor="year"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Year <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("year", {
+                  required: "Year is required",
+                })}
+                type="number"
+                id="year"
+                className={`block w-full px-4 py-3 border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent transition-colors ${
+                  errors.year
+                    ? "border-red-300 focus:ring-red-500"
+                    : "border-gray-300"
+                }`}
+              />
+            </div>
+
+            {/* Odometer */}
+            <div>
+              <label
+                htmlFor="odometer"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Odometer (km) <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("odometer", {
+                  required: "Odometer is required",
+                })}
+                type="number"
+                id="odometer"
+                className={`block w-full px-4 py-3 border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent transition-colors ${
+                  errors.odometer
+                    ? "border-red-300 focus:ring-red-500"
+                    : "border-gray-300"
+                }`}
+              />
+            </div>
+
+            {/* Asset ID (Read-only) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-2">
+                Asset ID (Read-only)
+              </label>
+              <div className="w-full px-4 py-3 border border-gray-200 bg-gray-50 rounded-lg text-gray-500 font-mono">
+                {vehicleData.dto.assetId || "N/A"}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="md:col-span-2">
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Description
+              </label>
+              <textarea
+                {...register("description")}
+                id="description"
+                rows={3}
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent transition-colors"
+                placeholder="Brief description of the vehicle"
+              />
+            </div>
           </div>
 
           {/* Save Button */}
@@ -720,10 +855,29 @@ export default function VehicleEditForm({
               </div>
             )}
           </div>
+
+          <div className="space-y-6 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Driver Assignment History
+            </h3>
+            {driverHistory?.dto && driverHistory.dto.length > 0 ? (
+              <UniversalTable
+                data={driverHistory.dto}
+                columns={historyColumns}
+                showSearch={false}
+                showPagination={true}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No driver assignment history found.
+              </div>
+            )}
+          </div>
         </div>
       )
       }
 
+<<<<<<< Updated upstream
       {
         activeTab === "history" && (
           <div className="space-y-6">
@@ -1029,6 +1183,265 @@ export default function VehicleEditForm({
               className="bg-[#004953] text-white px-10 py-3.5 rounded-xl font-bold hover:bg-[#003840] focus:ring-4 focus:ring-[#00495330] disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-[#00495320]"
             >
               {isLoading ? "Syncing Hardware..." : "Update Device Info"}
+=======
+      {activeTab === "status" && (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#004953]">
+                <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+              </svg>
+              Current Asset Status
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Status</label>
+                <select 
+                  {...register("assetStatus")}
+                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#004953] focus:border-transparent transition-colors capitalize"
+                >
+                  <option value="available">Available</option>
+                  <option value="unavailable">Unavailable</option>
+                  <option value="under maintenance">Under Maintenance</option>
+                  <option value="sold out">Sold Out</option>
+                  <option value="decommissioned">Decommissioned</option>
+                  <option value="operational - not downloading">Operational - Not Downloading</option>
+                </select>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status Expiry (Optional)</label>
+                <div className="flex gap-4 items-center">
+                  <input 
+                    {...register("assetStatusExpiry")}
+                    type="datetime-local" 
+                    className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#004953] transition-colors"
+                  />
+                  <button type="button" onClick={() => {
+                    const d = new Date(); d.setDate(d.getDate() + 7);
+                    setValue("assetStatusExpiry", d.toISOString().slice(0, 16), { shouldDirty: true });
+                  }} className="whitespace-nowrap px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">+ 1 Week</button>
+                  <button type="button" onClick={() => {
+                    const d = new Date(); d.setMonth(d.getMonth() + 1);
+                    setValue("assetStatusExpiry", d.toISOString().slice(0, 16), { shouldDirty: true });
+                  }} className="whitespace-nowrap px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">+ 1 Month</button>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">The status will automatically revert or trigger an alert after this date.</p>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                <textarea 
+                  {...register("assetStatusNotes")}
+                  rows={3}
+                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#004953] transition-colors text-sm"
+                  placeholder="Provide context on why the status is being changed..."
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
+              <button
+                type="submit"
+                disabled={isLoading || !isDirty}
+                className="bg-[#004953] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#014852] transition-colors disabled:opacity-50"
+              >
+                {isLoading ? "Updating..." : "Update Status"}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-gray-400">
+                <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+              </svg>
+              Status Update History
+            </h3>
+            {vehicleData.dto.statusHistory && vehicleData.dto.statusHistory.length > 0 ? (
+              <div className="relative border-l-2 border-[#004953]/20 ml-3 pl-6 space-y-8">
+                {vehicleData.dto.statusHistory.map((record) => (
+                  <div key={record.id} className="relative">
+                    <div className="absolute -left-[31px] bg-white p-1 rounded-full border-2 border-[#004953]">
+                      <div className="w-2.5 h-2.5 bg-[#004953] rounded-full"></div>
+                    </div>
+                    <div className="flex justify-between items-start mb-1">
+                      <div>
+                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider ${
+                          record.status === "available" ? "bg-green-100 text-green-800" :
+                          record.status === "under maintenance" ? "bg-yellow-100 text-yellow-800" :
+                          record.status === "unavailable" ? "bg-red-100 text-red-800" :
+                          "bg-gray-100 text-gray-800"
+                        }`}>
+                          {record.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 font-medium whitespace-nowrap">
+                        {new Date(record.changedAt).toLocaleString()}
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-700 font-medium mt-2">{record.changedBy}</p>
+                    {record.notes && <p className="text-sm text-gray-500 mt-1 italic">"{record.notes}"</p>}
+                    {record.expiryDate && (
+                      <p className="text-xs text-orange-600 mt-2 font-medium bg-orange-50 inline-block px-2 py-1 rounded">
+                        Expires: {new Date(record.expiryDate).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500 border-2 border-dashed border-gray-100 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mx-auto mb-3 text-gray-300">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                <p className="text-sm font-medium">No historical status updates found.</p>
+                <p className="text-xs mt-1 text-gray-400">Future changes to the asset status will appear here.</p>
+              </div>
+            )}
+          </div>
+        </form>
+      )}
+
+      {activeTab === "devices" && (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#004953]">
+                <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.5 2.5a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+              </svg>
+              Device Identification
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">IMEI / Ident</label>
+                <input {...register("flespiIdent")} className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 font-mono" placeholder="Enter device IMEI" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">SIM Card Number</label>
+                <input {...register("simSerialNumber")} className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 font-mono" placeholder="ICCID" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Device Brand</label>
+                <input {...register("deviceBrand")} className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900" placeholder="e.g., Teltonika" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Device Model</label>
+                <input {...register("deviceModel")} className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900" placeholder="e.g., FMC130" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#004953]">
+                  <path fillRule="evenodd" d="M4.75 3.75a.75.75 0 0 1 .75.75v15a.75.75 0 0 1-1.5 0v-15a.75.75 0 0 1 .75-.75ZM20.25 3.75a.75.75 0 0 1 .75.75v15a.75.75 0 0 1-1.5 0v-15a.75.75 0 0 1 .75-.75ZM9 3.75a.75.75 0 0 1 .75.75v15a.75.75 0 0 1-1.5 0v-15a.75.75 0 0 1 .75-.75ZM15 3.75a.75.75 0 0 1 .75.75v15a.75.75 0 0 1-1.5 0v-15a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                </svg>
+                I/O Configurations
+              </h3>
+              <select 
+                className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-black"
+                onChange={(e) => {
+                  const selected = e.target.value;
+                  if (!selected) return;
+                  const current = JSON.parse(getValues("ioConfigs") || "[]");
+                  const updated = [...current, { name: selected, type: "Input", status: "active" }];
+                  setValue("ioConfigs", JSON.stringify(updated), { shouldDirty: true });
+                  e.target.value = "";
+                }}
+              >
+                <option value="">+ Add I/O Device</option>
+                <option value="Fuel Sensor">Fuel Sensor</option>
+                <option value="Temperature Probe">Temperature Probe</option>
+                <option value="RFID Reader">RFID Reader</option>
+                <option value="Panic Button">Panic Button</option>
+                <option value="Door Sensor">Door Sensor</option>
+                <option value="Ignition Relay">Ignition Relay</option>
+              </select>
+            </div>
+
+            <div className="space-y-3">
+              {JSON.parse(watch("ioConfigs") || "[]").map((config: any, index: number) => (
+                <div key={index} className="flex flex-col gap-3 p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-[#004953]/10 flex items-center justify-center text-[#004953]">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                          <path d="M12 6.75a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5H12ZM12 11.25a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5H12ZM12 15.75a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5H12ZM5.25 5.25a.75.75 0 0 1 .75.75v12a.75.75 0 0 1-1.5 0v-12a.75.75 0 0 1 .75-.75ZM9 5.25a.75.75 0 0 1 .75.75v12a.75.75 0 0 1-1.5 0v-12a.75.75 0 0 1 .75-.75Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{config.name}</div>
+                        <div className="text-xs text-gray-500 uppercase tracking-tighter">{config.type}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="px-2 py-1 rounded bg-green-100 text-green-800 text-[10px] font-bold uppercase">Active</span>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const current = JSON.parse(getValues("ioConfigs") || "[]");
+                          const updated = current.filter((_: any, i: number) => i !== index);
+                          setValue("ioConfigs", JSON.stringify(updated), { shouldDirty: true });
+                        }}
+                        className="text-red-400 hover:text-red-600 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                          <path fillRule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-.355 5.945a.75.75 0 1 0-1.5.058l.347 9a.75.75 0 1 0 1.499-.058l-.347-9Zm5.48.058a.75.75 0 1 0-1.498-.058l-.347 9a.75.75 0 0 0 1.5.058l.347-9Z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pl-14">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Port / Channel</label>
+                      <input 
+                        type="text"
+                        defaultValue={config.value || ""}
+                        className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-[#004953] outline-none text-black"
+                        placeholder="e.g. AIN1"
+                        onChange={(e) => {
+                          const current = JSON.parse(getValues("ioConfigs") || "[]");
+                          current[index].value = e.target.value;
+                          setValue("ioConfigs", JSON.stringify(current), { shouldDirty: true });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Status</label>
+                      <select 
+                        className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded outline-none text-black"
+                        defaultValue={config.status}
+                        onChange={(e) => {
+                          const current = JSON.parse(getValues("ioConfigs") || "[]");
+                          current[index].status = e.target.value;
+                          setValue("ioConfigs", JSON.stringify(current), { shouldDirty: true });
+                        }}
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {JSON.parse(watch("ioConfigs") || "[]").length === 0 && (
+                <div className="text-center py-6 text-gray-500 text-sm border-2 border-dashed border-gray-200 rounded-lg">
+                  No I/O devices configured. Select a device from the menu to add.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-gray-200">
+            <button
+              type="submit"
+              disabled={isLoading || !isDirty}
+              className="bg-[#004953] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#014852] transition-all disabled:opacity-50"
+            >
+              {isLoading ? "Saving..." : "Save Configuration"}
+>>>>>>> Stashed changes
             </button>
           </div>
         </form>

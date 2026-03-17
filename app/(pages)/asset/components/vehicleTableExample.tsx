@@ -32,22 +32,26 @@ export default function VehicleTableExample() {
   const [filterValue, setFilterValue] = useState("all");
   const { data: Vehicles, isLoading, isError, error } = useVehicleQuery();
 
-  const columns: ColumnDef<Vehicle>[] = [
+  const columns: ColumnDef<any>[] = [
     {
       header: "Registration",
-      accessorKey: "vehicleRegNo",
-      cell: ({ row }) => `${row.original.registrationNumber}`,
+      accessorKey: "registrationNumber",
     },
     {
       header: "Status",
       accessorKey: "status",
-      cell: ({ row }) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-            " "
-          )}`}
-        ></span>
-      ),
+      cell: ({ row }) => {
+        const status = (row.original as any).status || "available";
+        return (
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+              status
+            )}`}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </span>
+        );
+      },
     },
     {
       header: "Model",
@@ -56,44 +60,60 @@ export default function VehicleTableExample() {
     {
       header: "Health Rate",
       accessorKey: "healthRate",
-      cell: ({ row }) => (
-        <span className={`font-semibold ${getHealthRateColor(0)}`}>%</span>
-      ),
+      cell: ({ row }) => {
+        const rate = (row.original as any).healthRate || 100;
+        return (
+          <span className={`font-semibold ${getHealthRateColor(rate)}`}>
+            {rate}%
+          </span>
+        );
+      },
     },
     {
       header: "Cost/Month",
       accessorKey: "costPerMonth",
-      cell: ({ row }) => `Tsh`,
+      cell: ({ row }) => {
+        const cost = (row.original as any).costPerMonth || 0;
+        return `Tsh ${cost.toLocaleString()}`;
+      },
     },
     {
       header: "Driver",
       accessorKey: "driverName",
-      cell: ({ row }) => (
-        <span>
-          {row.original.drivers
-            ? row.original.drivers.length === 0
-              ? "unassigned"
-              : row.original.drivers[0].firstName +
-                " " +
-                row.original.drivers[0].lastName
-            : "Unassigned"}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const drivers = row.original.drivers;
+        return (
+          <span>
+            {drivers && drivers.length > 0
+              ? `${drivers[0].firstName} ${drivers[0].lastName}`
+              : "Unassigned"}
+          </span>
+        );
+      },
     },
     {
       header: "Last Maintenance",
       accessorKey: "lastMaintenanceDate",
-      cell: ({ row }) => new Date().toLocaleDateString(),
+      cell: ({ row }) => {
+        const date = (row.original as any).updatedAt || new Date();
+        return new Date(date).toLocaleDateString();
+      },
     },
     {
       header: "Fuel Efficiency",
       accessorKey: "fuelEfficiency",
-      cell: ({ row }) => `km/L`,
+      cell: ({ row }) => {
+        const efficiency = (row.original as any).fuelEfficiency || 0;
+        return `${efficiency} km/L`;
+      },
     },
     {
       header: "Mileage",
       accessorKey: "mileage",
-      cell: ({ row }) => `km`,
+      cell: ({ row }) => {
+        const mileage = row.original.odometer || 0;
+        return `${parseInt(mileage).toLocaleString()} km`;
+      },
     },
   ];
 

@@ -8,7 +8,7 @@ import { useDashboardSummaryQuery } from "./query";
 import UniversalTableSkeleton, { SkeletonShimmer } from "@/app/components/universalTableSkeleton";
 
 const DashboardPage = () => {
-  const { data: summaryData, isLoading } = useDashboardSummaryQuery();
+  const { data: summaryData, isLoading, isError, error } = useDashboardSummaryQuery();
 
   if (isLoading) {
     return (
@@ -31,12 +31,39 @@ const DashboardPage = () => {
     );
   }
 
+<<<<<<< Updated upstream
   const stats = summaryData?.data?.vehicles || {
     total: 0,
     available: 0,
     outOfService: 0,
     underMaintenance: 0,
   };
+=======
+  if (isError) {
+    return (
+      <div className="bg-white w-full h-full flex flex-col items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-red-600 mb-4">Error Loading Dashboard</h2>
+          <p className="text-gray-600">{error?.message || "An error occurred while fetching data."}</p>
+          <p className="text-sm text-gray-500 mt-2">Please check your authentication and try again.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = summaryData?.data?.vehicles;
+>>>>>>> Stashed changes
+
+  if (!stats) {
+    return (
+      <div className="bg-white w-full h-full flex flex-col items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-gray-600 mb-4">No Data Available</h2>
+          <p className="text-gray-500">Unable to load dashboard data.</p>
+        </div>
+      </div>
+    );
+  }
 
   const recentTrips = summaryData?.data?.recentTrips || [];
 

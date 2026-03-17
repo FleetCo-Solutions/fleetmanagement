@@ -5,14 +5,19 @@ import { SessionProvider } from "next-auth/react";
 import { HeaderActionsProvider } from "./context/HeaderActionsContext";
 import React, { ReactNode } from "react";
 
+<<<<<<< Updated upstream
 const Providers = ({ children }: { children: ReactNode }) => {
   const queryClient = new QueryClient({
+=======
+const Providers = ({ children }: { children: ReactNode}) => {
+  const [queryClient] = React.useState(() => new QueryClient({
+>>>>>>> Stashed changes
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 3, // 3 minutes
       },
     },
-  });
+  }));
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>

@@ -1,0 +1,3 @@
+Executing simple query...
+Simple Query Error: Failed query: SELECT id FROM vehicles LIMIT 1
+params: 
